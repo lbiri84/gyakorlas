@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#293c4b">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Gyakorló">
+<meta name="description" content="Gyakorló oldal 3. osztályosoknak: matek és nyelvtan, pontokkal és jelvényekkel.">
+<title>Gyakorló</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap">
+<link rel="preconnect" href="https://laszlobiri.com">
+<link rel="stylesheet" href="https://laszlobiri.com/design-system/tokens.css">
+<script>
+  // Mindig a palakék (slate) téma, mint a többi laszlobiri oldalon.
+  document.documentElement.dataset.theme = 'slate';
+</script>
+<style>
+  /* A laszlobiri design system alapján (tokens.css a laszlobiri.com-ról). Egyetlen, sötét (palakék) megjelenés. */
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font-family: var(--font-sans); font-size: 17px; line-height: 26px;
+    -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+  }
+  #app {
+    max-width: 600px; margin: 0 auto; min-height: 100vh; min-height: 100dvh;
+    padding: max(var(--space-4), env(safe-area-inset-top)) var(--space-4) max(var(--space-12), env(safe-area-inset-bottom));
+  }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+  h1, h2, h3, p { margin: 0; }
+  .mk .f{fill:var(--mark-filler)}.mk .l{fill:var(--mark-l)}.mk .b{fill:var(--mark-b)}.mk .lr{stroke:var(--mark-l)}.mk .br{stroke:var(--mark-ring)}
+  .mk circle[stroke-width] { fill: none; }
+
+  /* ---------- fejléc ---------- */
+  .head { display: flex; align-items: center; gap: var(--space-4); margin: var(--space-4) 0 var(--space-6); }
+  .head .mk { width: 64px; height: auto; flex: none; }
+  .head h1 { font-size: 34px; line-height: 38px; font-weight: 600; letter-spacing: -0.02em; }
+  .sub { color: var(--fg-muted); font-size: 15px; line-height: 22px; }
+
+  /* ---------- kártyák ---------- */
+  .card { background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: var(--space-6); }
+  .level { display: flex; flex-direction: column; gap: var(--space-3); }
+  .level .row { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); }
+  .level .lv { font-size: 24px; line-height: 30px; font-weight: 600; letter-spacing: -0.01em; }
+  .level .lv small { font-size: 15px; font-weight: 500; color: var(--accent-text); margin-left: var(--space-2); }
+  .level .pts { font-size: 15px; color: var(--fg-muted); }
+  .bar { height: 12px; border-radius: var(--radius-full); background: var(--line); overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--accent); border-radius: var(--radius-full); }
+  .mini { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin-top: var(--space-2); }
+  .mini div { border-top: 1px solid var(--line); padding-top: var(--space-3); font-size: 14px; line-height: 20px; color: var(--fg-muted); }
+  .mini b { display: block; font-size: 22px; line-height: 28px; font-weight: 600; color: var(--fg); }
+  .link-btn { background: none; border: 0; padding: 0; text-align: left; color: var(--accent-text); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+
+  .big-btn {
+    display: flex; align-items: center; justify-content: center; gap: var(--space-3);
+    width: 100%; min-height: 64px; margin-top: var(--space-4);
+    background: var(--accent); color: var(--brand-black); border: 0; border-radius: var(--radius-lg);
+    font-size: 20px; font-weight: 600; letter-spacing: -0.01em; padding: var(--space-3) var(--space-6);
+  }
+  .big-btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+  .big-btn:active { transform: translateY(1px); }
+
+  h2.group { font-size: 14px; line-height: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--fg-muted); margin: var(--space-8) 0 var(--space-3); }
+  .topics { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); }
+  .topic {
+    display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); text-align: left;
+    min-height: 132px; padding: var(--space-4);
+    background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--radius-lg);
+  }
+  .topic:hover { border-color: var(--accent); }
+  .ico {
+    width: 44px; height: 44px; border-radius: 50%; flex: none;
+    display: grid; place-items: center;
+    border: 2px solid var(--accent); color: var(--accent-text);
+    font-weight: 700; font-size: 20px; line-height: 1; letter-spacing: -0.02em;
+  }
+  .ico.sm { font-size: 15px; }
+  .topic .name { font-size: 18px; line-height: 22px; font-weight: 600; margin-top: auto; }
+  .topic .best { font-size: 14px; line-height: 20px; color: var(--fg-muted); }
+
+  /* ---------- kvíz ---------- */
+  .qbar { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-2) 0 var(--space-4); }
+  .icon-btn {
+    width: 48px; height: 48px; border-radius: 50%; flex: none;
+    display: grid; place-items: center; background: var(--bg-raised); border: 1px solid var(--line); font-size: 22px; line-height: 1;
+  }
+  .qtitle { flex: 1; min-width: 0; font-size: 20px; line-height: 26px; font-weight: 600; letter-spacing: -0.01em; }
+  .qcount { font-size: 15px; color: var(--fg-muted); font-weight: 500; }
+  .chip { display: inline-flex; align-items: center; font-size: 14px; line-height: 20px; font-weight: 500; padding: 2px var(--space-3); border: 1px solid var(--line); border-radius: var(--radius-full); color: var(--fg-muted); }
+  .chip.hot { color: var(--accent-text); border-color: currentColor; }
+
+  .dots { display: flex; gap: 8px; justify-content: space-between; margin-bottom: var(--space-6); }
+  .dot { flex: 1; max-width: 22px; aspect-ratio: 1; border-radius: 50%; border: 2px solid var(--line); }
+  .dot.now { border-color: var(--accent); }
+  .dot.ok { background: var(--accent); border-color: var(--accent); }
+  .dot.bad { border-color: var(--fg-muted); border-style: dashed; }
+  .dots.big { justify-content: center; gap: 10px; width: 100%; }
+  .dots.big .dot { max-width: 26px; }
+
+  .qcard { padding: var(--space-8) var(--space-6); text-align: center; display: flex; flex-direction: column; gap: var(--space-3); align-items: center; }
+  .qprompt { font-size: 16px; line-height: 22px; color: var(--fg-muted); }
+  .qtext { font-size: 38px; line-height: 46px; font-weight: 600; letter-spacing: -0.02em; overflow-wrap: anywhere; }
+  .qtext.long { font-size: 22px; line-height: 32px; font-weight: 500; letter-spacing: 0; text-align: left; }
+  .blank { display: inline-block; min-width: 1.5em; margin: 0 .1em; border-bottom: 4px solid var(--accent); color: var(--accent-text); text-align: center; line-height: 1; }
+
+  .choices { display: grid; gap: var(--space-3); margin-top: var(--space-4); grid-template-columns: 1fr; }
+  .choices.grid { grid-template-columns: repeat(2, 1fr); }
+  .choice {
+    position: relative; min-height: 68px; padding: var(--space-3) var(--space-4);
+    background: var(--bg-raised); border: 2px solid var(--line); border-radius: var(--radius-lg);
+    font-size: 20px; line-height: 26px; font-weight: 600; text-align: center;
+  }
+  .choices.grid .choice { font-size: 30px; line-height: 36px; min-height: 76px; }
+  .choice:not(:disabled):hover { border-color: var(--accent); }
+  .choice:disabled { cursor: default; }
+  .choice.right { background: var(--accent); border-color: var(--accent); color: var(--brand-black); }
+  .choice.wrong { border-style: dashed; border-color: var(--fg-muted); color: var(--fg-muted); text-decoration: line-through; }
+  .choice.dim { opacity: .5; }
+  .choice .mark { position: absolute; top: 6px; right: 12px; font-size: 18px; line-height: 1; text-decoration: none; }
+
+  .fb { margin-top: var(--space-4); padding: var(--space-4) var(--space-6); border: 1px solid var(--line); border-radius: var(--radius-lg); background: var(--bg-raised); }
+  .fb.good { border-color: var(--accent); }
+  .fb h3 { font-size: 22px; line-height: 28px; font-weight: 600; }
+  .fb.good h3 { color: var(--accent-text); }
+  .fb p { color: var(--fg-muted); margin-top: var(--space-2); font-size: 16px; line-height: 24px; }
+  .fb .plus { float: right; font-size: 22px; font-weight: 700; color: var(--accent-text); }
+
+  /* ---------- eredmény ---------- */
+  .result { text-align: center; display: flex; flex-direction: column; align-items: center; gap: var(--space-4); padding: var(--space-8) var(--space-6); }
+  .result .score { font-size: 72px; line-height: 76px; font-weight: 700; letter-spacing: -0.04em; }
+  .result .score small { font-size: 32px; color: var(--fg-muted); letter-spacing: -0.02em; }
+  .result h2 { font-size: 24px; line-height: 30px; font-weight: 600; }
+  .earn { font-size: 20px; font-weight: 600; color: var(--accent-text); }
+  .banner { width: 100%; padding: var(--space-3) var(--space-4); border: 1px solid var(--accent); border-radius: var(--radius-md); color: var(--accent-text); font-weight: 600; }
+  .newb { width: 100%; display: flex; flex-direction: column; gap: var(--space-2); }
+  .newb .it { display: flex; align-items: center; gap: var(--space-3); text-align: left; padding: var(--space-3) var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-md); }
+  .newb .ic { font-size: 28px; line-height: 1; flex: none; }
+  .newb .tx { font-size: 16px; line-height: 22px; }
+
+  /* ---------- jelvények ---------- */
+  .badges { display: grid; grid-template-columns: 1fr; gap: var(--space-3); }
+  .badge { display: flex; gap: var(--space-4); align-items: center; padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-lg); background: transparent; }
+  .badge .bi { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; font-size: 28px; flex: none; border: 2px dashed var(--line); filter: grayscale(1); opacity: .5; }
+  .badge.got { background: var(--bg-raised); }
+  .badge.got .bi { border: 2px solid var(--accent); filter: none; opacity: 1; }
+  .badge b { display: block; font-size: 18px; line-height: 24px; font-weight: 600; }
+  .badge span { color: var(--fg-muted); font-size: 15px; line-height: 22px; }
+  .badge:not(.got) b { color: var(--fg-muted); }
+
+  .foot { margin-top: var(--space-12); font-size: 14px; line-height: 20px; color: var(--fg-muted); text-align: center; }
+  @media (max-width: 380px) { .qtext { font-size: 32px; line-height: 40px; } .choices.grid .choice { font-size: 26px; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<div id="app"><noscript>Az oldalhoz JavaScript kell.</noscript></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ================= segédek ================= */
+  const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  const pick = a => a[rnd(0, a.length - 1)];
+  const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = rnd(0, i); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const $app = document.getElementById('app');
+
+  /* számválaszok: a helyes + 3 hihető rossz, egyedi értékekkel */
+  function numQ(c, cands, extra) {
+    const opts = [];
+    for (const v of shuffle(cands)) {
+      if (Number.isInteger(v) && v >= 0 && v !== c && opts.indexOf(v) < 0) { opts.push(v); if (opts.length === 3) break; }
+    }
+    for (let d = 1; opts.length < 3; d++) {
+      [c + d, c - d].forEach(v => { if (opts.length < 3 && v >= 0 && v !== c && opts.indexOf(v) < 0) opts.push(v); });
+    }
+    const all = shuffle([c].concat(opts));
+    return Object.assign({ choices: all.map(String), correct: all.indexOf(c), layout: 'grid' }, extra);
+  }
+  const near = c => [c + 10, c - 10, c + 1, c - 1, c + 100, c - 100, c + 2, c - 2];
+
+  /* ================= témák és feladatgenerátorok ================= */
+  const GEN = {
+    osszeadas() {
+      const t = rnd(1, 3); let a, b;
+      if (t === 1) { a = rnd(11, 60); b = rnd(11, 100 - a); }
+      else if (t === 2) { a = rnd(1, 7) * 100 + rnd(0, 9) * 10; b = rnd(1, 99 - 0) * 10; if (a + b > 990) b = 990 - a - (990 - a) % 10; if (b < 10) b = 10; }
+      else { a = rnd(101, 600); b = rnd(11, Math.min(399, 999 - a)); }
+      const c = a + b;
+      return numQ(c, near(c).concat([c + 20, c - 20, a + b + 9, a + b - 9]), { prompt: 'Számold ki!', text: `${a} + ${b} = ?`, explain: `${a} + ${b} = ${c}` });
+    },
+    kivonas() {
+      const t = rnd(1, 3); let a, b;
+      if (t === 1) { a = rnd(31, 100); b = rnd(11, a - 10); }
+      else if (t === 2) { a = rnd(3, 10) * 100 - rnd(0, 5) * 100; if (a < 300) a = 300; a += rnd(0, 9) * 10; b = rnd(1, Math.floor((a - 10) / 10)) * 10; }
+      else { a = rnd(201, 999); b = rnd(11, a - 50); }
+      const c = a - b;
+      return numQ(c, near(c).concat([c + 20, c - 20, a + b, c + 9, c - 9]), { prompt: 'Számold ki!', text: `${a} − ${b} = ?`, explain: `${a} − ${b} = ${c}` });
+    },
+    szorzas() {
+      const a = rnd(2, 10), b = rnd(2, 10), c = a * b;
+      return numQ(c, [c + a, c - a, c + b, c - b, c + 10, c - 10, (a + 1) * b, a * (b + 1), a + b, c + 1, c - 1], { prompt: 'Szorzótábla', text: `${a} · ${b} = ?`, explain: `${a} · ${b} = ${c}` });
+    },
+    osztas() {
+      if (Math.random() < 0.25) {
+        const d = rnd(3, 9), q = rnd(2, 9), r = rnd(1, d - 1), n = d * q + r;
+        const opts = []; for (let i = 0; i < d; i++) if (i !== r) opts.push(i);
+        const o = shuffle(opts).slice(0, 3);
+        while (o.length < 3) o.push(d + o.length);
+        const all = shuffle([r].concat(o));
+        return { prompt: 'Maradékos osztás', text: `${n} : ${d} = ${q} (maradék: ?)`, choices: all.map(String), correct: all.indexOf(r), layout: 'grid', explain: `${n} = ${d} · ${q} + ${r}, tehát a maradék ${r}.` };
+      }
+      const d = rnd(2, 10), q = rnd(2, 10), n = d * q;
+      return numQ(q, [q + 1, q - 1, q + 2, q - 2, d, n - d, q + 10], { prompt: 'Osztás', text: `${n} : ${d} = ?`, explain: `${n} : ${d} = ${q}, mert ${d} · ${q} = ${n}.` });
+    },
+    sorozat() {
+      const s = pick([2, 3, 4, 5, 10, 20, 25, 50, 100]); const up = Math.random() < 0.7;
+      let start;
+      if (s >= 20) start = rnd(0, Math.floor((1000 - 4 * s) / s)) * s; else start = rnd(1, 40);
+      const t = []; for (let i = 0; i < 5; i++) t.push(start + i * s);
+      const seq = up ? t : t.slice().reverse();
+      const h = rnd(1, 4), c = seq[h];
+      const txt = seq.map((v, i) => i === h ? '<span class="blank">?</span>' : v).join(', ');
+      return numQ(c, [c + s, c - s, c + 2 * s, c - 2 * s, c + 1, c - 1, c + 10], { prompt: 'Melyik szám hiányzik?', text: txt, explain: `A lépés: ${s} (${up ? 'nő' : 'csökken'}). Teljes sor: ${seq.join(', ')}.` });
+    },
+    mertek() {
+      const F = [['m', 'cm', 100, 9], ['dm', 'cm', 10, 9], ['m', 'dm', 10, 9], ['km', 'm', 1000, 5], ['kg', 'dkg', 100, 9], ['kg', 'g', 1000, 5], ['l', 'dl', 10, 9], ['óra', 'perc', 60, 4]];
+      const [big, small, f, mx] = pick(F), n = rnd(1, mx), rev = Math.random() < 0.35;
+      const c = rev ? n : n * f, text = rev ? `${n * f} ${small} = ? ${big}` : `${n} ${big} = ? ${small}`;
+      return numQ(c, [c * 10, c % 10 === 0 ? c / 10 : -1, c + 10, c - 10, c + 1, c - 1, c * 2, c % 2 === 0 ? c / 2 : -1], { prompt: 'Váltsd át!', text, explain: `1 ${big} = ${f} ${small}, ezért ${n} ${big} = ${n * f} ${small}.` });
+    },
+    szoveges() {
+      const NAMES = [['Anna', 'Bence'], ['Dóri', 'Máté'], ['Zsófi', 'Levente'], ['Réka', 'Marci']];
+      const T = [
+        () => { const [a, b] = pick(NAMES), x = rnd(12, 60), y = rnd(12, 60); return { text: `${a} ${x} matricát gyűjtött, ${b} ${y} matricát. Hány matricájuk van együtt?`, ans: x + y, ex: `${x} + ${y} = ${x + y}`, alt: [Math.abs(x - y)] }; },
+        () => { const x = rnd(120, 500), y = rnd(110, 400); return { text: `A könyvtárban a polcon ${x} mesekönyv volt. Hoztak még ${y} könyvet. Hány könyv van most a polcon?`, ans: x + y, ex: `${x} + ${y} = ${x + y}`, alt: [x - y] }; },
+        () => { const x = rnd(60, 200), y = rnd(11, x - 10); return { text: `A boltban ${x} alma volt. Eladtak ${y} almát. Hány alma maradt?`, ans: x - y, ex: `${x} − ${y} = ${x - y}`, alt: [x + y] }; },
+        () => { const a = rnd(3, 9), b = rnd(2, 9); return { text: `Egy dobozban ${a} ceruza van. ${b} dobozban hány ceruza van összesen?`, ans: a * b, ex: `${a} · ${b} = ${a * b}`, alt: [a + b] }; },
+        () => { const d = rnd(2, 9), q = rnd(2, 10), p = d * q; return { text: `${p} cukorkát egyenlően elosztunk ${d} gyerek között. Hány cukorka jut egy gyereknek?`, ans: q, ex: `${p} : ${d} = ${q}`, alt: [p - d, d] }; },
+        () => { const n = pick(['Dóri', 'Anna', 'Réka', 'Zsófi']), a = rnd(3, 6), b = rnd(4, 9), c = rnd(3, a * b - 5); return { text: `${n} ${a} csomag matricát vett, egy csomagban ${b} matrica van. ${c} matricát odaadott a testvérének. Hány matricája maradt?`, ans: a * b - c, ex: `${a} · ${b} = ${a * b}, majd ${a * b} − ${c} = ${a * b - c}`, alt: [a * b + c, a * b] }; },
+        () => { const x = rnd(25, 60), y = rnd(5, x - 5), z = rnd(3, 20); return { text: `A buszon ${x} utas ült. A megállóban ${y} utas leszállt, ${z} felszállt. Hány utas van most a buszon?`, ans: x - y + z, ex: `${x} − ${y} + ${z} = ${x - y + z}`, alt: [x - y - z, x + y + z] }; },
+        () => { const x = rnd(10, 50) * 10, y = rnd(5, x / 10 - 1) * 10; return { text: `Máté ${x} forintot tett a perselybe, Réka ${y} forintot. Hány forinttal tett Máté többet?`, ans: x - y, ex: `${x} − ${y} = ${x - y}`, alt: [x + y] }; },
+        () => { const p = rnd(4, 12) * 10, n = rnd(2, 6); return { text: `Egy füzet ${p} forint. ${n} füzet hány forintba kerül?`, ans: p * n, ex: `${n} · ${p} = ${p * n}`, alt: [p + n, p * n / 10] }; }
+      ];
+      const q = pick(T)();
+      return numQ(q.ans, q.alt.concat(near(q.ans)), { prompt: 'Szöveges feladat', text: q.text, long: true, explain: q.ex });
+    },
+    jly() {
+      const LY = [['he', ''], ['go', 'ó'], ['fo', 'ó'], ['kirá', ''], ['mé', ''], ['', 'uk'], ['pehe', ''], ['kö', 'ök'], ['bago', ''], ['gó', 'a'], ['fo', 'ik'], ['hó', 'ag'], ['me', 'ik'], ['mi', 'en']];
+      const J = [['', 'áték'], ['ha', 'ó'], ['a', 'tó'], ['ma', 'om'], ['pa', 'tás'], ['a', 'ándék'], ['é', 'szaka'], ['ba', 'usz'], ['te', ''], ['fe', ''], ['va', 'on'], ['sa', 't'], ['ha', 'nal']];
+      const isLy = Math.random() < 0.5, w = pick(isLy ? LY : J), ans = isLy ? 'ly' : 'j';
+      return { prompt: 'Melyik betű hiányzik?', text: `${w[0]}<span class="blank">?</span>${w[1]}`, choices: ['j', 'ly'], correct: ans === 'j' ? 0 : 1, layout: 'grid', explain: `Így helyes: ${w[0]}${ans}${w[1]}.` };
+    },
+    szofaj() {
+      const W = {
+        'főnév': ['ház', 'kutya', 'asztal', 'madár', 'iskola', 'könyv', 'fa', 'labda', 'barát', 'tenger'],
+        'melléknév': ['nagy', 'piros', 'szép', 'kerek', 'vidám', 'hideg', 'gyors', 'kicsi', 'magas', 'édes'],
+        'ige': ['fut', 'olvas', 'alszik', 'ír', 'rajzol', 'játszik', 'úszik', 'eszik', 'ugrik', 'nevet']
+      };
+      const H = { 'főnév': 'ki? mi?', 'melléknév': 'milyen?', 'ige': 'mit csinál?' };
+      const types = ['főnév', 'melléknév', 'ige'], t = pick(types), w = pick(W[t]);
+      return { prompt: 'Milyen szófaj ez a szó?', text: w, choices: types, correct: types.indexOf(t), layout: 'list', explain: `${w}: ${t} (kérdése: ${H[t]})` };
+    },
+    mondat() {
+      const S = {
+        'kijelentő': ['Süt a nap.', 'A kutya az udvaron alszik.', 'Anna könyvet olvas.', 'Ma szombat van.', 'A madarak délre repülnek.'],
+        'kérdő': ['Hová mész?', 'Mikor jössz haza?', 'Kié ez a táska?', 'Szereted a süteményt?', 'Mit csinálsz?'],
+        'felkiáltó': ['Milyen gyönyörű a szivárvány!', 'De hideg van ma!', 'Hű, de nagy ez a labda!', 'Milyen finom ez a leves!'],
+        'óhajtó': ['Bárcsak itt lenne már a nyár!', 'Bárcsak elmúlna már az eső!', 'Bárcsak minden nap vasárnap lenne!'],
+        'felszólító': ['Pakold el a játékokat.', 'Gyere ide.', 'Nyisd ki az ablakot.', 'Írd le a leckét.', 'Mosd meg a kezed.']
+      };
+      const E = { 'kijelentő': 'közöl valamit', 'kérdő': 'kérdez valamit', 'felkiáltó': 'érzelmet fejez ki', 'óhajtó': 'valamit kíván (bárcsak…)', 'felszólító': 'kér vagy parancsol valamit' };
+      const types = Object.keys(S), t = pick(types), s = pick(S[t]);
+      const ch = shuffle([t].concat(shuffle(types.filter(x => x !== t)).slice(0, 3)));
+      return { prompt: 'Milyen mondat ez?', text: s, long: true, choices: ch, correct: ch.indexOf(t), layout: 'list', explain: `${t} mondat: ${E[t]}.` };
+    },
+    abc() {
+      const P = ['alma', 'barack', 'citrom', 'dió', 'eper', 'füge', 'gomba', 'ház', 'iskola', 'jég', 'kutya', 'labda', 'madár', 'narancs', 'olló', 'pálma', 'répa', 'sál', 'tányér', 'uszoda', 'vonat', 'zebra'];
+      const w = shuffle(P).slice(0, 3), sorted = w.slice().sort((x, y) => P.indexOf(x) - P.indexOf(y));
+      const first = Math.random() < 0.5, c = first ? sorted[0] : sorted[2];
+      return { prompt: first ? 'Melyik szó van legelöl az ábécében?' : 'Melyik szó van leghátul az ábécében?', text: first ? 'ábécé: legelső' : 'ábécé: legutolsó', choices: w, correct: w.indexOf(c), layout: 'list', explain: `Ábécé szerint: ${sorted.join(', ')}.` };
+    }
+  };
+
+  const TOPICS = [
+    { id: 'osszeadas', g: 'Matek', name: 'Összeadás', ico: '+' },
+    { id: 'kivonas', g: 'Matek', name: 'Kivonás', ico: '−' },
+    { id: 'szorzas', g: 'Matek', name: 'Szorzótábla', ico: '×' },
+    { id: 'osztas', g: 'Matek', name: 'Osztás', ico: ':' },
+    { id: 'sorozat', g: 'Matek', name: 'Sorozatok', ico: '…' },
+    { id: 'mertek', g: 'Matek', name: 'Mértékegységek', ico: 'cm', sm: 1 },
+    { id: 'szoveges', g: 'Matek', name: 'Szöveges feladatok', ico: '?' },
+    { id: 'jly', g: 'Nyelvtan', name: 'j vagy ly?', ico: 'ly', sm: 1 },
+    { id: 'szofaj', g: 'Nyelvtan', name: 'Szófajok', ico: 'Aa', sm: 1 },
+    { id: 'mondat', g: 'Nyelvtan', name: 'Mondatfajták', ico: '!?', sm: 1 },
+    { id: 'abc', g: 'Nyelvtan', name: 'ABC-sorrend', ico: 'A–Z', sm: 1 }
+  ];
+  const TNAME = {}; TOPICS.forEach(t => TNAME[t.id] = t.name); TNAME.vegyes = 'Vegyes kör';
+
+  function makeQuestion(topic) {
+    const id = topic === 'vegyes' ? pick(TOPICS).id : topic;
+    const q = GEN[id](); q.topic = id; return q;
+  }
+  function buildRound(topic) {
+    const qs = [], seen = {};
+    for (let tries = 0; qs.length < 10 && tries < 400; tries++) {
+      const q = makeQuestion(topic);
+      if (!seen[q.topic + q.text]) { seen[q.topic + q.text] = 1; qs.push(q); }
+    }
+    while (qs.length < 10) qs.push(makeQuestion(topic));
+    return qs;
+  }
+
+  /* ================= mentés ================= */
+  const KEY = 'gyakorlo.v1';
+  const def = () => ({ points: 0, answered: 0, correct: 0, rounds: 0, perfect: 0, best: {}, played: {}, badges: {}, days: 0, lastDay: '' });
+  function load() { try { return Object.assign(def(), JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) { return def(); } }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* nincs tárhely: a játék működik tovább */ } }
+  let S = load();
+
+  /* ================= szintek, jelvények ================= */
+  const LEVELS = ['Kezdő', 'Felfedező', 'Ügyes', 'Gyors', 'Okos', 'Bajnok', 'Mester', 'Zseni', 'Legenda'];
+  const need = n => 50 * n * (n - 1);
+  const levelOf = p => { let n = 1; while (need(n + 1) <= p) n++; return n; };
+  const lvName = n => LEVELS[Math.min(n, LEVELS.length) - 1];
+  const BADGES = [
+    { id: 'elso', ico: '🌱', name: 'Első kör', desc: 'Játssz végig egy kört.', ok: s => s.rounds >= 1 },
+    { id: 'tokeletes', ico: '⭐', name: 'Tökéletes kör', desc: 'Válaszolj mind a 10 kérdésre helyesen.', ok: (s, c) => c.score === 10 },
+    { id: 'ot', ico: '🔥', name: 'Öt egyvégtében', desc: 'Egy körben 5 jó válasz egymás után.', ok: (s, c) => c.bestStreak >= 5 },
+    { id: 'szorzo', ico: '✖️', name: 'Szorzótábla-mester', desc: 'Hibátlan kör a szorzótáblából.', ok: (s, c) => c.topic === 'szorzas' && c.score === 10 },
+    { id: 'helyesiras', ico: '✏️', name: 'Helyesírás-bajnok', desc: 'Hibátlan kör a j vagy ly? témából.', ok: (s, c) => c.topic === 'jly' && c.score === 10 },
+    { id: 'minden', ico: '🧭', name: 'Mindent kipróbáltam', desc: 'Játssz végig egy kört mind a 11 témából.', ok: s => TOPICS.every(t => s.played[t.id]) },
+    { id: 'harom', ico: '📅', name: 'Három nap egymás után', desc: 'Gyakorolj három egymást követő napon.', ok: s => s.days >= 3 },
+    { id: 'szaz', ico: '💯', name: 'Száz jó válasz', desc: 'Gyűjts össze 100 helyes választ.', ok: s => s.correct >= 100 },
+    { id: 'ot-szint', ico: '🏆', name: 'Ötödik szint', desc: 'Érd el az 5. szintet.', ok: s => levelOf(s.points) >= 5 }
+  ];
+
+  const dayStr = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  function touchDay() {
+    const now = new Date(), today = dayStr(now);
+    if (S.lastDay === today) return;
+    const y = new Date(now); y.setDate(y.getDate() - 1);
+    S.days = S.lastDay === dayStr(y) ? S.days + 1 : 1; S.lastDay = today;
+  }
+
+  /* ================= állapot ================= */
+  let view = 'home', Q = null, R = null;
+
+  function start(topic) {
+    Q = { topic, qs: buildRound(topic), i: 0, picked: null, res: [], score: 0, streak: 0, bestStreak: 0, lv0: levelOf(S.points) };
+    view = 'quiz'; render();
+  }
+  function answer(i) {
+    if (!Q || Q.picked !== null) return;
+    const q = Q.qs[Q.i], ok = i === q.correct;
+    Q.picked = i; Q.res[Q.i] = ok; S.answered++;
+    if (ok) { Q.score++; Q.streak++; Q.bestStreak = Math.max(Q.bestStreak, Q.streak); S.points += 10; S.correct++; } else Q.streak = 0;
+    save(); render(); const b = document.getElementById('next'); if (b) { b.focus({ preventScroll: true }); b.scrollIntoView({ block: 'nearest' }); }
+  }
+  function next() {
+    if (Q.i < 9) { Q.i++; Q.picked = null; render(); window.scrollTo(0, 0); } else finish();
+  }
+  function finish() {
+    const bonus = Q.score === 10 ? 50 : 0;
+    S.points += bonus; S.rounds++; if (bonus) S.perfect++;
+    S.best[Q.topic] = Math.max(S.best[Q.topic] || 0, Q.score);
+    if (Q.topic !== 'vegyes') S.played[Q.topic] = 1;
+    touchDay();
+    const fresh = [], ctx = { topic: Q.topic, score: Q.score, bestStreak: Q.bestStreak };
+    BADGES.forEach(b => { if (!S.badges[b.id] && b.ok(S, ctx)) { S.badges[b.id] = dayStr(new Date()); fresh.push(b); } });
+    save();
+    R = { topic: Q.topic, score: Q.score, res: Q.res.slice(), earned: Q.score * 10 + bonus, bonus, lv0: Q.lv0, lv1: levelOf(S.points), fresh };
+    view = 'result'; render(); window.scrollTo(0, 0);
+  }
+
+  /* ================= nézetek ================= */
+  const MARK = '<svg class="mk" viewBox="0 0 81 53" role="img" aria-label="laszlobiri jel"><g transform="rotate(180 40.5 26.5)"><g transform="translate(81 0) rotate(90)"><circle class="f" cx="47.5" cy="5.5" r="4"/><circle class="f" cx="33.5" cy="19.5" r="4"/><circle class="f" cx="47.5" cy="33.5" r="4"/><circle class="f" cx="33.5" cy="47.5" r="4"/><circle class="l" cx="5.5" cy="5.5" r="4"/><circle class="l" cx="5.5" cy="19.5" r="4"/><circle class="l" cx="5.5" cy="33.5" r="4"/><circle class="l" cx="5.5" cy="47.5" r="4"/><circle class="l" cx="5.5" cy="61.5" r="4"/><circle class="l" cx="5.5" cy="75.5" r="4"/><circle class="l" cx="19.5" cy="75.5" r="4"/><circle class="l" cx="33.5" cy="75.5" r="4"/><circle class="l" cx="47.5" cy="75.5" r="4"/><circle class="b" cx="19.5" cy="5.5" r="4"/><circle class="b" cx="19.5" cy="19.5" r="4"/><circle class="b" cx="19.5" cy="33.5" r="4"/><circle class="b" cx="19.5" cy="47.5" r="4"/><circle class="b" cx="19.5" cy="61.5" r="4"/><circle class="b" cx="33.5" cy="5.5" r="4"/><circle class="b" cx="33.5" cy="33.5" r="4"/><circle class="b" cx="47.5" cy="19.5" r="4"/><circle class="lr" cx="47.5" cy="61.5" r="3" fill="none" stroke-width="2"/><circle class="br" cx="33.5" cy="61.5" r="3" fill="none" stroke-width="2"/><circle class="br" cx="47.5" cy="47.5" r="3" fill="none" stroke-width="2"/></g></g></svg>';
+
+  function dotsHtml(res, now, big) {
+    let h = `<div class="dots${big ? ' big' : ''}" role="img" aria-label="${res.filter(Boolean).length} jó válasz a ${res.filter(v => v !== undefined).length} megválaszolt kérdésből">`;
+    for (let i = 0; i < 10; i++) h += `<span class="dot ${res[i] === true ? 'ok' : res[i] === false ? 'bad' : i === now ? 'now' : ''}"></span>`;
+    return h + '</div>';
+  }
+
+  function homeView() {
+    const L = levelOf(S.points), a = need(L), b = need(L + 1), pct = Math.round((S.points - a) / (b - a) * 100);
+    const topicBtn = t => {
+      const best = S.best[t.id];
+      return `<button class="topic" data-go="${t.id}"><span class="ico${t.sm ? ' sm' : ''}" aria-hidden="true">${t.ico}</span><span class="name">${t.name}</span><span class="best">${best === undefined ? 'még nem játszottad' : 'legjobb: ' + best + '/10'}</span></button>`;
+    };
+    const grp = g => `<h2 class="group">${g}</h2><div class="topics">${TOPICS.filter(t => t.g === g).map(topicBtn).join('')}</div>`;
+    const got = Object.keys(S.badges).length;
+    return `<header class="head">${MARK}<div><h1>Gyakorló</h1><p class="sub">3. osztály · matek és nyelvtan</p></div></header>
+<section class="card level" aria-label="Szinted">
+  <div class="row"><div class="lv">${L}. szint<small>${lvName(L)}</small></div><div class="pts">${S.points} pont</div></div>
+  <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div>
+  <p class="sub">Még ${b - S.points} pont a ${L + 1}. szintig.</p>
+  <div class="mini"><div><b>${S.days}</b>napja gyakorolsz egymás után</div><div><b>${S.correct}</b>jó válasz összesen</div><div><b>${got}/${BADGES.length}</b><button class="link-btn" data-go="badges">jelvényeim</button></div></div>
+</section>
+<button class="big-btn" data-go="vegyes"><span aria-hidden="true">★</span> Vegyes kör mindenből</button>
+${grp('Matek')}${grp('Nyelvtan')}
+<p class="foot">A pontjaid csak ezen az eszközön vannak elmentve.</p>`;
+  }
+
+  const PRAISE = ['Ügyes vagy!', 'Szuper!', 'Pontosan!', 'Nagyszerű!', 'Így van!', 'Remek!'];
+  const OOPS = ['Majdnem!', 'Semmi baj, ebből tanulunk!', 'Nem ez volt, de menni fog!'];
+
+  function quizView() {
+    const q = Q.qs[Q.i], done = Q.picked !== null;
+    const chips = Q.topic === 'vegyes' ? `<span class="chip">${TNAME[q.topic]}</span>` : '';
+    const streak = Q.streak >= 3 ? `<span class="chip hot">🔥 ${Q.streak} egyvégtében</span>` : '';
+    let ch = '';
+    q.choices.forEach((c, i) => {
+      let cls = 'choice', mark = '';
+      if (done) {
+        if (i === q.correct) { cls += ' right'; mark = '<span class="mark" aria-hidden="true">✓</span>'; }
+        else if (i === Q.picked) { cls += ' wrong'; mark = '<span class="mark" aria-hidden="true">✕</span>'; }
+        else cls += ' dim';
+      }
+      ch += `<button class="${cls}" data-pick="${i}"${done ? ' disabled' : ''}>${c}${mark}${done && i === Q.picked && i !== q.correct ? '<span class="sr" hidden> (a te válaszod)</span>' : ''}</button>`;
+    });
+    let fb = '';
+    if (done) {
+      const ok = Q.picked === q.correct, last = Q.i === 9;
+      fb = `<div class="fb ${ok ? 'good' : ''}" role="status"><h3>${ok ? '<span class="plus">+10</span>' + pick(PRAISE) : pick(OOPS)}</h3><p>${q.explain}</p></div><button class="big-btn" id="next" data-next>${last ? 'Eredmény' : 'Tovább'} <span aria-hidden="true">→</span></button>`;
+    }
+    return `<div class="qbar"><button class="icon-btn" data-go="home" aria-label="Vissza a témákhoz">←</button><div class="qtitle">${TNAME[Q.topic]}</div><div class="qcount">${Q.i + 1}/10</div></div>
+${dotsHtml(Q.res, Q.i)}
+<section class="card qcard"><div>${chips} ${streak}</div><p class="qprompt">${q.prompt}</p><div class="qtext${q.long ? ' long' : ''}">${q.text}</div></section>
+<div class="choices ${q.layout}" role="group" aria-label="Válaszok">${ch}</div>${fb}`;
+  }
+
+  function resultView() {
+    const s = R.score;
+    const msg = s === 10 ? 'Tökéletes! Hibátlan kör!' : s >= 8 ? 'Nagyon ügyes vagy!' : s >= 5 ? 'Jó munka! Még egy kör, és tökéletes lesz.' : 'Gyakorolj még egy kört, menni fog!';
+    const up = R.lv1 > R.lv0 ? `<div class="banner">Szintet léptél: ${R.lv1}. szint, ${lvName(R.lv1)}!</div>` : '';
+    const nb = R.fresh.length ? `<div class="newb" aria-label="Új jelvények">${R.fresh.map(b => `<div class="it"><span class="ic" aria-hidden="true">${b.ico}</span><div class="tx"><b>${b.name}</b><br><span class="sub">${b.desc}</span></div></div>`).join('')}</div>` : '';
+    return `<div class="qbar"><button class="icon-btn" data-go="home" aria-label="Vissza a témákhoz">←</button><div class="qtitle">${TNAME[R.topic]}</div></div>
+<section class="card result"><div class="score">${s}<small>/10</small></div>${dotsHtml(R.res, -1, true)}<h2>${msg}</h2>
+<p class="earn">+${R.earned} pont${R.bonus ? ' (benne: +' + R.bonus + ' bónusz a hibátlan körért)' : ''}</p>${up}${nb}</section>
+<button class="big-btn" data-go="${R.topic}">Még egy kör</button><button class="big-btn ghost" data-go="home">Vissza a témákhoz</button>`;
+  }
+
+  function badgesView() {
+    return `<div class="qbar"><button class="icon-btn" data-go="home" aria-label="Vissza a témákhoz">←</button><div class="qtitle">Jelvényeim</div><div class="qcount">${Object.keys(S.badges).length}/${BADGES.length}</div></div>
+<div class="badges">${BADGES.map(b => { const d = S.badges[b.id]; return `<div class="badge${d ? ' got' : ''}"><div class="bi" aria-hidden="true">${b.ico}</div><div><b>${b.name}</b><span>${b.desc}${d ? ' · megszerezted: ' + d : ''}</span></div></div>`; }).join('')}</div>`;
+  }
+
+  function render() {
+    $app.innerHTML = view === 'quiz' ? quizView() : view === 'result' ? resultView() : view === 'badges' ? badgesView() : homeView();
+  }
+
+  /* ================= események ================= */
+  $app.addEventListener('click', e => {
+    const t = e.target.closest('[data-go],[data-pick],[data-next]'); if (!t) return;
+    if (t.hasAttribute('data-pick')) return answer(+t.dataset.pick);
+    if (t.hasAttribute('data-next')) return next();
+    const g = t.dataset.go;
+    if (g === 'home' || g === 'badges') { view = g; render(); window.scrollTo(0, 0); } else start(g);
+  });
+  document.addEventListener('keydown', e => {
+    if (view !== 'quiz' || !Q || Q.picked !== null || e.ctrlKey || e.metaKey || e.altKey) return;
+    const n = parseInt(e.key, 10), q = Q.qs[Q.i];
+    if (n >= 1 && n <= q.choices.length) answer(n - 1);
+  });
+
+  if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  }
+  window.__gyakorlo = { GEN, TOPICS, makeQuestion };
+  render();
+})();
+</script>
+</body>
+</html>
