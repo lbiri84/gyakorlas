@@ -8,7 +8,7 @@ Gyakorló oldal 3. osztályosoknak: matek, nyelvtan és környezetismeret, kérd
 - **Környezetismeret:** az élet feltételei (élő és élettelen, életfeltételek, táplálkozás), állatcsoportok vegyesen, valamint külön az emlősök, madarak, hüllők, kétéltűek és a rovarok (bogarak): testtakaró, belső vagy külső váz, testfelépítés, szaporodás, kicsinyek, fejlődés.
 - **Vegyes kör:** 10 kérdés az összes témából.
 - Egy kör 10 véletlenszerű kérdés, 4 (vagy 2–3) válaszlehetőséggel, azonnali visszajelzéssel és magyarázattal.
-- Jutalom: 10 pont minden jó válaszért, +50 pont hibátlan körért, szintek (1–9+), napi sorozat és 9 jelvény.
+- Jutalom: 10 pont minden jó válaszért, +50 pont hibátlan körért (csak a befejezett kör számít), szintek (1–9+), napi sorozat és 11 jelvény.
 - Offline működik, telepíthető a kezdőképernyőre (PWA). A gyerek tableten telepített appként használd: böngészőfülben a Safari egy hét használat nélkül törölheti a párosítást.
 
 ## Gyerekprofilok, szülői nézet, gyerek mód
@@ -25,10 +25,11 @@ Gyakorló oldal 3. osztályosoknak: matek, nyelvtan és környezetismeret, kérd
 ## Fejlesztés
 
 - A tokenek a központi design systemből töltődnek: `https://laszlobiri.com/design-system/tokens.css`. Helyi `tokens.css` másolat nincs, és a `sw.js` előre mentett listájába sem kerül.
-- Mindig a palakék (slate) téma.
-- A `sw.js`-ben minden kiadásnál emeld a gyorsítótár verzióját (`gyakorlo-vN`). A service worker a Supabase-kéréseket és a belépőoldalt nem kezeli és nem menti el.
+- Palakék (slate) téma; a gyerek saját nézeteiben választható rózsaszín (`data-theme="rose"`, lásd fent).
+- A `sw.js`-ben minden kiadásnál emeld a gyorsítótár verzióját (`gyakorlo-vN`), és vele együtt az `index.html` `APP_VERSION`-ját (ez kerül a hibajelentésekbe). A service worker a Supabase-kéréseket és a belépőoldalt nem kezeli és nem menti el.
 - Új feladattípus: a `GEN` objektumba egy generátor (`prompt`, `text`, `choices`, `correct`, `explain`, opcionálisan `key` a körön belüli ismétlés kizárására), és egy sor a `TOPICS` listába. A környezetismereti tartalom adatai a `GR` (állatcsoportok), `FACTS` és `CLUES` objektumokban vannak.
-- A feladatgenerátorokat külön ellenőriztem: témánként 3000 generált kérdésre a helyes válasz egyezik a kiszámolt értékkel, és a válaszlehetőségek egyediek.
+- A feladatgenerátorok ellenőrzése (minden módosítás után): témánként 3000 generált kérdés; a helyes válasz a lehetőségek között van, a lehetőségek egyediek, és egy feladatban legfeljebb egy kérdőjel áll. A `window.__gyakorlo` (`GEN`, `TOPICS`, `makeQuestion`) a böngészőből elérhető ehhez.
+- Tananyag bővítése: tankönyvfotók alapján, saját feladatokkal (a tankönyv szövege nem kerül a nyilvános repóba).
 
 ## Publikálás
 
