@@ -819,7 +819,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   const def = () => ({ points: 0, answered: 0, correct: 0, rounds: 0, perfect: 0, best: {}, played: {}, badges: {}, days: 0, lastDay: '', mgDone: 0, mgWins: 0, mgN: 0, wsWins: 0, boWins: 0 });
   const CACHE_KEY = 'gyakorlo.v2';
   // Minijáték jutalom ennyi pontonként (egy hibátlan kör 150 pont).
-  const MG_EVERY = 1000;
+  const MG_EVERY = 500;
   const outbox = createOutbox('gyakorlo.outbox.v1');
   // Gyerekprofilonként választható színtéma (pupils.theme).
   const THEMES = {
