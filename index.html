@@ -835,6 +835,11 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   }
 
   async function handle(op) {
+    if (op.t === 'theme') {
+      const { error } = await sb.from('pupils').update({ theme: op.theme }).eq('id', op.id);
+      if (error) throw error;
+      return;
+    }
     const { error } = await sb.from(op.t === 'result' ? 'results' : 'pupil_badges').insert(op.row);
     if (error && error.code !== '23505') throw error;   // 23505: már fent van (ismételt küldés)
   }
@@ -859,6 +864,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     for (const op of outbox.pending()) {
       if (op.t === 'result' && C.results[op.row.pupil_id] && !C.results[op.row.pupil_id].some(x => x.id === op.row.id)) C.results[op.row.pupil_id].push(op.row);
       if (op.t === 'badge' && C.badges[op.row.pupil_id]) C.badges[op.row.pupil_id][op.row.badge_id] ??= dayStr(new Date(op.row.earned_at));
+      if (op.t === 'theme') { const x = C.pupils.find(q => q.id === op.id); if (x) x.theme = op.theme; }
     }
     if (MODE === 'parent' && !C.householdId) {
       const h = await sb.from('households').select('id').limit(1).maybeSingle();
@@ -1108,6 +1114,7 @@ ${WS.done ? `<button class="big-btn" data-go="mg-ws">Új tábla</button><button 
 </section>
 <button class="big-btn" data-go="vegyes"><span aria-hidden="true">★</span> Vegyes kör mindenből</button>
 ${grp('Matek')}${grp('Nyelvtan')}${grp('Környezetismeret')}
+<h2 class="group">Színem</h2><div class="themes" role="group" aria-label="Színem">${themeBtns(p)}</div>
 ${footHtml()}`;
   }
 
@@ -1133,7 +1140,7 @@ ${footHtml()}`;
       const s = computeState(p.id), L = levelOf(s.points);
       const last = (C.results[p.id] || []).filter(r => r.kind === 'round').slice(-5).reverse()
         .map(r => `<li>${esc(dayStr(new Date(r.created_at)))} · ${esc(TNAME[r.topic] || r.topic)}: <b>${r.score | 0}/10</b></li>`).join('');
-      return `<div class="rowi"><div><b>${AVATARS[p.avatar]} ${esc(p.nickname)}</b><p class="sub">${L}. szint · ${s.points} pont · ${s.rounds} kör · ${Object.keys(s.badges).length} jelvény${s.lastDay ? ' · utoljára: ' + esc(s.lastDay) : ''}</p>${last ? `<ul class="recent">${last}</ul>` : ''}<div class="themes" role="group" aria-label="${esc(p.nickname)} színe">${themeBtns(p)}</div></div><button class="small-btn danger" data-delpupil="${p.id}">Törlés</button></div>`;
+      return `<div class="rowi"><div><b>${AVATARS[p.avatar]} ${esc(p.nickname)}</b><p class="sub">${L}. szint · ${s.points} pont · ${s.rounds} kör · ${Object.keys(s.badges).length} jelvény${s.lastDay ? ' · utoljára: ' + esc(s.lastDay) : ''}</p>${last ? `<ul class="recent">${last}</ul>` : ''}</div><button class="small-btn danger" data-delpupil="${p.id}">Törlés</button></div>`;
     }).join('');
     const avs = Object.entries(AVATARS).map(([k, v], i) => `<label><input type="radio" name="av" value="${k}"${i === 0 ? ' checked' : ''}><span aria-label="${k}">${v}</span></label>`).join('');
     const devs = devices === null ? '<p class="sub">Betöltés…</p>' : devices.length ? devices.map(d => `<div class="rowi"><div><b>${esc(d.label)}</b><p class="sub">${esc(d.names)} · utoljára: ${esc(dayStr(new Date(d.last_seen_at)))}</p></div><button class="small-btn danger" data-revoke="${d.user_id}">Visszavonás</button></div>`).join('') : '<p class="sub">Nincs párosított gyerek tablet.</p>';
@@ -1145,7 +1152,6 @@ ${footHtml()}`;
 <section class="card stack"><h3>Új gyerekprofil</h3><p class="sub">Csak becenevet adj meg, teljes nevet ne.</p>
 <input class="inp" id="nick" maxlength="20" autocomplete="off" placeholder="Becenév" aria-label="Becenév">
 <fieldset class="avs"><legend class="sub">Ikon</legend>${avs}</fieldset>
-<fieldset class="avs"><legend class="sub">Szín</legend>${Object.entries(THEMES).map(([k, t], i) => `<label><input type="radio" name="th" value="${k}"${i === 0 ? ' checked' : ''}><span aria-label="${t.name}" title="${t.name}" style="background:${t.bg}"><i class="sw" style="background:${t.dot};margin:0"></i></span></label>`).join('')}</fieldset>
 <button class="big-btn" data-go="addpupil">Létrehozás</button></section>
 <section class="card stack"><h3>Gyerek tabletek</h3>${devs}
 ${C.pupils.length ? `<h3>Új tablet párosítása</h3><div class="checks">${checks}</div>
@@ -1171,8 +1177,7 @@ ${footHtml()}`;
     const av = document.querySelector('input[name=av]:checked')?.value || 'fox';
     if (!nick || nick.length > 20) { msg = 'A becenév 1–20 karakter.'; return render(); }
     if (!C.householdId) { msg = 'Ehhez a fiókhoz nem tartozik háztartás.'; return render(); }
-    const th = document.querySelector('input[name=th]:checked')?.value || 'slate';
-    const { error } = await sb.from('pupils').insert({ id: crypto.randomUUID(), household_id: C.householdId, nickname: nick, avatar: av, theme: th });
+    const { error } = await sb.from('pupils').insert({ id: crypto.randomUUID(), household_id: C.householdId, nickname: nick, avatar: av });
     msg = error ? (error.code === '23505' ? 'Ilyen becenév már van.' : 'Nem sikerült létrehozni (van internet?).') : `${nick} profilja elkészült.`;
     if (!error) await pull().catch(() => {});
     render();
@@ -1180,12 +1185,12 @@ ${footHtml()}`;
   function themeBtns(p) {
     return Object.entries(THEMES).map(([k, t]) => `<button type="button" data-theme-pupil="${p.id}" data-theme-val="${k}" aria-pressed="${p.theme === k}"><i class="sw" style="background:${t.dot}"></i>${t.name}</button>`).join('');
   }
-  async function setTheme(id, theme) {
+  // A gyerek maga választja (a tableten is): azonnal látszik, a szerverre a kimenő soron át megy.
+  function setTheme(id, theme) {
     const p = C.pupils.find(x => x.id === id); if (!p || !THEMES[theme] || p.theme === theme) return;
-    const { error } = await sb.from('pupils').update({ theme }).eq('id', id);
-    if (error) { msg = 'Nem sikerült menteni a színt (van internet?).'; return render(); }
     p.theme = theme; saveCache();
-    msg = `${p.nickname} színe: ${THEMES[theme].name}.`;
+    outbox.enqueue({ t: 'theme', id, theme });
+    kick();
     render();
   }
 
