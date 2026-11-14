@@ -1,6 +1,6 @@
 // Egyszerű offline gyorsítótár: az app héja induláskor mentődik.
 // A tokens.css külső (laszlobiri.com), ezért nincs az előre mentett listában; az első betöltéskor kerül a gyorsítótárba.
-const CACHE = 'gyakorlo-v4';
+const CACHE = 'gyakorlo-v5';
 const ASSETS = ['./', 'index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'icon-180.png'];
 
 self.addEventListener('install', e => {

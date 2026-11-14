@@ -166,6 +166,14 @@
   .key.hit { background: var(--accent); border-color: var(--accent); color: var(--brand-black); }
   .key.miss { border-style: dashed; border-color: var(--fg-muted); color: var(--fg-muted); text-decoration: line-through; }
   .hm .lives { color: var(--fg-muted); margin: 0; font-size: 15px; }
+  .ws { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); padding: var(--space-4); }
+  .wgrid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 3px; width: 100%; max-width: 380px; }
+  .wc { aspect-ratio: 1; padding: 0; min-width: 0; border-radius: 8px; background: var(--bg); border: 2px solid transparent; color: var(--fg); font: inherit; font-size: 17px; font-weight: 600; text-transform: uppercase; }
+  .wc.sel { border-color: var(--accent); color: var(--accent-text); }
+  .wc.hit { background: var(--accent); color: var(--brand-black); }
+  .wlist { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 0; padding: 0; list-style: none; }
+  .wlist li { padding: 4px 12px; border: 1px solid var(--line); border-radius: 999px; font-size: 16px; font-weight: 600; text-transform: uppercase; }
+  .wlist li.got { background: var(--accent); border-color: var(--accent); color: var(--brand-black); text-decoration: line-through; }
   .banner { width: 100%; padding: var(--space-3) var(--space-4); border: 1px solid var(--accent); border-radius: var(--radius-md); color: var(--accent-text); font-weight: 600; }
   .newb { width: 100%; display: flex; flex-direction: column; gap: var(--space-2); }
   .newb .it { display: flex; align-items: center; gap: var(--space-3); text-align: left; padding: var(--space-3) var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-md); }
@@ -690,7 +698,7 @@
 
   /* ================= mentés ================= */
   const KEY = 'gyakorlo.v1';
-  const def = () => ({ points: 0, answered: 0, correct: 0, rounds: 0, perfect: 0, best: {}, played: {}, badges: {}, days: 0, lastDay: '', mgDone: 0, mgWins: 0 });
+  const def = () => ({ points: 0, answered: 0, correct: 0, rounds: 0, perfect: 0, best: {}, played: {}, badges: {}, days: 0, lastDay: '', mgDone: 0, mgWins: 0, mgN: 0, wsWins: 0 });
   function load() { try { return Object.assign(def(), JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) { return def(); } }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* nincs tárhely: a játék működik tovább */ } }
   let S = load();
@@ -710,6 +718,7 @@
     { id: 'harom', ico: '📅', name: 'Három nap egymás után', desc: 'Gyakorolj három egymást követő napon.', ok: s => s.days >= 3 },
     { id: 'szaz', ico: '💯', name: 'Száz jó válasz', desc: 'Gyűjts össze 100 helyes választ.', ok: s => s.correct >= 100 },
     { id: 'szojatek', ico: '🔤', name: 'Szókitaláló', desc: 'Találj ki egy szót az akasztófa játékban.', ok: s => s.mgWins >= 1 },
+    { id: 'szokereso', ico: '🔎', name: 'Szókereső', desc: 'Találd meg az összes szót a szókeresőben.', ok: s => s.wsWins >= 1 },
     { id: 'ot-szint', ico: '🏆', name: 'Ötödik szint', desc: 'Érd el az 5. szintet.', ok: s => levelOf(s.points) >= 5 }
   ];
 
@@ -722,7 +731,7 @@
   }
 
   /* ================= állapot ================= */
-  let view = 'home', Q = null, R = null, MG = null;
+  let view = 'home', Q = null, R = null, MG = null, WS = null;
 
   function start(topic) {
     Q = { topic, qs: buildRound(topic), i: 0, picked: null, res: [], score: 0, streak: 0, bestStreak: 0, lv0: levelOf(S.points) };
@@ -746,9 +755,9 @@
     touchDay();
     const fresh = [], ctx = { topic: Q.topic, score: Q.score, bestStreak: Q.bestStreak };
     BADGES.forEach(b => { if (!S.badges[b.id] && b.ok(S, ctx)) { S.badges[b.id] = dayStr(new Date()); fresh.push(b); } });
-    const mgNow = Math.floor(S.points / 50), mgOffer = mgNow > S.mgDone; S.mgDone = mgNow;
+    const mgNow = Math.floor(S.points / 50), mgOffer = mgNow > S.mgDone, mgKind = S.mgN % 2 ? 'ws' : 'hm'; S.mgDone = mgNow; if (mgOffer) S.mgN++;
     save();
-    R = { mg: mgOffer, topic: Q.topic, score: Q.score, res: Q.res.slice(), earned: Q.score * 10 + bonus, bonus, lv0: Q.lv0, lv1: levelOf(S.points), fresh };
+    R = { mg: mgOffer, mgKind, topic: Q.topic, score: Q.score, res: Q.res.slice(), earned: Q.score * 10 + bonus, bonus, lv0: Q.lv0, lv1: levelOf(S.points), fresh };
     view = 'result'; render(); window.scrollTo(0, 0);
   }
 
@@ -789,11 +798,65 @@
     const slots = w.split('').map(c => { const on = MG.got.indexOf(c) >= 0; return `<span class="slot${!on && lost ? ' lost' : ''}">${on || lost ? c : ''}</span>`; }).join('');
     const keys = HM_KEYS.map(k => `<button class="key${MG.got.indexOf(k) >= 0 ? ' hit' : MG.miss.indexOf(k) >= 0 ? ' miss' : ''}" data-k="${k}"${MG.done || MG.got.indexOf(k) >= 0 || MG.miss.indexOf(k) >= 0 ? ' disabled' : ''} aria-label="${k}">${k}</button>`).join('');
     const end = MG.done === 1 ? `<div class="banner">Kitaláltad! +10 pont${MG.badge ? ' · Új jelvény: ' + MG.badge.ico + ' ' + MG.badge.name : ''}</div>` : lost ? `<div class="banner">Most nem sikerült. A szó: <b>${w}</b></div>` : '';
-    const btns = MG.done ? `<button class="big-btn" data-go="mg">Még egy szó</button><button class="big-btn ghost" data-go="home">Vissza a témákhoz</button>` : '';
+    const btns = MG.done ? `<button class="big-btn" data-go="mg-hm">Még egy szó</button><button class="big-btn ghost" data-go="home">Vissza a témákhoz</button>` : '';
     return `<div class="qbar"><button class="icon-btn" data-go="home" aria-label="Kilépés a játékból">←</button><div class="qtitle">Akasztófa</div></div>
 <section class="card hm"><p class="hint">Tipp: ${MG.cat} · ${w.length} betű</p>${hmSvg(MG.miss.length)}<div class="slots" aria-label="A kitalálandó szó">${slots}</div>${end}
 ${MG.done ? '' : `<p class="lives">Hibázhatsz még ${HM_MAX - MG.miss.length}-szer.</p>`}</section>
 ${MG.done ? '' : `<div class="kb" role="group" aria-label="Betűk">${keys}</div>`}${btns}`;
+  }
+
+
+  /* ================= mini játék: szókereső ================= */
+  const WS_N = 10, WS_DIR = [[0, 1], [1, 0], [1, 1]];
+  function wsStart() {
+    const cats = HM_WORDS.map(([c, ws]) => [c, ws.filter(w => w.length >= 3 && w.length <= 9 && w.split('').every(k => HM_KEYS.indexOf(k) >= 0))]);
+    const [cat, ws] = pick(cats.filter(c => c[1].length >= 8));
+    for (let tries = 0; tries < 200; tries++) {
+      const grid = Array.from({ length: WS_N }, () => Array(WS_N).fill('')), words = [];
+      const pickW = shuffle(ws).slice(0, rnd(5, 6)).sort((a, b) => b.length - a.length);
+      let ok = true;
+      for (const w of pickW) {
+        let placed = false;
+        for (let k = 0; k < 120 && !placed; k++) {
+          const d = pick(WS_DIR), r = rnd(0, WS_N - 1 - d[0] * (w.length - 1)), c = rnd(0, WS_N - 1 - d[1] * (w.length - 1));
+          const cells = w.split('').map((ch, i) => [r + d[0] * i, c + d[1] * i]);
+          if (cells.every(([y, x], i) => !grid[y][x] || grid[y][x] === w[i])) { cells.forEach(([y, x], i) => grid[y][x] = w[i]); words.push({ w, cells, found: false }); placed = true; }
+        }
+        if (!placed) { ok = false; break; }
+      }
+      if (!ok) continue;
+      for (let y = 0; y < WS_N; y++) for (let x = 0; x < WS_N; x++) if (!grid[y][x]) grid[y][x] = pick(HM_KEYS.filter(k => 'aeiouáéíóöőúüűyz'.indexOf(k) < 0 || Math.random() < 0.6));
+      WS = { cat, grid, words, sel: null, hit: {}, done: 0 }; view = 'ws'; render(); window.scrollTo(0, 0); return;
+    }
+  }
+  function wsTap(y, x) {
+    if (!WS || WS.done) return;
+    if (!WS.sel) { WS.sel = [y, x]; return render(); }
+    const [y0, x0] = WS.sel, dy = y - y0, dx = x - x0, n = Math.max(Math.abs(dy), Math.abs(dx));
+    if (n === 0) { WS.sel = null; return render(); }
+    if (dy !== 0 && dx !== 0 && Math.abs(dy) !== Math.abs(dx)) { WS.sel = [y, x]; return render(); }
+    const cells = []; for (let i = 0; i <= n; i++) cells.push([y0 + Math.sign(dy) * i, x0 + Math.sign(dx) * i]);
+    const str = cells.map(([a, b]) => WS.grid[a][b]).join(''), rev = str.split('').reverse().join('');
+    const hit = WS.words.find(o => !o.found && (o.w === str || o.w === rev));
+    WS.sel = null;
+    if (hit) {
+      hit.found = true; cells.forEach(([a, b]) => WS.hit[a + ',' + b] = 1);
+      if (WS.words.every(o => o.found)) {
+        WS.done = 1; S.points += 10; S.wsWins++;
+        BADGES.forEach(b => { if (!S.badges[b.id] && b.ok(S, {})) { S.badges[b.id] = dayStr(new Date()); WS.badge = b; } });
+        save();
+      }
+    }
+    render();
+  }
+  function wsView() {
+    const cells = WS.grid.map((row, y) => row.map((ch, x) => `<button class="wc${WS.hit[y + ',' + x] ? ' hit' : ''}${WS.sel && WS.sel[0] === y && WS.sel[1] === x ? ' sel' : ''}" data-r="${y}" data-c="${x}" aria-label="${ch}, ${y + 1}. sor, ${x + 1}. oszlop">${ch}</button>`).join('')).join('');
+    const list = WS.words.map(o => `<li class="${o.found ? 'got' : ''}">${o.w}</li>`).join('');
+    const end = WS.done ? `<div class="banner">Megtaláltál mindent! +10 pont${WS.badge ? ' · Új jelvény: ' + WS.badge.ico + ' ' + WS.badge.name : ''}</div>` : '';
+    return `<div class="qbar"><button class="icon-btn" data-go="home" aria-label="Kilépés a játékból">←</button><div class="qtitle">Szókereső</div><div class="qcount">${WS.words.filter(o => o.found).length}/${WS.words.length}</div></div>
+<section class="card ws"><p class="hint" style="margin:0;color:var(--fg-muted);text-align:center">Téma: ${WS.cat}. Koppints a szó első, majd utolsó betűjére. A szó lehet vízszintes, függőleges vagy átlós.</p>
+<div class="wgrid" role="group" aria-label="Betűtábla">${cells}</div><ul class="wlist" aria-label="Keresendő szavak">${list}</ul>${end}</section>
+${WS.done ? `<button class="big-btn" data-go="mg-ws">Új tábla</button><button class="big-btn ghost" data-go="home">Vissza a témákhoz</button>` : ''}`;
   }
 
   /* ================= nézetek ================= */
@@ -860,7 +923,7 @@ ${dotsHtml(Q.res, Q.i)}
     const nb = R.fresh.length ? `<div class="newb" aria-label="Új jelvények">${R.fresh.map(b => `<div class="it"><span class="ic" aria-hidden="true">${b.ico}</span><div class="tx"><b>${b.name}</b><br><span class="sub">${b.desc}</span></div></div>`).join('')}</div>` : '';
     return `<div class="qbar"><button class="icon-btn" data-go="home" aria-label="Vissza a témákhoz">←</button><div class="qtitle">${TNAME[R.topic]}</div></div>
 <section class="card result"><div class="score">${s}<small>/10</small></div>${dotsHtml(R.res, -1, true)}<h2>${msg}</h2>
-<p class="earn">+${R.earned} pont${R.bonus ? ' (benne: +' + R.bonus + ' bónusz a hibátlan körért)' : ''}</p>${up}${nb}</section>${R.mg ? `<section class="card mgoffer"><h3>🔤 Mini játék: akasztófa</h3><p>Összegyűjtöttél újabb 50 pontot. Kitalálsz egy szót?</p><div class="row2"><button class="big-btn" data-go="mg">Játszom</button><button class="big-btn ghost" data-go="nomg">Most nem</button></div></section>` : ''}
+<p class="earn">+${R.earned} pont${R.bonus ? ' (benne: +' + R.bonus + ' bónusz a hibátlan körért)' : ''}</p>${up}${nb}</section>${R.mg ? `<section class="card mgoffer"><h3>${R.mgKind === 'ws' ? '🔎 Mini játék: szókereső' : '🔤 Mini játék: akasztófa'}</h3><p>Összegyűjtöttél újabb 50 pontot. ${R.mgKind === 'ws' ? 'Megkeresed az elrejtett szavakat?' : 'Kitalálsz egy szót?'}</p><div class="row2"><button class="big-btn" data-go="mg-${R.mgKind}">Játszom</button><button class="big-btn ghost" data-go="nomg">Most nem</button></div></section>` : ''}
 <button class="big-btn" data-go="${R.topic}">Még egy kör</button><button class="big-btn ghost" data-go="home">Vissza a témákhoz</button>`;
   }
 
@@ -870,17 +933,19 @@ ${dotsHtml(Q.res, Q.i)}
   }
 
   function render() {
-    $app.innerHTML = view === 'quiz' ? quizView() : view === 'result' ? resultView() : view === 'badges' ? badgesView() : view === 'mg' ? mgView() : homeView();
+    $app.innerHTML = view === 'quiz' ? quizView() : view === 'result' ? resultView() : view === 'badges' ? badgesView() : view === 'mg' ? mgView() : view === 'ws' ? wsView() : homeView();
   }
 
   /* ================= események ================= */
   $app.addEventListener('click', e => {
-    const t = e.target.closest('[data-go],[data-pick],[data-next],[data-k]'); if (!t) return;
+    const t = e.target.closest('[data-go],[data-pick],[data-next],[data-k],[data-r]'); if (!t) return;
+    if (t.hasAttribute('data-r')) return wsTap(+t.dataset.r, +t.dataset.c);
     if (t.hasAttribute('data-k')) return hmGuess(t.dataset.k);
     if (t.hasAttribute('data-pick')) return answer(+t.dataset.pick);
     if (t.hasAttribute('data-next')) return next();
     const g = t.dataset.go;
-    if (g === 'mg') return hmStart();
+    if (g === 'mg-hm') return hmStart();
+    if (g === 'mg-ws') return wsStart();
     if (g === 'nomg') { R.mg = false; render(); return; }
     if (g === 'home' || g === 'badges') { view = g; render(); window.scrollTo(0, 0); } else start(g);
   });
@@ -894,7 +959,7 @@ ${dotsHtml(Q.res, Q.i)}
   if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
   }
-  window.__gyakorlo = { get MG() { return MG; }, HM_WORDS, HM_KEYS, GEN, TOPICS, makeQuestion, GR, GOF };
+  window.__gyakorlo = { get MG() { return MG; }, get WS() { return WS; }, HM_WORDS, HM_KEYS, GEN, TOPICS, makeQuestion, GR, GOF };
   render();
 })();
 </script>
