@@ -7,7 +7,7 @@ Gyakorló oldal 3. osztályosoknak: matek, nyelvtan és környezetismeret, kérd
 - **Nyelvtan:** j vagy ly?, szófajok, mondatfajták, ABC-sorrend.
 - **Környezetismeret:** az élet feltételei (élő és élettelen, életfeltételek, táplálkozás), állatcsoportok vegyesen, valamint külön az emlősök, madarak, hüllők, kétéltűek és a rovarok (bogarak): testtakaró, belső vagy külső váz, testfelépítés, szaporodás, kicsinyek, fejlődés.
 - **Vegyes kör:** 10 kérdés az összes témából.
-- Egy kör 10 véletlenszerű kérdés, 4 (vagy 2–3) válaszlehetőséggel, azonnali visszajelzéssel és magyarázattal.
+- Egy kör 10 véletlenszerű kérdés, változatosan (egy feladattípus legfeljebb kétszer, és nem egymás után), 4 (vagy 2–3) válaszlehetőséggel, azonnali visszajelzéssel és magyarázattal.
 - Jutalom: 10 pont minden jó válaszért, +50 pont hibátlan körért (csak a befejezett kör számít), szintek (1–9+), napi sorozat és 12 jelvény.
 - Offline működik, telepíthető a kezdőképernyőre (PWA). A gyerek tableten telepített appként használd: böngészőfülben a Safari egy hét használat nélkül törölheti a párosítást.
 

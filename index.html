@@ -468,7 +468,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
       T.push(() => numQ(3, [2, 4, 5, 6], { prompt: 'Hány testrészből áll a rovarok teste?', text: '🐜', explain: 'Három testrészből: fej, tor, potroh.', key: 'f:parts' }));
     }
     if (gid === 'emlos') T.push(() => { const [y, p] = pick(PAIRS.slice(0, 5)); return mc('Kinek a kicsinye?', y, p, PARENTS.filter(x => x !== 'tyúk'), `${A(y)} ${art(p)} ${p} kicsinye.`, { key: 'young:' + y }); });
-    return pick(T)();
+    return pickT(T);
   }
 
   const mk = gid => () => groupQ(gid);
@@ -484,7 +484,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
         () => { const t = pick([[HERB, 0], [CARN, 1], [OMNI, 2]]), w = pick(t[0]); return { prompt: 'Mivel táplálkozik?', text: withEmo(w), choices: ['növényevő', 'húsevő', 'mindenevő'], correct: t[1], layout: 'list', key: 'eat:' + w, explain: ['növényeket eszik (növényevő).', 'más állatokat eszik (húsevő).', 'növényt és állatot is eszik (mindenevő).'][t[1]].replace(/^/, A(w) + ' ') }; },
         () => { const c = pick(['tulipán', 'fa', 'fű', 'búza', 'napraforgó', 'rózsa']); return mc('Melyik élőlény készíti el maga a táplálékát?', '☀️', c, ['kutya', 'béka', 'veréb', 'tehén', 'ember', 'méh'], 'A zöld növények a fény segítségével maguk készítik a táplálékukat.', { key: 'prod:' + c }); }
       ];
-      return pick(T)();
+      return pickT(T);
     },
     allat() {
       const T = [
@@ -494,7 +494,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
         () => { const x = pick(ALLN.filter(n => NOREP.indexOf(n) < 0)), g = GR[GOF[x]]; return { prompt: 'Hogyan szaporodik?', text: withEmo(x), choices: REPS.slice(1), correct: g.rep - 1, layout: 'list', key: 'rep:' + x, explain: `${A(x)} ${g.n}: ${REPEX[g.rep]}` }; },
         () => { const no = pick(['csiga', 'giliszta', 'méh', 'hangya', 'pillangó', 'légy']), yes = ['kutya', 'béka', 'veréb', 'ponty', 'gyík', 'macska']; return mc('Melyik állatnak nincs gerince?', 'Melyiknek nincs belső csontváza?', no, yes, 'A gerinctelen állatoknak nincs belső csontvázuk (pl. csiga, giliszta, rovarok).', { key: 'nobone:' + no }); }
       ];
-      return pick(T)();
+      return pickT(T);
     }
   });
 
@@ -594,7 +594,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
           const c = pick(ok); return mc(`Melyik szám számjegyeinek összege ${S}?`, `Számjegyek összege: ${S}`, c, bad, `${c}: ${c.split('').join(' + ')} = ${S}`, { key: 'dsum:' + S + ':' + c, meta: { dsum: S } });
         }
       ];
-      return pick(T)();
+      return pickT(T);
     },
 
     helyiertek() {
@@ -632,7 +632,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
           return mc('Melyik szám ez?', 'A százasok és a tízesek helyén ugyanaz a számjegy áll.', String(c), Array.from(bad), `${c}: a százasok helyén 1, a tízesek helyén is 1 áll.`, { key: 'allh:' + c, meta: { same: c } });
         }
       ];
-      return pick(T)();
+      return pickT(T);
     },
 
     szamegyenes() {
@@ -646,7 +646,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
         },
         () => jumpQ()
       ];
-      return pick(T)();
+      return pickT(T);
     },
 
     szomszed() {
@@ -659,7 +659,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
         () => { const n = rnd(101, 199); if (n % 10 === 0) return GEN.szomszed(); const lo = n - (n % 10), hi = lo + 10, ans = n % 10 >= 5 ? hi : lo; return numQ(ans, [lo, hi, ans + 10, ans - 10, ans + 20, ans - 20], { prompt: 'Kerekítsd tízesre!', text: `${n} ≈ ?`, key: 'rnd:' + n, explain: `${n} közelebb van a(z) ${ans}-hez (5 vagy több egyesnél felfelé kerekítünk).`, meta: { expr: `Math.round(${n}/10)*10` } }); },
         () => { const t = t10(110, 190), c = rnd(t - 5, t + 4), bad = []; for (let i = 6; i <= 9; i++) { bad.push(t - i, t + i); } return numQ(c, bad, { prompt: 'Válaszd ki!', text: `Melyik szám tízesre kerekített értéke ${t}?`, long: true, key: `rt:${t}:${c}`, explain: `A(z) ${c} tízesre kerekítve ${t}.`, meta: { rnd: [c, t] } }); }
       ];
-      return pick(T)();
+      return pickT(T);
     },
 
     osszkiv() {
@@ -688,7 +688,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
           return exprQ('Számold ki! Az azonos jelek azonos számot takarnak.', `${A1[0]} = ${A1[1]} · ${A2[0]} = ${A2[1]}<br>${a} ${sub ? '−' : '+'} ${sy[0]} = ?`, c, `${a}${sub ? '-' : '+'}${sy[1]}`, [c + 10, c - 10, c + 20, c - 20, sub ? a + sy[1] : a - sy[1]], `${a} ${sub ? '−' : '+'} ${sy[1]} = ${c}`, { key: `sym:${A1[0]}${A2[0]}${a}${sy[0]}${sub}`, long: false });
         }
       ];
-      return pick(T)();
+      return pickT(T);
     },
 
     szorosz() {
@@ -706,7 +706,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
         },
         () => { const [k, t, p] = pick(P.filter(x => x[0] < 10)), kind = rnd(1, 2); return kind === 1 ? exprQ('Melyik osztás igaz?', `${k} · ${t} = ${p}, tehát ${p} : ${k} = ?`, t, String(t), [t + 10, t - 10, k, p - t, t * 2], `${p} : ${k} = ${t}`, { key: `rel1:${k}:${t}` }) : exprQ('Melyik osztás igaz?', `${k} · ${t} = ${p}, tehát ${p} : ${t} = ?`, k, String(k), [k + 1, k - 1, t, k + 10, p - t], `${p} : ${t} = ${k}`, { key: `rel2:${k}:${t}` }); }
       ];
-      return pick(T)();
+      return pickT(T);
     },
 
     szoveges() {
@@ -722,7 +722,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
         () => { const k = rnd(2, 6), t = t10(10, Math.floor(200 / k / 10) * 10), c = k * t; return exprQ('Szöveges feladat', `Egy dobozban ${t} ceruza van. ${k} dobozban hány ceruza van összesen?`, c, `${k}*${t}`, [c + t, c - t, c + 10, c - 10, k + t], `${k} · ${t} = ${c}`, { key: `sz9:${k}:${t}`, long: true }); },
         () => { const k = rnd(2, 8), t = t10(10, Math.floor(200 / k / 10) * 10), p = k * t; return exprQ('Szöveges feladat', `${p} Ft-ot egyenlően elosztanak ${k} gyerek között. Hány forint jut egy gyereknek?`, t, `${p}/${k}`, [t + 10, t - 10 >= 10 ? t - 10 : t + 20, k, p - k, t + 20], `${p} : ${k} = ${t}`, { key: `sz10:${k}:${t}`, long: true }); }
       ];
-      return pick(T)();
+      return pickT(T);
     },
 
     meres() {
@@ -758,7 +758,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
           return exprQ('Hány dkg kell a jobb serpenyőbe, hogy a mérleg egyensúlyban legyen?', `Bal: ${x} dkg + ${y} dkg<br>Jobb: ${z} dkg + ? dkg`, c, `${x}+${y}-${z}`, [c + 10, c - 10, s, z, c + 20, c - 20], `Bal: ${x} + ${y} = ${s} dkg. ${s} − ${z} = ${c}.`, { key: `bal:${x}:${y}:${z}`, long: false });
         }
       ];
-      return pick(T)();
+      return pickT(T);
     },
 
     penz() {
@@ -771,7 +771,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
         },
         () => { const p = t10(20, 190), c = 200 - p; return exprQ('Mennyi a visszajáró?', `Fizetsz 200 Ft-tal. A vásárlás ${p} Ft.`, c, `200-${p}`, [c + 10, c - 10, c + 20, c - 20, p], `200 − ${p} = ${c}`, { key: 'chg:' + p, long: false }); }
       ];
-      return pick(T)();
+      return pickT(T);
     }
   });
 
@@ -799,18 +799,37 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   ];
   const TNAME = {}; TOPICS.forEach(t => TNAME[t.id] = t.name); TNAME.vegyes = 'Vegyes kör';
 
+  // Egy feladattípus (sablon) kiválasztása; a feladat megjegyzi, melyikből készült (buildRound).
+  function pickT(T) { const i = rnd(0, T.length - 1), q = T[i](); q.tpl = i; q.tplN = T.length; return q; }
   function makeQuestion(topic) {
     const id = topic === 'vegyes' ? pick(TOPICS).id : topic;
     const q = GEN[id](); q.topic = id; return q;
   }
+  // A kör összeállítása, változatosan: minden feladat megjegyzi, melyik sablonból (feladattípusból)
+  // készült (pickT). Egy körben egy típus legfeljebb kétszer szerepel (ha a témának kevés típusa
+  // van, arányosan többször), és két azonos típusú feladat nem jön egymás után. A vegyes körben
+  // ugyanez témánként: egy témából legfeljebb kettő, és nem egymás után.
   function buildRound(topic) {
-    const qs = [], seen = {};
-    for (let tries = 0; qs.length < 10 && tries < 400; tries++) {
-      const q = makeQuestion(topic);
-      const k = q.topic + (q.key || q.text); if (!seen[k]) { seen[k] = 1; qs.push(q); }
+    const mixed = topic === 'vegyes';
+    const tplOf = mixed ? q => q.topic : q => q.topic + ':' + (q.tpl ?? '-');
+    const qs = [], seen = {}, cnt = {};
+    for (let tries = 0; qs.length < 10 && tries < 800; tries++) {
+      const q = makeQuestion(topic), k = q.topic + (q.key || q.text), t = tplOf(q);
+      const cap = mixed ? 2 : Math.max(2, Math.ceil(10 / (q.tplN || 1)));
+      if (seen[k] || (cnt[t] || 0) >= cap) continue;
+      seen[k] = 1; cnt[t] = (cnt[t] || 0) + 1; qs.push(q);
     }
     while (qs.length < 10) qs.push(makeQuestion(topic));
-    return qs;
+    // Sorrend: mindig a legtöbbször maradt típusból jön a következő, ami nem egyezik az előzővel.
+    const out = [], rest = shuffle(qs);
+    while (rest.length) {
+      const last = out.length ? tplOf(out[out.length - 1]) : null, left = {};
+      rest.forEach(q => { left[tplOf(q)] = (left[tplOf(q)] || 0) + 1; });
+      const order = Object.keys(left).filter(t => t !== last).sort((a, b) => left[b] - left[a]);
+      const want = order.length ? order[0] : last;
+      out.push(rest.splice(rest.findIndex(q => tplOf(q) === want), 1)[0]);
+    }
+    return out;
   }
 
   /* ================= mentés: a háztartás közös adatai ================= */
@@ -843,7 +862,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   let kidExitWarn = false;
   let reports = null;           // a szülői nézet nyitott jelentései
   let reportOpen = false;       // a kérdésnél nyitva van-e a „Mi a hiba?” doboz
-  const APP_VERSION = 'gyakorlo-v14';
+  const APP_VERSION = 'gyakorlo-v15';
   const REASONS = { wrong_answer: 'Rossz a megoldás', bad_question: 'Hibás a kérdés', other: 'Más baj van' };
 
   function emptyCache() { return { pupils: [], results: {}, badges: {}, current: null, userId: null, householdId: null }; }
@@ -1645,7 +1664,7 @@ ${dotsHtml(Q.res, Q.i)}${box}
       setInterval(check, 30 * 60 * 1000);
     }).catch(() => {}));
   }
-  window.__gyakorlo = { get MG() { return MG; }, get WS() { return WS; }, get BO() { return BO; }, HM_WORDS, HM_KEYS, GEN, TOPICS, makeQuestion, GR, GOF };
+  window.__gyakorlo = { get MG() { return MG; }, get WS() { return WS; }, get BO() { return BO; }, HM_WORDS, HM_KEYS, GEN, TOPICS, makeQuestion, buildRound, GR, GOF };
   init();
 })();
 </script>
