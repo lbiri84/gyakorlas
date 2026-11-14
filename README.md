@@ -3,12 +3,12 @@
 Gyakorló oldal 3. osztályosoknak: matek, nyelvtan és környezetismeret, kérdés-felelet formában, pontokkal és jelvényekkel. Egyetlen `index.html`, build nélkül. Csak belépve használható; a pontok és jelvények a laszlobiri közös backendjébe mentődnek, gyerekprofilonként.
 
 - **Matek (számok és műveletek 200-ig, mérések):** számok 200-ig, helyi érték, számegyenes, számszomszédok és kerekítés, összeadás-kivonás, szorzás-osztás, szöveges feladatok, mérések (tömeg, hossz), pénz és visszajáró. A feladatok generáltak, minden kör új számokkal.
-- **Mini játékok:** 50 pontonként a kör végén felváltva akasztófa vagy szókereső (10×10-es tábla, 5–6 elrejtett szó) ajánlódik fel, elfogadható vagy elvethető. A szavak az anyagból valók. Siker +10 pont, az első győzelem jelvényt ad.
+- **Mini játékok:** 500 pontonként a kör végén jutalom: a gyerek választ akasztófa, szókereső (10×10-es tábla, 5–6 elrejtett szó) és falbontó (2 × 6 tégla, 3 élet, a téma színeivel) közül, vagy elveti. Egy jutalom egy játék. A szavak az anyagból valók. Siker +10 pont, az első győzelem jelvényt ad.
 - **Nyelvtan:** j vagy ly?, szófajok, mondatfajták, ABC-sorrend.
 - **Környezetismeret:** az élet feltételei (élő és élettelen, életfeltételek, táplálkozás), állatcsoportok vegyesen, valamint külön az emlősök, madarak, hüllők, kétéltűek és a rovarok (bogarak): testtakaró, belső vagy külső váz, testfelépítés, szaporodás, kicsinyek, fejlődés.
 - **Vegyes kör:** 10 kérdés az összes témából.
 - Egy kör 10 véletlenszerű kérdés, 4 (vagy 2–3) válaszlehetőséggel, azonnali visszajelzéssel és magyarázattal.
-- Jutalom: 10 pont minden jó válaszért, +50 pont hibátlan körért (csak a befejezett kör számít), szintek (1–9+), napi sorozat és 11 jelvény.
+- Jutalom: 10 pont minden jó válaszért, +50 pont hibátlan körért (csak a befejezett kör számít), szintek (1–9+), napi sorozat és 12 jelvény.
 - Offline működik, telepíthető a kezdőképernyőre (PWA). A gyerek tableten telepített appként használd: böngészőfülben a Safari egy hét használat nélkül törölheti a párosítást.
 
 ## Gyerekprofilok, szülői nézet, gyerek mód
