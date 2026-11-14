@@ -30,6 +30,7 @@ Gyakorló oldal 3. osztályosoknak: matek, nyelvtan és környezetismeret, kérd
 - A `sw.js`-ben minden kiadásnál emeld a gyorsítótár verzióját (`gyakorlo-vN`), és vele együtt az `index.html` `APP_VERSION`-ját (ez kerül a hibajelentésekbe). A service worker a Supabase-kéréseket és a belépőoldalt nem kezeli és nem menti el.
 - Új feladattípus: a `GEN` objektumba egy generátor (`prompt`, `text`, `choices`, `correct`, `explain`, opcionálisan `key` a körön belüli ismétlés kizárására), és egy sor a `TOPICS` listába. A környezetismereti tartalom adatai a `GR` (állatcsoportok), `FACTS` és `CLUES` objektumokban vannak.
 - A feladatgenerátorok ellenőrzése (minden módosítás után): témánként 3000 generált kérdés; a helyes válasz a lehetőségek között van, a lehetőségek egyediek, és egy feladatban legfeljebb egy kérdőjel áll. A `window.__gyakorlo` (`GEN`, `TOPICS`, `makeQuestion`) a böngészőből elérhető ehhez.
+- Írásmód a feladatokban: a „·” csak szorzásjel lehet (3. osztályban így tanulják); felsorolásnál és elválasztásnál vessző. Ellenőrzés: a generált feladatok szövegében, válaszaiban és magyarázatában minden „·” két szám (vagy szám és „?”) között álljon.
 - Tananyag bővítése: tankönyvfotók alapján, saját feladatokkal (a tankönyv szövege nem kerül a nyilvános repóba).
 
 ## Publikálás
