@@ -31,14 +31,14 @@
     try {
       var c = JSON.parse(localStorage.getItem('gyakorlo.v2'));
       var p = c && c.pupils && c.pupils.filter(function (x) { return x.id === c.current; })[0];
-      if (p && p.theme === 'rose' && location.hash !== '#parositas') t = 'rose';
+      if (p && (p.theme === 'rose' || p.theme === 'sky') && location.hash !== '#parositas') t = p.theme;
     } catch (e) {}
     document.documentElement.dataset.theme = t;
   })();
 </script>
 <style>
   /* A laszlobiri design system alapján (tokens.css a laszlobiri.com-ról). Sötét (palakék) megjelenés;
-     gyerekprofilonként választható a rózsaszín téma (data-theme="rose"), lent. */
+     gyerekprofilonként választható a rózsaszín (data-theme="rose") és az égkék (data-theme="sky") téma, lent. */
   :root { color-scheme: dark; }
   /* Rózsaszín téma: a gyerekprofil saját palettája (#ebcddb, #e6abc0, #d77ca2, #3c3737, #261d1b).
      Kontraszt: fg 11,2:1 a háttéren; fg-muted 5,3:1 és accent-text 6,1:1 a kártyán; a gombok
@@ -46,6 +46,16 @@
   :root[data-theme="rose"] {
     --bg: #261d1b; --bg-raised: #3c3737; --fg: #ebcddb; --fg-muted: #bfa8b2;
     --accent: #d77ca2; --accent-text: #e6abc0; --line: #5f5558;
+  }
+  /* Égkék téma (világos): a paletta #1B90DD, #5FCEEA, #FFFFFF; a szöveg és a kiemelt kis szöveg a kék
+     sötétített változata. Kontraszt: fg 14,6:1; fg-muted 5,1:1 (háttéren) / 5,6:1 (kártyán); accent-text
+     5,7:1 / 6,3:1; a gombok fekete felirata 6,1:1 az accent-en. A jel a design system világos változatát
+     használja (fekete L, palakék kitöltő, narancs B), mint a data-theme="light". */
+  :root[data-theme="sky"] {
+    color-scheme: light;
+    --bg: #e7f8fc; --bg-raised: #ffffff; --fg: #082b42; --fg-muted: #526b7b;
+    --accent: #1b90dd; --accent-text: #13659b; --line: #9fe2f2;
+    --mark-l: #000000; --mark-filler: #293c4b;
   }
   .flag { font-size: 20px; }
   .flag[aria-pressed="true"] { color: var(--accent-text); border-color: var(--accent); }
@@ -773,7 +783,11 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   const CACHE_KEY = 'gyakorlo.v2';
   const outbox = createOutbox('gyakorlo.outbox.v1');
   // Gyerekprofilonként választható színtéma (pupils.theme).
-  const THEMES = { slate: { name: 'Palakék', bg: '#293c4b', dot: '#ee8643' }, rose: { name: 'Rózsaszín', bg: '#261d1b', dot: '#d77ca2' } };
+  const THEMES = {
+    slate: { name: 'Palakék', bg: '#293c4b', dot: '#ee8643' },
+    rose: { name: 'Rózsaszín', bg: '#261d1b', dot: '#d77ca2' },
+    sky: { name: 'Égkék', bg: '#e7f8fc', dot: '#1b90dd' },
+  };
   const AVATARS = { fox: '🦊', owl: '🦉', cat: '🐱', bear: '🐻', frog: '🐸', bee: '🐝', rabbit: '🐰', turtle: '🐢' };
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const esc = v => String(v).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
@@ -790,7 +804,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   let kidExitWarn = false;
   let reports = null;           // a szülői nézet nyitott jelentései
   let reportOpen = false;       // a kérdésnél nyitva van-e a „Mi a hiba?” doboz
-  const APP_VERSION = 'gyakorlo-v8';
+  const APP_VERSION = 'gyakorlo-v9';
   const REASONS = { wrong_answer: 'Rossz a megoldás', bad_question: 'Hibás a kérdés', other: 'Más baj van' };
 
   function emptyCache() { return { pupils: [], results: {}, badges: {}, current: null, userId: null, householdId: null }; }
@@ -1416,7 +1430,7 @@ ${dotsHtml(Q.res, Q.i)}${box}
   function applyTheme() {
     const p = pupil();
     const theme = p && PLAY_VIEWS.includes(view) ? p.theme : 'slate';
-    document.documentElement.dataset.theme = theme === 'rose' ? 'rose' : 'slate';
+    document.documentElement.dataset.theme = THEMES[theme] ? theme : 'slate';
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEMES[theme]?.bg || THEMES.slate.bg);
   }
 
