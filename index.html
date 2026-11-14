@@ -2,6 +2,11 @@
 <html lang="hu">
 <head>
 <meta charset="utf-8">
+<!-- Belépési kapu: szülői munkamenet (közös süti), párosított gyerek tablet (lb-device),
+     vagy a párosító oldal (#parositas) engedi tovább; minden más a belépőoldalra kerül.
+     A tényleges ellenőrzést a lib/v1/gate.js, illetve gyerek módban a lib/v1/device.js végzi. -->
+<style id="lb-gate">html{visibility:hidden}</style>
+<script>/* lb-gate */(function(){var d=false;try{d=localStorage.getItem('lb-device')==='1'}catch(e){}if(!d&&location.hash!=='#parositas'&&!/(?:^|;\s*)sb-[a-z0-9]+-auth-token(?:\.0)?=/.test(document.cookie))location.replace('https://laszlobiri.com/belepes/?next='+encodeURIComponent(location.href))})()</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#293c4b">
 <meta name="robots" content="noindex, nofollow">
@@ -190,6 +195,34 @@
   .badge span { color: var(--fg-muted); font-size: 15px; line-height: 22px; }
   .badge:not(.got) b { color: var(--fg-muted); }
 
+  /* ---------- gyerekprofil, szülői nézet, párosítás ---------- */
+  .whobar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin: 0 0 var(--space-4); }
+  .whobar .me { font-size: 20px; line-height: 28px; }
+  .whobar .me b { font-weight: 600; }
+  .topic.who .ico { font-size: 40px; }
+  .stack { display: flex; flex-direction: column; gap: var(--space-3); }
+  .card h3 { margin: 0 0 var(--space-2); font-size: 20px; line-height: 26px; font-weight: 600; }
+  .card + .card, .card + .big-btn { margin-top: var(--space-4); }
+  .inp { width: 100%; min-height: 48px; padding: var(--space-3) var(--space-4); border-radius: var(--radius-md); border: 1px solid var(--line); background: var(--bg); color: var(--fg); font: inherit; font-size: 18px; }
+  .inp:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .inp.code { text-transform: uppercase; letter-spacing: .15em; text-align: center; font-size: 24px; }
+  .avs { display: flex; flex-wrap: wrap; gap: var(--space-2); border: 0; padding: 0; margin: 0; }
+  .avs label { cursor: pointer; }
+  .avs input { position: absolute; opacity: 0; }
+  .avs span { display: grid; place-items: center; width: 52px; height: 52px; font-size: 30px; border-radius: 50%; border: 2px solid var(--line); }
+  .avs input:checked + span { border-color: var(--accent); background: var(--bg); }
+  .avs input:focus-visible + span { outline: 2px solid var(--fg); outline-offset: 2px; }
+  .checks label { display: flex; gap: var(--space-3); align-items: center; font-size: 18px; min-height: 44px; }
+  .checks input { width: 22px; height: 22px; accent-color: var(--accent); }
+  .rowi { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--line); }
+  .rowi:first-of-type { border-top: 0; }
+  .rowi .sub { margin: 0; }
+  .small-btn { min-height: 40px; padding: 0 var(--space-4); border-radius: var(--radius-full); border: 1px solid var(--line); background: transparent; color: var(--fg); font: inherit; font-size: 15px; font-weight: 500; flex: none; }
+  .small-btn.danger { color: var(--accent-text); }
+  .codebox { white-space: nowrap; font-size: clamp(26px, 9vw, 40px); line-height: 48px; font-weight: 700; letter-spacing: .1em; text-align: center; padding: var(--space-4); border: 2px dashed var(--accent); border-radius: var(--radius-md); }
+  .msg { min-height: 22px; margin: 0; color: var(--accent-text); font-size: 15px; line-height: 22px; }
+  .recent { margin: var(--space-2) 0 0; padding: 0; list-style: none; font-size: 15px; line-height: 22px; color: var(--fg-muted); }
+  .foot lb-auth { display: flex; justify-content: center; margin-top: var(--space-3); }
   .foot { margin-top: var(--space-12); font-size: 14px; line-height: 20px; color: var(--fg-muted); text-align: center; }
   @media (max-width: 380px) { .qtext { font-size: 32px; line-height: 40px; } .choices.grid .choice { font-size: 26px; } }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
@@ -198,7 +231,15 @@
 <body>
 <div id="app"><noscript>Az oldalhoz JavaScript kell.</noscript></div>
 
-<script>
+<script type="module">
+// A gyakorló a laszlobiri közös backendjébe ment (gyerekprofilok, eredmények, jelvények).
+// Két üzemmód: szülő (Google-belépés, közös süti) és gyerek tablet (párosított, névtelen
+// eszközfiók, csak a hozzá rendelt gyerekprofilokkal). Terv: laszlobiri-com/docs/backend-terv.md, 3. fázis.
+import { isDevice, deviceClient, deviceReady, pair, unpair, validPin, forgetDevice } from 'https://laszlobiri.com/lib/v1/device.js';
+import { createOutbox } from 'https://laszlobiri.com/lib/v1/outbox.js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from 'https://laszlobiri.com/lib/v1/config.js';
+const LIB = 'https://laszlobiri.com/lib/v1/';
+
 (function () {
   'use strict';
 
@@ -696,12 +737,165 @@
     return qs;
   }
 
-  /* ================= mentés ================= */
-  const KEY = 'gyakorlo.v1';
+  /* ================= mentés: a háztartás közös adatai ================= */
+  // Döntés: a régi, belépés nélküli pontok nem kerülnek át; az új verzió törli őket.
+  try { localStorage.removeItem('gyakorlo.v1'); } catch (e) {}
   const def = () => ({ points: 0, answered: 0, correct: 0, rounds: 0, perfect: 0, best: {}, played: {}, badges: {}, days: 0, lastDay: '', mgDone: 0, mgWins: 0, mgN: 0, wsWins: 0 });
-  function load() { try { return Object.assign(def(), JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) { return def(); } }
-  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* nincs tárhely: a játék működik tovább */ } }
-  let S = load();
+  const CACHE_KEY = 'gyakorlo.v2';
+  const outbox = createOutbox('gyakorlo.outbox.v1');
+  const AVATARS = { fox: '🦊', owl: '🦉', cat: '🐱', bear: '🐻', frog: '🐸', bee: '🐝', rabbit: '🐰', turtle: '🐢' };
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const esc = v => String(v).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+
+  // 'parent': szülő; 'device': gyerek tablet; 'pair': párosító oldal (#parositas).
+  let MODE = isDevice() ? 'device' : location.hash === '#parositas' ? 'pair' : 'parent';
+  let sb = null;
+  let C = loadCache();
+  let S = def();
+  let msg = '';                 // üzenet a szülői / párosító nézetben
+  let devices = null;           // a szülői nézet eszközlistája
+  let pairCode = null;          // a legutóbb kért párosító kód
+  let pairFromParent = false;   // a szülő ezt az eszközt teszi gyerek tabletté
+  let kidExitWarn = false;
+
+  function emptyCache() { return { pupils: [], results: {}, badges: {}, current: null, userId: null, householdId: null }; }
+  function loadCache() {
+    try { const c = JSON.parse(localStorage.getItem(CACHE_KEY)); if (c && Array.isArray(c.pupils)) return Object.assign(emptyCache(), c); } catch (e) {}
+    return emptyCache();
+  }
+  function saveCache() { try { localStorage.setItem(CACHE_KEY, JSON.stringify(C)); } catch (e) { /* nincs tárhely */ } }
+  const pupil = () => C.pupils.find(p => p.id === C.current) || null;
+
+  // A gyerek állapota (pont, szint, sorozat, legjobbak, jelvények) az eredményekből számolódik.
+  function computeState(pid) {
+    const s = def(), days = [];
+    const rs = (C.results[pid] || []).slice().sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
+    for (const r of rs) {
+      s.points += r.points | 0;
+      if (r.kind === 'round') {
+        s.answered += r.answered | 0; s.correct += r.correct | 0; s.rounds++;
+        if (r.score === 10) s.perfect++;
+        s.best[r.topic] = Math.max(s.best[r.topic] || 0, r.score | 0);
+        if (r.topic !== 'vegyes') s.played[r.topic] = 1;
+        const d = dayStr(new Date(r.created_at));
+        if (days[days.length - 1] !== d) days.push(d);
+      } else if (r.kind === 'hangman') s.mgWins++;
+      else if (r.kind === 'wordsearch') s.wsWins++;
+    }
+    // Napi sorozat: az utolsó gyakorlási napig egymást követő napok száma.
+    let run = days.length ? 1 : 0;
+    for (let i = days.length - 2; i >= 0; i--) {
+      const prev = new Date(days[i + 1] + 'T12:00:00'); prev.setDate(prev.getDate() - 1);
+      if (dayStr(prev) === days[i]) run++; else break;
+    }
+    s.days = run; s.lastDay = days[days.length - 1] || '';
+    s.mgDone = Math.floor(s.points / 50); s.mgN = s.mgDone;
+    Object.assign(s.badges, C.badges[pid] || {});
+    return s;
+  }
+  const refreshS = () => { S = C.current ? computeState(C.current) : def(); };
+
+  // Egy befejezett kör vagy minijáték mentése (azonnal helyben, a sorban a szerver felé).
+  function record(kind, f) {
+    const p = pupil(); if (!p) return;
+    const row = { id: crypto.randomUUID(), pupil_id: p.id, kind, topic: f.topic ?? null, score: f.score ?? 0, best_streak: f.best_streak ?? 0,
+      answered: f.answered ?? 0, correct: f.correct ?? 0, points: f.points ?? 0, created_at: new Date().toISOString() };
+    (C.results[p.id] ||= []).push(row);
+    outbox.enqueue({ t: 'result', row });
+    const have = (C.badges[p.id] ||= {});
+    for (const [id, day] of Object.entries(S.badges)) {
+      if (have[id]) continue;
+      have[id] = day;
+      outbox.enqueue({ t: 'badge', row: { pupil_id: p.id, badge_id: id, earned_at: new Date().toISOString() } });
+    }
+    saveCache(); kick();
+  }
+
+  async function handle(op) {
+    const { error } = await sb.from(op.t === 'result' ? 'results' : 'pupil_badges').insert(op.row);
+    if (error && error.code !== '23505') throw error;   // 23505: már fent van (ismételt küldés)
+  }
+
+  async function pull() {
+    const pr = await sb.from('pupils').select('id, nickname, avatar').order('created_at');
+    if (pr.error) throw pr.error;
+    C.pupils = pr.data.filter(p => UUID.test(p.id)).map(p => ({ id: p.id, nickname: String(p.nickname), avatar: AVATARS[p.avatar] ? p.avatar : 'fox' }));
+    const ids = C.pupils.map(p => p.id);
+    C.results = {}; C.badges = {};
+    if (ids.length) {
+      const [r, b] = await Promise.all([
+        sb.from('results').select('id, pupil_id, kind, topic, score, best_streak, answered, correct, points, created_at').in('pupil_id', ids).order('created_at'),
+        sb.from('pupil_badges').select('pupil_id, badge_id, earned_at').in('pupil_id', ids),
+      ]);
+      if (r.error) throw r.error;
+      if (b.error) throw b.error;
+      for (const x of r.data) (C.results[x.pupil_id] ||= []).push(x);
+      for (const x of b.data) (C.badges[x.pupil_id] ||= {})[x.badge_id] = dayStr(new Date(x.earned_at));
+    }
+    // A még el nem küldött eredmények és jelvények.
+    for (const op of outbox.pending()) {
+      if (op.t === 'result' && C.results[op.row.pupil_id] && !C.results[op.row.pupil_id].some(x => x.id === op.row.id)) C.results[op.row.pupil_id].push(op.row);
+      if (op.t === 'badge' && C.badges[op.row.pupil_id]) C.badges[op.row.pupil_id][op.row.badge_id] ??= dayStr(new Date(op.row.earned_at));
+    }
+    if (MODE === 'parent' && !C.householdId) {
+      const h = await sb.from('households').select('id').limit(1).maybeSingle();
+      if (!h.error && h.data) C.householdId = h.data.id;
+    }
+    if (C.current && !ids.includes(C.current)) C.current = null;
+    if (MODE === 'device' && ids.length === 1) C.current = ids[0];
+    saveCache();
+    // Játék közben és a szülői / párosító űrlapokon nem rajzolunk újra.
+    if (['home', 'who', 'badges'].includes(view)) {
+      refreshS();
+      if (view === 'home' && !C.current) view = 'who';
+      // Gyerek tablet egy hozzárendelt gyerekkel: rögtön az ő kezdőképernyője.
+      if (view === 'who' && MODE === 'device' && C.current) view = 'home';
+      render();
+    }
+  }
+
+  let syncing = false, again = false, kickTimer = null;
+  const kick = () => { clearTimeout(kickTimer); kickTimer = setTimeout(sync, 300); };
+  async function sync() {
+    if (!sb) return;
+    if (syncing) { again = true; return; }
+    syncing = true;
+    try {
+      const r = await outbox.flush(handle, (op, e) => console.warn('Nem menthető, kimarad:', op, e));
+      if (r !== 'offline') await pull();
+    } catch (e) { /* hálózati hiba: később újra */ }
+    finally { syncing = false; if (again) { again = false; kick(); } }
+  }
+  window.addEventListener('online', kick);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') kick(); });
+
+  function reveal() { document.getElementById('lb-gate')?.remove(); document.documentElement.style.visibility = ''; }
+  function adopt(user) {
+    // Másik fiók (pl. szülőből gyerek tablet lett): a helyi másolat és a sor az előzőé.
+    if (user && C.userId && C.userId !== user.id) { C = emptyCache(); outbox.clear(); }
+    if (user) C.userId = user.id;
+    saveCache();
+  }
+
+  async function init() {
+    if (MODE === 'pair') { reveal(); view = 'pair'; render(); return; }
+    if (MODE === 'device') {
+      const r = await deviceReady();
+      if (r.revoked) { C = emptyCache(); outbox.clear(); saveCache(); MODE = 'pair'; view = 'pair'; msg = 'A gyerek mód megszűnt ezen a tableten. Párosítsd újra.'; render(); return; }
+      sb = deviceClient();
+      adopt(r.user);
+    } else {
+      const [{ ready }, { supabase }] = await Promise.all([import(LIB + 'gate.js'), import(LIB + 'client.js')]);
+      import(LIB + 'auth-badge.js');
+      const r = await ready;
+      sb = supabase;
+      adopt(r.user);
+    }
+    refreshS();
+    view = C.current ? 'home' : 'who';
+    render();
+    sync();
+  }
 
   /* ================= szintek, jelvények ================= */
   const LEVELS = ['Kezdő', 'Felfedező', 'Ügyes', 'Gyors', 'Okos', 'Bajnok', 'Mester', 'Zseni', 'Legenda'];
@@ -734,29 +928,32 @@
   let view = 'home', Q = null, R = null, MG = null, WS = null;
 
   function start(topic) {
+    if (!pupil()) { view = 'who'; render(); return; }
     Q = { topic, qs: buildRound(topic), i: 0, picked: null, res: [], score: 0, streak: 0, bestStreak: 0, lv0: levelOf(S.points) };
     view = 'quiz'; render();
   }
   function answer(i) {
     if (!Q || Q.picked !== null) return;
     const q = Q.qs[Q.i], ok = i === q.correct;
-    Q.picked = i; Q.res[Q.i] = ok; S.answered++;
-    if (ok) { Q.score++; Q.streak++; Q.bestStreak = Math.max(Q.bestStreak, Q.streak); S.points += 10; S.correct++; } else Q.streak = 0;
-    save(); render(); const b = document.getElementById('next'); if (b) { b.focus({ preventScroll: true }); b.scrollIntoView({ block: 'nearest' }); }
+    Q.picked = i; Q.res[Q.i] = ok;
+    if (ok) { Q.score++; Q.streak++; Q.bestStreak = Math.max(Q.bestStreak, Q.streak); } else Q.streak = 0;
+    render(); const b = document.getElementById('next'); if (b) { b.focus({ preventScroll: true }); b.scrollIntoView({ block: 'nearest' }); }
   }
   function next() {
     if (Q.i < 9) { Q.i++; Q.picked = null; render(); window.scrollTo(0, 0); } else finish();
   }
   function finish() {
+    // Döntés: csak a befejezett kör számít; a pontok itt, egyszerre íródnak.
     const bonus = Q.score === 10 ? 50 : 0;
-    S.points += bonus; S.rounds++; if (bonus) S.perfect++;
+    S.points += Q.score * 10 + bonus; S.answered += 10; S.correct += Q.score;
+    S.rounds++; if (bonus) S.perfect++;
     S.best[Q.topic] = Math.max(S.best[Q.topic] || 0, Q.score);
     if (Q.topic !== 'vegyes') S.played[Q.topic] = 1;
     touchDay();
     const fresh = [], ctx = { topic: Q.topic, score: Q.score, bestStreak: Q.bestStreak };
     BADGES.forEach(b => { if (!S.badges[b.id] && b.ok(S, ctx)) { S.badges[b.id] = dayStr(new Date()); fresh.push(b); } });
     const mgNow = Math.floor(S.points / 50), mgOffer = mgNow > S.mgDone, mgKind = S.mgN % 2 ? 'ws' : 'hm'; S.mgDone = mgNow; if (mgOffer) S.mgN++;
-    save();
+    record('round', { topic: Q.topic, score: Q.score, best_streak: Q.bestStreak, answered: 10, correct: Q.score, points: Q.score * 10 + bonus });
     R = { mg: mgOffer, mgKind, topic: Q.topic, score: Q.score, res: Q.res.slice(), earned: Q.score * 10 + bonus, bonus, lv0: Q.lv0, lv1: levelOf(S.points), fresh };
     view = 'result'; render(); window.scrollTo(0, 0);
   }
@@ -782,7 +979,7 @@
     if (MG.word.split('').every(c => MG.got.indexOf(c) >= 0)) {
       MG.done = 1; S.points += 10; S.mgWins++;
       BADGES.forEach(b => { if (!S.badges[b.id] && b.ok(S, {})) { S.badges[b.id] = dayStr(new Date()); MG.badge = b; } });
-      save();
+      record('hangman', { points: 10 });
     } else if (MG.miss.length >= HM_MAX) MG.done = 2;
     render();
   }
@@ -844,7 +1041,7 @@ ${MG.done ? '' : `<div class="kb" role="group" aria-label="Betűk">${keys}</div>
       if (WS.words.every(o => o.found)) {
         WS.done = 1; S.points += 10; S.wsWins++;
         BADGES.forEach(b => { if (!S.badges[b.id] && b.ok(S, {})) { S.badges[b.id] = dayStr(new Date()); WS.badge = b; } });
-        save();
+        record('wordsearch', { points: 10 });
       }
     }
     render();
@@ -876,7 +1073,10 @@ ${WS.done ? `<button class="big-btn" data-go="mg-ws">Új tábla</button><button 
     };
     const grp = g => `<h2 class="group">${g}</h2><div class="topics">${TOPICS.filter(t => t.g === g).map(topicBtn).join('')}</div>`;
     const got = Object.keys(S.badges).length;
+    const p = pupil();
+    const switchBtn = MODE === 'parent' || C.pupils.length > 1 ? '<button class="link-btn" data-go="who">Másik gyerek</button>' : '';
     return `<header class="head">${MARK}<div><h1>Gyakorló</h1><p class="sub">3. osztály · matek, nyelvtan, környezetismeret</p></div></header>
+<div class="whobar"><div class="me">${AVATARS[p.avatar]} <b>${esc(p.nickname)}</b></div>${switchBtn}</div>
 <section class="card level" aria-label="Szinted">
   <div class="row"><div class="lv">${L}. szint<small>${lvName(L)}</small></div><div class="pts">${S.points} pont</div></div>
   <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div>
@@ -885,7 +1085,163 @@ ${WS.done ? `<button class="big-btn" data-go="mg-ws">Új tábla</button><button 
 </section>
 <button class="big-btn" data-go="vegyes"><span aria-hidden="true">★</span> Vegyes kör mindenből</button>
 ${grp('Matek')}${grp('Nyelvtan')}${grp('Környezetismeret')}
-<p class="foot">A pontjaid csak ezen az eszközön vannak elmentve.</p>`;
+${footHtml()}`;
+  }
+
+  function footHtml() {
+    const n = outbox.size();
+    const st = n ? `<br>${navigator.onLine === false ? 'Offline' : 'Mentés'} · ${n} eredmény vár` : '';
+    if (MODE === 'device') return `<p class="foot">A pontok a családi fiókba mentődnek.${st}<br><button class="link-btn" data-go="kidexit">Szülő</button></p>`;
+    return `<p class="foot">A pontok a családi fiókba mentődnek.${st}<br><button class="link-btn" data-go="parent">Szülői nézet</button><lb-auth></lb-auth></p>`;
+  }
+
+  function whoView() {
+    const cards = C.pupils.map(p => `<button class="topic who" data-pupil="${p.id}"><span class="ico emo" aria-hidden="true">${AVATARS[p.avatar]}</span><span class="name">${esc(p.nickname)}</span><span class="best">${levelOf(computeState(p.id).points)}. szint</span></button>`).join('');
+    const none = MODE === 'device'
+      ? '<section class="card"><p>Ehhez a tablethez most nincs gyerek rendelve. Kérd meg a szülőt, hogy párosítsa újra.</p><button class="big-btn ghost" data-go="forget">Újrapárosítás</button></section>'
+      : '<section class="card"><p>Még nincs gyerekprofil.</p><button class="big-btn" data-go="parent">Gyerekprofil létrehozása</button></section>';
+    return `<header class="head">${MARK}<div><h1>Gyakorló</h1><p class="sub">3. osztály · matek, nyelvtan, környezetismeret</p></div></header>
+<h2 class="group">Ki gyakorol?</h2>${C.pupils.length ? `<div class="topics">${cards}</div>` : none}${footHtml()}`;
+  }
+
+  /* ---------- szülői nézet ---------- */
+  function parentView() {
+    const rows = C.pupils.map(p => {
+      const s = computeState(p.id), L = levelOf(s.points);
+      const last = (C.results[p.id] || []).filter(r => r.kind === 'round').slice(-5).reverse()
+        .map(r => `<li>${esc(dayStr(new Date(r.created_at)))} · ${esc(TNAME[r.topic] || r.topic)}: <b>${r.score | 0}/10</b></li>`).join('');
+      return `<div class="rowi"><div><b>${AVATARS[p.avatar]} ${esc(p.nickname)}</b><p class="sub">${L}. szint · ${s.points} pont · ${s.rounds} kör · ${Object.keys(s.badges).length} jelvény${s.lastDay ? ' · utoljára: ' + esc(s.lastDay) : ''}</p>${last ? `<ul class="recent">${last}</ul>` : ''}</div><button class="small-btn danger" data-delpupil="${p.id}">Törlés</button></div>`;
+    }).join('');
+    const avs = Object.entries(AVATARS).map(([k, v], i) => `<label><input type="radio" name="av" value="${k}"${i === 0 ? ' checked' : ''}><span aria-label="${k}">${v}</span></label>`).join('');
+    const devs = devices === null ? '<p class="sub">Betöltés…</p>' : devices.length ? devices.map(d => `<div class="rowi"><div><b>${esc(d.label)}</b><p class="sub">${esc(d.names)} · utoljára: ${esc(dayStr(new Date(d.last_seen_at)))}</p></div><button class="small-btn danger" data-revoke="${d.user_id}">Visszavonás</button></div>`).join('') : '<p class="sub">Nincs párosított gyerek tablet.</p>';
+    const checks = C.pupils.map(p => `<label><input type="checkbox" name="pp" value="${p.id}" checked> ${AVATARS[p.avatar]} ${esc(p.nickname)}</label>`).join('');
+    const code = pairCode ? `<div class="codebox" aria-label="Párosító kód">${esc(pairCode)}</div><p class="sub">10 percig érvényes, egyszer használható. A tableten nyisd meg: <b>gyakorlas.laszlobiri.com/#parositas</b></p>` : '';
+    return `<div class="qbar"><button class="icon-btn" data-go="who" aria-label="Vissza">←</button><div class="qtitle">Szülői nézet</div></div>
+<p class="msg" role="status">${esc(msg)}</p>
+<section class="card"><h3>Gyerekek</h3>${rows || '<p class="sub">Még nincs gyerekprofil.</p>'}</section>
+<section class="card stack"><h3>Új gyerekprofil</h3><p class="sub">Csak becenevet adj meg, teljes nevet ne.</p>
+<input class="inp" id="nick" maxlength="20" autocomplete="off" placeholder="Becenév" aria-label="Becenév">
+<fieldset class="avs"><legend class="sub">Ikon</legend>${avs}</fieldset>
+<button class="big-btn" data-go="addpupil">Létrehozás</button></section>
+<section class="card stack"><h3>Gyerek tabletek</h3>${devs}
+${C.pupils.length ? `<h3>Új tablet párosítása</h3><div class="checks">${checks}</div>
+<input class="inp" id="dlabel" maxlength="30" value="Tablet" aria-label="A tablet neve">
+<button class="big-btn" data-go="newcode">Párosító kód kérése</button>${code}
+<button class="big-btn ghost" data-go="thisdevice">Ez az eszköz legyen a gyerek tablet</button>` : ''}</section>
+${footHtml()}`;
+  }
+
+  async function loadDevices() {
+    const [d, dp] = await Promise.all([
+      sb.from('devices').select('user_id, label, last_seen_at').order('created_at'),
+      sb.from('device_pupils').select('device_user_id, pupil_id'),
+    ]);
+    if (d.error || dp.error) { devices = []; msg = 'Az eszközlista nem tölthető be.'; return; }
+    devices = d.data.filter(x => UUID.test(x.user_id)).map(x => ({ ...x,
+      names: dp.data.filter(y => y.device_user_id === x.user_id).map(y => C.pupils.find(p => p.id === y.pupil_id)?.nickname).filter(Boolean).join(', ') || 'nincs gyerek' }));
+  }
+  async function openParent() { view = 'parent'; msg = ''; devices = null; render(); window.scrollTo(0, 0); await loadDevices(); if (view === 'parent') render(); }
+
+  async function addPupil() {
+    const nick = document.getElementById('nick').value.trim();
+    const av = document.querySelector('input[name=av]:checked')?.value || 'fox';
+    if (!nick || nick.length > 20) { msg = 'A becenév 1–20 karakter.'; return render(); }
+    if (!C.householdId) { msg = 'Ehhez a fiókhoz nem tartozik háztartás.'; return render(); }
+    const { error } = await sb.from('pupils').insert({ id: crypto.randomUUID(), household_id: C.householdId, nickname: nick, avatar: av });
+    msg = error ? (error.code === '23505' ? 'Ilyen becenév már van.' : 'Nem sikerült létrehozni (van internet?).') : `${nick} profilja elkészült.`;
+    if (!error) await pull().catch(() => {});
+    render();
+  }
+  async function delPupil(id) {
+    const p = C.pupils.find(x => x.id === id); if (!p) return;
+    if (!confirm(`Biztosan törlöd ${p.nickname} profilját? Az összes eredménye és jelvénye is törlődik.`)) return;
+    const { error } = await sb.from('pupils').delete().eq('id', id);
+    msg = error ? 'Nem sikerült törölni.' : `${p.nickname} profilja törölve.`;
+    if (!error) { if (C.current === id) C.current = null; await pull().catch(() => {}); }
+    render();
+  }
+  async function revoke(uid) {
+    if (!confirm('Visszavonod ezt a tabletet? Utána semmihez nem fér hozzá, újra párosítani kell.')) return;
+    const { error } = await sb.from('devices').delete().eq('user_id', uid);
+    msg = error ? 'Nem sikerült visszavonni.' : 'A tablet visszavonva.';
+    await loadDevices(); render();
+  }
+  async function newCode() {
+    const ids = [...document.querySelectorAll('input[name=pp]:checked')].map(x => x.value);
+    const label = document.getElementById('dlabel').value.trim();
+    if (!ids.length) { msg = 'Válassz legalább egy gyereket.'; return render(); }
+    if (!label) { msg = 'Adj nevet a tabletnek.'; return render(); }
+    const { data, error } = await sb.rpc('create_pairing', { p_pupils: ids, p_label: label });
+    if (error) { msg = 'Nem sikerült kódot kérni (van internet?).'; pairCode = null; } else { msg = ''; pairCode = data; }
+    render();
+    return pairCode;
+  }
+
+  /* ---------- párosítás (a tableten) ---------- */
+  function pairView() {
+    return `<header class="head">${MARK}<div><h1>Gyakorló</h1><p class="sub">Gyerek tablet párosítása</p></div></header>
+<section class="card stack"><h3>Párosítás</h3>
+<p class="sub">Írd be a szülő telefonján kapott kódot, és adj meg egy 4 jegyű PIN-t. A PIN-nel lehet majd kilépni a gyerek módból.</p>
+<input class="inp code" id="pcode" maxlength="9" autocomplete="off" autocapitalize="characters" placeholder="XXXX-XXXX" aria-label="Párosító kód" value="${esc(pairFromParent && pairCode ? pairCode : '')}">
+<input class="inp" id="ppin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="PIN (4 számjegy)" aria-label="PIN">
+<input class="inp" id="ppin2" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="PIN még egyszer" aria-label="PIN még egyszer">
+<button class="big-btn" data-go="dopair">Párosítás</button>
+<p class="msg" role="status">${esc(msg)}</p>
+${pairFromParent ? '<p class="sub">A párosítás után ezen az eszközön kilépsz a laszlobiri oldalakról.</p><button class="big-btn ghost" data-go="parent">Mégse</button>' : ''}</section>`;
+  }
+
+  // A szülő munkamenetének lezárása ezen az eszközön, a kapu átirányítása nélkül.
+  async function dropParentSession() {
+    try {
+      const { supabase } = await import(LIB + 'client.js');
+      const { data } = await supabase.auth.getSession();
+      if (data.session) await fetch(SUPABASE_URL + '/auth/v1/logout?scope=local', { method: 'POST', headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + data.session.access_token } });
+    } catch (e) { /* a süti így is törlődik */ }
+    for (const c of document.cookie.split(';')) {
+      const n = c.split('=')[0].trim();
+      if (/^sb-[a-z0-9]+-auth-token/.test(n)) ['', '; domain=.laszlobiri.com'].forEach(d => { document.cookie = n + '=; Max-Age=0; path=/' + d; });
+    }
+  }
+
+  async function doPair() {
+    const code = document.getElementById('pcode').value, pin = document.getElementById('ppin').value, pin2 = document.getElementById('ppin2').value;
+    if (code.replace(/[^A-Za-z0-9]/g, '').length !== 8) { msg = 'A kód 8 karakter (pl. ABCD-EFGH).'; return render(); }
+    if (!validPin(pin)) { msg = 'A PIN 4 számjegy.'; return render(); }
+    if (pin !== pin2) { msg = 'A két PIN nem egyezik.'; return render(); }
+    msg = 'Párosítás…'; render();
+    try {
+      const r = await pair(code, pin);
+      if (r !== 'ok') { msg = 'Hibás vagy lejárt kód. Kérj újat a szülő telefonján.'; return render(); }
+    } catch (e) {
+      msg = /anonymous/i.test(String(e?.code || e?.message)) ? 'A gyerek mód még nincs bekapcsolva a szerveren.' : 'A párosítás nem sikerült (van internet?).';
+      return render();
+    }
+    if (pairFromParent) await dropParentSession();
+    try { localStorage.removeItem(CACHE_KEY); } catch (e) {}
+    outbox.clear();
+    location.replace(location.pathname);
+  }
+
+  /* ---------- kilépés a gyerek módból ---------- */
+  function kidExitView() {
+    const n = outbox.size();
+    return `<div class="qbar"><button class="icon-btn" data-go="who" aria-label="Vissza">←</button><div class="qtitle">Szülő</div></div>
+<section class="card stack"><h3>Kilépés a gyerek módból</h3>
+<p class="sub">Add meg a párosításkor beállított PIN-t.</p>
+<input class="inp" id="kpin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="PIN" aria-label="PIN">
+${n && kidExitWarn ? `<p class="msg">Még ${n} eredmény nincs elmentve (nincs internet). Ha most kilépsz, elvesznek.</p>` : ''}
+<button class="big-btn" data-go="dokidexit">${n && kidExitWarn ? 'Kilépés mégis' : 'Kilépés'}</button>
+<p class="msg" role="status">${esc(msg)}</p></section>`;
+  }
+  async function doKidExit() {
+    const pin = document.getElementById('kpin').value;
+    if (!validPin(pin)) { msg = 'A PIN 4 számjegy.'; return render(); }
+    await sync();
+    if (outbox.size() && !kidExitWarn) { kidExitWarn = true; msg = ''; return render(); }
+    if (!(await unpair(pin))) { msg = 'Hibás PIN.'; return render(); }
+    try { localStorage.removeItem(CACHE_KEY); } catch (e) {}
+    outbox.clear();
+    location.replace(location.pathname);
   }
 
   const PRAISE = ['Ügyes vagy!', 'Szuper!', 'Pontosan!', 'Nagyszerű!', 'Így van!', 'Remek!'];
@@ -933,12 +1289,17 @@ ${dotsHtml(Q.res, Q.i)}
   }
 
   function render() {
-    $app.innerHTML = view === 'quiz' ? quizView() : view === 'result' ? resultView() : view === 'badges' ? badgesView() : view === 'mg' ? mgView() : view === 'ws' ? wsView() : homeView();
+    $app.innerHTML = view === 'quiz' ? quizView() : view === 'result' ? resultView() : view === 'badges' ? badgesView() : view === 'mg' ? mgView() : view === 'ws' ? wsView()
+      : view === 'who' ? whoView() : view === 'parent' ? parentView() : view === 'pair' ? pairView() : view === 'kidexit' ? kidExitView()
+      : pupil() ? homeView() : whoView();
   }
 
   /* ================= események ================= */
   $app.addEventListener('click', e => {
-    const t = e.target.closest('[data-go],[data-pick],[data-next],[data-k],[data-r]'); if (!t) return;
+    const t = e.target.closest('[data-go],[data-pick],[data-next],[data-k],[data-r],[data-pupil],[data-delpupil],[data-revoke]'); if (!t) return;
+    if (t.dataset.pupil) { C.current = t.dataset.pupil; saveCache(); refreshS(); view = 'home'; render(); window.scrollTo(0, 0); return; }
+    if (t.dataset.delpupil) return delPupil(t.dataset.delpupil);
+    if (t.dataset.revoke) return revoke(t.dataset.revoke);
     if (t.hasAttribute('data-r')) return wsTap(+t.dataset.r, +t.dataset.c);
     if (t.hasAttribute('data-k')) return hmGuess(t.dataset.k);
     if (t.hasAttribute('data-pick')) return answer(+t.dataset.pick);
@@ -947,6 +1308,16 @@ ${dotsHtml(Q.res, Q.i)}
     if (g === 'mg-hm') return hmStart();
     if (g === 'mg-ws') return wsStart();
     if (g === 'nomg') { R.mg = false; render(); return; }
+    if (g === 'who') { refreshS(); view = 'who'; msg = ''; render(); window.scrollTo(0, 0); return; }
+    if (g === 'parent') { if (MODE === 'parent') { pairFromParent = false; openParent(); } return; }
+    if (g === 'addpupil') return addPupil();
+    if (g === 'newcode') return newCode();
+    if (g === 'thisdevice') { pairFromParent = true; msg = ''; return newCode().then(c => { if (c) { view = 'pair'; render(); window.scrollTo(0, 0); } }); }
+    if (g === 'dopair') return doPair();
+    if (g === 'kidexit') { view = 'kidexit'; msg = ''; kidExitWarn = false; render(); return; }
+    if (g === 'dokidexit') return doKidExit();
+    if (g === 'forget') { forgetDevice().then(() => { C = emptyCache(); outbox.clear(); saveCache(); location.replace(location.pathname + '#parositas'); location.reload(); }); return; }
+    if (g === 'home') { refreshS(); }
     if (g === 'home' || g === 'badges') { view = g; render(); window.scrollTo(0, 0); } else start(g);
   });
   document.addEventListener('keydown', e => {
@@ -960,7 +1331,7 @@ ${dotsHtml(Q.res, Q.i)}
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
   }
   window.__gyakorlo = { get MG() { return MG; }, get WS() { return WS; }, HM_WORDS, HM_KEYS, GEN, TOPICS, makeQuestion, GR, GOF };
-  render();
+  init();
 })();
 </script>
 </body>
