@@ -197,6 +197,11 @@
   .mgoffer h3 { margin: 0; font-size: 22px; line-height: 28px; }
   .mgoffer p { margin: 0; color: var(--fg-muted); }
   .mgoffer .row2 { display: flex; gap: var(--space-3); width: 100%; }
+  .mgoffer .mgpick { display: flex; flex-direction: column; gap: var(--space-2); width: 100%; }
+  .mgoffer .big-btn { margin: 0; }
+  .bo { padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-3); }
+  .bo canvas { width: 100%; aspect-ratio: 3 / 4; display: block; border-radius: var(--radius-md); background: var(--bg); touch-action: none; }
+  .bo .hint { margin: 0; color: var(--fg-muted); text-align: center; font-size: 15px; line-height: 22px; }
   .mgoffer .row2 .big-btn { margin: 0; flex: 1; }
   .hm { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); }
   .hm svg { width: 150px; height: auto; }
@@ -811,8 +816,10 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   /* ================= mentés: a háztartás közös adatai ================= */
   // Döntés: a régi, belépés nélküli pontok nem kerülnek át; az új verzió törli őket.
   try { localStorage.removeItem('gyakorlo.v1'); } catch (e) {}
-  const def = () => ({ points: 0, answered: 0, correct: 0, rounds: 0, perfect: 0, best: {}, played: {}, badges: {}, days: 0, lastDay: '', mgDone: 0, mgWins: 0, mgN: 0, wsWins: 0 });
+  const def = () => ({ points: 0, answered: 0, correct: 0, rounds: 0, perfect: 0, best: {}, played: {}, badges: {}, days: 0, lastDay: '', mgDone: 0, mgWins: 0, mgN: 0, wsWins: 0, boWins: 0 });
   const CACHE_KEY = 'gyakorlo.v2';
+  // Minijáték jutalom ennyi pontonként (egy hibátlan kör 150 pont).
+  const MG_EVERY = 1000;
   const outbox = createOutbox('gyakorlo.outbox.v1');
   // Gyerekprofilonként választható színtéma (pupils.theme).
   const THEMES = {
@@ -836,7 +843,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   let kidExitWarn = false;
   let reports = null;           // a szülői nézet nyitott jelentései
   let reportOpen = false;       // a kérdésnél nyitva van-e a „Mi a hiba?” doboz
-  const APP_VERSION = 'gyakorlo-v13';
+  const APP_VERSION = 'gyakorlo-v14';
   const REASONS = { wrong_answer: 'Rossz a megoldás', bad_question: 'Hibás a kérdés', other: 'Más baj van' };
 
   function emptyCache() { return { pupils: [], results: {}, badges: {}, current: null, userId: null, householdId: null }; }
@@ -862,6 +869,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
         if (days[days.length - 1] !== d) days.push(d);
       } else if (r.kind === 'hangman') s.mgWins++;
       else if (r.kind === 'wordsearch') s.wsWins++;
+      else if (r.kind === 'breakout') s.boWins++;
     }
     // Napi sorozat: az utolsó gyakorlási napig egymást követő napok száma.
     let run = days.length ? 1 : 0;
@@ -870,7 +878,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
       if (dayStr(prev) === days[i]) run++; else break;
     }
     s.days = run; s.lastDay = days[days.length - 1] || '';
-    s.mgDone = Math.floor(s.points / 50); s.mgN = s.mgDone;
+    s.mgDone = Math.floor(s.points / MG_EVERY); s.mgN = s.mgDone;
     Object.assign(s.badges, C.badges[pid] || {});
     return s;
   }
@@ -1005,6 +1013,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     { id: 'szaz', ico: '💯', name: 'Száz jó válasz', desc: 'Gyűjts össze 100 helyes választ.', ok: s => s.correct >= 100 },
     { id: 'szojatek', ico: '🔤', name: 'Szókitaláló', desc: 'Találj ki egy szót az akasztófa játékban.', ok: s => s.mgWins >= 1 },
     { id: 'szokereso', ico: '🔎', name: 'Szókereső', desc: 'Találd meg az összes szót a szókeresőben.', ok: s => s.wsWins >= 1 },
+    { id: 'falbonto', ico: '🧱', name: 'Falbontó', desc: 'Bonts le minden téglát a falbontóban.', ok: s => s.boWins >= 1 },
     { id: 'ot-szint', ico: '🏆', name: 'Ötödik szint', desc: 'Érd el az 5. szintet.', ok: s => levelOf(s.points) >= 5 }
   ];
 
@@ -1063,9 +1072,9 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     touchDay();
     const fresh = [], ctx = { topic: Q.topic, score: Q.score, bestStreak: Q.bestStreak };
     BADGES.forEach(b => { if (!S.badges[b.id] && b.ok(S, ctx)) { S.badges[b.id] = dayStr(new Date()); fresh.push(b); } });
-    const mgNow = Math.floor(S.points / 50), mgOffer = mgNow > S.mgDone, mgKind = S.mgN % 2 ? 'ws' : 'hm'; S.mgDone = mgNow; if (mgOffer) S.mgN++;
+    const mgNow = Math.floor(S.points / MG_EVERY), mgOffer = mgNow > S.mgDone; S.mgDone = mgNow; if (mgOffer) S.mgN++;
     record('round', { topic: Q.topic, score: Q.score, best_streak: Q.bestStreak, answered: 10, correct: Q.score, points: Q.score * 10 + bonus });
-    R = { mg: mgOffer, mgKind, topic: Q.topic, score: Q.score, res: Q.res.slice(), earned: Q.score * 10 + bonus, bonus, lv0: Q.lv0, lv1: levelOf(S.points), fresh };
+    R = { mg: mgOffer, topic: Q.topic, score: Q.score, res: Q.res.slice(), earned: Q.score * 10 + bonus, bonus, lv0: Q.lv0, lv1: levelOf(S.points), fresh };
     view = 'result'; render(); window.scrollTo(0, 0);
   }
 
@@ -1106,13 +1115,106 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     const slots = w.split('').map(c => { const on = MG.got.indexOf(c) >= 0; return `<span class="slot${!on && lost ? ' lost' : ''}">${on || lost ? c : ''}</span>`; }).join('');
     const keys = HM_KEYS.map(k => `<button class="key${MG.got.indexOf(k) >= 0 ? ' hit' : MG.miss.indexOf(k) >= 0 ? ' miss' : ''}" data-k="${k}"${MG.done || MG.got.indexOf(k) >= 0 || MG.miss.indexOf(k) >= 0 ? ' disabled' : ''} aria-label="${k}">${k}</button>`).join('');
     const end = MG.done === 1 ? `<div class="banner">Kitaláltad! +10 pont${MG.badge ? ' · Új jelvény: ' + MG.badge.ico + ' ' + MG.badge.name : ''}</div>` : lost ? `<div class="banner">Most nem sikerült. A szó: <b>${w}</b></div>` : '';
-    const btns = MG.done ? `<button class="big-btn" data-go="mg-hm">Még egy szó</button><button class="big-btn ghost" data-go="home">Vissza a témákhoz</button>` : '';
+    const btns = MG.done ? `<button class="big-btn" data-go="home">Vissza a témákhoz</button>` : '';
     return `<div class="qbar"><button class="icon-btn" data-go="home" aria-label="Kilépés a játékból">←</button><div class="qtitle">Akasztófa</div></div>
 <section class="card hm"><p class="hint">Tipp: ${MG.cat} · ${w.length} betű</p>${hmSvg(MG.miss.length)}<div class="slots" aria-label="A kitalálandó szó">${slots}</div>${end}
 ${MG.done ? '' : `<p class="lives">Hibázhatsz még ${HM_MAX - MG.miss.length}-szer.</p>`}</section>
 ${MG.done ? '' : `<div class="kb" role="group" aria-label="Betűk">${keys}</div>`}${btns}`;
   }
 
+
+  /* ================= mini játék: falbontó ================= */
+  // Egyszerű, gyorsan kijátszható falbontó: 2 × 6 tégla, 3 élet. A színek az aktuális témából
+  // jönnek (CSS-változók). Ütő: ujjal húzva / egérrel, vagy a nyilakkal; indítás: koppintás / szóköz.
+  let BO = null, boRaf = 0;
+  const BO_W = 300, BO_H = 400, BO_ROWS = 2, BO_COLS = 6, BO_LIVES = 3;
+  const BO_PW = 64, BO_PH = 10, BO_PY = BO_H - 28, BO_BR = 7, BO_SPEED = 230;
+  const BO_TOP = 54, BO_BH = 20, BO_GAP = 6, BO_MX = 12;
+  function boStart() {
+    const bw = (BO_W - 2 * BO_MX - (BO_COLS - 1) * BO_GAP) / BO_COLS, bricks = [];
+    for (let r = 0; r < BO_ROWS; r++) for (let c = 0; c < BO_COLS; c++) bricks.push({ r, x: BO_MX + c * (bw + BO_GAP), y: BO_TOP + r * (BO_BH + BO_GAP), w: bw, h: BO_BH, alive: true });
+    BO = { lives: BO_LIVES, bricks, done: 0, ready: true, px: BO_W / 2, bx: BO_W / 2, by: BO_PY - BO_BR - 1, vx: 0, vy: 0, speed: BO_SPEED, last: 0, badge: null, colors: null };
+    view = 'bo'; render(); window.scrollTo(0, 0);
+  }
+  function boView() {
+    const end = BO.done === 1 ? `<div class="banner">Lebontottad a falat! +10 pont${BO.badge ? ' · Új jelvény: ' + BO.badge.ico + ' ' + BO.badge.name : ''}</div>`
+      : BO.done === 2 ? '<div class="banner">Most nem sikerült. Legközelebb menni fog!</div>' : '';
+    return `<div class="qbar"><button class="icon-btn" data-go="home" aria-label="Kilépés a játékból">←</button><div class="qtitle">Falbontó</div><div class="qcount" aria-label="Életek">${'❤️'.repeat(BO.lives)}</div></div>
+<section class="card bo"><p class="hint">${BO.done ? '' : 'Húzd az ütőt az ujjaddal (vagy a nyilakkal), és koppints az indításhoz. Ne engedd leesni a labdát!'}</p><canvas id="boCanvas" width="${BO_W * 2}" height="${BO_H * 2}" aria-label="Falbontó játéktér"></canvas>${end}</section>
+${BO.done ? '<button class="big-btn" data-go="home">Vissza a témákhoz</button>' : ''}`;
+  }
+  function boMount() {
+    const cv = document.getElementById('boCanvas'); if (!cv || !BO) return;
+    const cs = getComputedStyle(document.documentElement), v = n => cs.getPropertyValue(n).trim();
+    BO.colors = { bg: v('--bg'), rows: [v('--accent'), v('--fg-muted')], paddle: v('--fg'), ball: v('--accent-text'), line: v('--line') };
+    const toX = e => { const r = cv.getBoundingClientRect(); return (e.clientX - r.left) / r.width * BO_W; };
+    cv.addEventListener('pointerdown', e => { if (BO.done) return; BO.px = toX(e); boLaunch(); });
+    cv.addEventListener('pointermove', e => { if (!BO.done) BO.px = toX(e); });
+    boDraw();
+    if (!BO.done && !boRaf) { BO.last = 0; boRaf = requestAnimationFrame(boFrame); }
+  }
+  function boLaunch() {
+    if (!BO || BO.done || !BO.ready) return;
+    const a = (Math.random() * 50 - 25) * Math.PI / 180;
+    BO.vx = BO.speed * Math.sin(a); BO.vy = -BO.speed * Math.cos(a); BO.ready = false;
+  }
+  function boFrame(t) {
+    if (view !== 'bo' || !BO || BO.done || !document.getElementById('boCanvas')) { boRaf = 0; return; }
+    const dt = BO.last ? Math.min(0.033, (t - BO.last) / 1000) : 0; BO.last = t;
+    if (document.visibilityState !== 'hidden') boStep(dt);
+    boDraw();
+    boRaf = BO.done ? 0 : requestAnimationFrame(boFrame);
+  }
+  function boStep(dt) {
+    BO.px = Math.max(BO_PW / 2, Math.min(BO_W - BO_PW / 2, BO.px));
+    if (BO.ready) { BO.bx = BO.px; BO.by = BO_PY - BO_BR - 1; return; }
+    BO.bx += BO.vx * dt; BO.by += BO.vy * dt;
+    if (BO.bx < BO_BR) { BO.bx = BO_BR; BO.vx = Math.abs(BO.vx); }
+    if (BO.bx > BO_W - BO_BR) { BO.bx = BO_W - BO_BR; BO.vx = -Math.abs(BO.vx); }
+    if (BO.by < BO_BR) { BO.by = BO_BR; BO.vy = Math.abs(BO.vy); }
+    // Ütő: a találat helye szabja meg a visszapattanás szögét (legfeljebb 60°).
+    if (BO.vy > 0 && BO.by + BO_BR >= BO_PY && BO.by + BO_BR <= BO_PY + BO_PH + 8 && Math.abs(BO.bx - BO.px) <= BO_PW / 2 + BO_BR) {
+      const off = Math.max(-1, Math.min(1, (BO.bx - BO.px) / (BO_PW / 2))), a = off * 60 * Math.PI / 180;
+      BO.vx = BO.speed * Math.sin(a); BO.vy = -BO.speed * Math.cos(a); BO.by = BO_PY - BO_BR;
+    }
+    for (const b of BO.bricks) {
+      if (!b.alive) continue;
+      const cx = Math.max(b.x, Math.min(BO.bx, b.x + b.w)), cy = Math.max(b.y, Math.min(BO.by, b.y + b.h));
+      if ((BO.bx - cx) ** 2 + (BO.by - cy) ** 2 > BO_BR * BO_BR) continue;
+      b.alive = false;
+      if (cx === b.x || cx === b.x + b.w) BO.vx = -BO.vx; else BO.vy = -BO.vy;
+      BO.speed *= 1.03; const k = BO.speed / Math.hypot(BO.vx, BO.vy); BO.vx *= k; BO.vy *= k;
+      break;
+    }
+    if (BO.bricks.every(b => !b.alive)) return boEnd(true);
+    if (BO.by - BO_BR > BO_H) {
+      BO.lives--;
+      if (BO.lives <= 0) return boEnd(false);
+      BO.ready = true;
+      const q = document.querySelector('.qbar .qcount'); if (q) q.textContent = '❤️'.repeat(BO.lives);
+    }
+  }
+  function boEnd(won) {
+    BO.done = won ? 1 : 2;
+    if (won) {
+      S.points += 10; S.boWins++;
+      BADGES.forEach(b => { if (!S.badges[b.id] && b.ok(S, {})) { S.badges[b.id] = dayStr(new Date()); BO.badge = b; } });
+      record('breakout', { points: 10 });
+    }
+    render();
+  }
+  function boDraw() {
+    const cv = document.getElementById('boCanvas'); if (!cv || !BO || !BO.colors) return;
+    const c = cv.getContext('2d'), C = BO.colors;
+    c.setTransform(2, 0, 0, 2, 0, 0);
+    c.fillStyle = C.bg; c.fillRect(0, 0, BO_W, BO_H);
+    // A roundRect régebbi Safarikban (iOS 15) nincs: ott sima téglalap.
+    const box = (x, y, w, h) => { c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, 5); else c.rect(x, y, w, h); c.fill(); };
+    for (const b of BO.bricks) if (b.alive) { c.fillStyle = C.rows[b.r % C.rows.length]; box(b.x, b.y, b.w, b.h); }
+    c.fillStyle = C.paddle; box(BO.px - BO_PW / 2, BO_PY, BO_PW, BO_PH);
+    c.fillStyle = C.ball; c.beginPath(); c.arc(BO.bx, BO.by, BO_BR, 0, Math.PI * 2); c.fill();
+    if (BO.ready && !BO.done) { c.fillStyle = C.paddle; c.font = '600 16px "Space Grotesk", system-ui, sans-serif'; c.textAlign = 'center'; c.fillText('Koppints az indításhoz', BO_W / 2, BO_H / 2 + 40); }
+  }
 
   /* ================= mini játék: szókereső ================= */
   const WS_N = 10, WS_DIR = [[0, 1], [1, 0], [1, 1]];
@@ -1164,7 +1266,7 @@ ${MG.done ? '' : `<div class="kb" role="group" aria-label="Betűk">${keys}</div>
     return `<div class="qbar"><button class="icon-btn" data-go="home" aria-label="Kilépés a játékból">←</button><div class="qtitle">Szókereső</div><div class="qcount">${WS.words.filter(o => o.found).length}/${WS.words.length}</div></div>
 <section class="card ws"><p class="hint" style="margin:0;color:var(--fg-muted);text-align:center">Téma: ${WS.cat}. Koppints a szó első, majd utolsó betűjére. A szó lehet vízszintes, függőleges vagy átlós.</p>
 <div class="wgrid" role="group" aria-label="Betűtábla">${cells}</div><ul class="wlist" aria-label="Keresendő szavak">${list}</ul>${end}</section>
-${WS.done ? `<button class="big-btn" data-go="mg-ws">Új tábla</button><button class="big-btn ghost" data-go="home">Vissza a témákhoz</button>` : ''}`;
+${WS.done ? `<button class="big-btn" data-go="home">Vissza a témákhoz</button>` : ''}`;
   }
 
   /* ================= nézetek ================= */
@@ -1449,7 +1551,7 @@ ${dotsHtml(Q.res, Q.i)}${box}
     const nb = R.fresh.length ? `<div class="newb" aria-label="Új jelvények">${R.fresh.map(b => `<div class="it"><span class="ic" aria-hidden="true">${b.ico}</span><div class="tx"><b>${b.name}</b><br><span class="sub">${b.desc}</span></div></div>`).join('')}</div>` : '';
     return `<div class="qbar"><button class="icon-btn" data-go="home" aria-label="Vissza a témákhoz">←</button><div class="qtitle">${TNAME[R.topic]}</div></div>
 <section class="card result"><div class="score">${s}<small>/10</small></div>${dotsHtml(R.res, -1, true)}<h2>${msg}</h2>
-<p class="earn">+${R.earned} pont${R.bonus ? ' (benne: +' + R.bonus + ' bónusz a hibátlan körért)' : ''}</p>${up}${nb}</section>${R.mg ? `<section class="card mgoffer"><h3>${R.mgKind === 'ws' ? '🔎 Mini játék: szókereső' : '🔤 Mini játék: akasztófa'}</h3><p>Összegyűjtöttél újabb 50 pontot. ${R.mgKind === 'ws' ? 'Megkeresed az elrejtett szavakat?' : 'Kitalálsz egy szót?'}</p><div class="row2"><button class="big-btn" data-go="mg-${R.mgKind}">Játszom</button><button class="big-btn ghost" data-go="nomg">Most nem</button></div></section>` : ''}
+<p class="earn">+${R.earned} pont${R.bonus ? ' (benne: +' + R.bonus + ' bónusz a hibátlan körért)' : ''}</p>${up}${nb}</section>${R.mg ? `<section class="card mgoffer"><h3>🎁 Jutalom: mini játék</h3><p>Összegyűjtöttél újabb ${MG_EVERY} pontot! Válassz egy játékot:</p><div class="mgpick"><button class="big-btn" data-go="mg-hm">🔤 Akasztófa</button><button class="big-btn" data-go="mg-ws">🔎 Szókereső</button><button class="big-btn" data-go="mg-bo">🧱 Falbontó</button></div><button class="big-btn ghost" data-go="nomg">Most nem</button></section>` : ''}
 <button class="big-btn" data-go="${R.topic}">Még egy kör</button><button class="big-btn ghost" data-go="home">Vissza a témákhoz</button>`;
   }
 
@@ -1458,7 +1560,7 @@ ${dotsHtml(Q.res, Q.i)}${box}
 <div class="badges">${BADGES.map(b => { const d = S.badges[b.id]; return `<div class="badge${d ? ' got' : ''}"><div class="bi" aria-hidden="true">${b.ico}</div><div><b>${b.name}</b><span>${b.desc}${d ? ' · megszerezted: ' + d : ''}</span></div></div>`; }).join('')}</div>`;
   }
 
-  const PLAY_VIEWS = ['home', 'quiz', 'result', 'badges', 'mg', 'ws', 'kidexit'];
+  const PLAY_VIEWS = ['home', 'quiz', 'result', 'badges', 'mg', 'ws', 'bo', 'kidexit'];
   function applyTheme() {
     const p = pupil();
     const theme = p && PLAY_VIEWS.includes(view) ? p.theme : 'slate';
@@ -1469,9 +1571,10 @@ ${dotsHtml(Q.res, Q.i)}${box}
   function render() {
     if (updateReady && RELOAD_SAFE_VIEWS.includes(view)) { reloadIfSafe(); return; }
     applyTheme();
-    $app.innerHTML = view === 'quiz' ? quizView() : view === 'result' ? resultView() : view === 'badges' ? badgesView() : view === 'mg' ? mgView() : view === 'ws' ? wsView()
+    $app.innerHTML = view === 'quiz' ? quizView() : view === 'result' ? resultView() : view === 'badges' ? badgesView() : view === 'mg' ? mgView() : view === 'ws' ? wsView() : view === 'bo' ? boView()
       : view === 'who' ? whoView() : view === 'parent' ? parentView() : view === 'pair' ? pairView() : view === 'kidexit' ? kidExitView()
       : pupil() ? homeView() : whoView();
+    if (view === 'bo') boMount();
   }
 
   /* ================= események ================= */
@@ -1490,6 +1593,7 @@ ${dotsHtml(Q.res, Q.i)}${box}
     const g = t.dataset.go;
     if (g === 'mg-hm') return hmStart();
     if (g === 'mg-ws') return wsStart();
+    if (g === 'mg-bo') return boStart();
     if (g === 'nomg') { R.mg = false; render(); return; }
     if (g === 'who') { refreshS(); view = 'who'; msg = ''; render(); window.scrollTo(0, 0); return; }
     if (g === 'parent') { if (MODE === 'parent') { pairFromParent = false; openParent(); } return; }
@@ -1507,6 +1611,11 @@ ${dotsHtml(Q.res, Q.i)}${box}
   });
   document.addEventListener('keydown', e => {
     if (view === 'mg' && !e.ctrlKey && !e.metaKey && !e.altKey && e.key.length === 1) return hmGuess(e.key.toLowerCase());
+    if (view === 'bo' && BO && !BO.done) {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { BO.px += e.key === 'ArrowLeft' ? -22 : 22; e.preventDefault(); }
+      if (e.key === ' ' || e.key === 'Enter') { boLaunch(); e.preventDefault(); }
+      return;
+    }
     if (view !== 'quiz' || !Q || Q.picked !== null || e.ctrlKey || e.metaKey || e.altKey) return;
     const n = parseInt(e.key, 10), q = Q.qs[Q.i];
     if (n >= 1 && n <= q.choices.length) answer(n - 1);
@@ -1536,7 +1645,7 @@ ${dotsHtml(Q.res, Q.i)}${box}
       setInterval(check, 30 * 60 * 1000);
     }).catch(() => {}));
   }
-  window.__gyakorlo = { get MG() { return MG; }, get WS() { return WS; }, HM_WORDS, HM_KEYS, GEN, TOPICS, makeQuestion, GR, GOF };
+  window.__gyakorlo = { get MG() { return MG; }, get WS() { return WS; }, get BO() { return BO; }, HM_WORDS, HM_KEYS, GEN, TOPICS, makeQuestion, GR, GOF };
   init();
 })();
 </script>
