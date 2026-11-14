@@ -149,6 +149,23 @@
   .result .score small { font-size: 32px; color: var(--fg-muted); letter-spacing: -0.02em; }
   .result h2 { font-size: 24px; line-height: 30px; font-weight: 600; }
   .earn { font-size: 20px; font-weight: 600; color: var(--accent-text); }
+  .mgoffer { text-align: center; display: flex; flex-direction: column; gap: var(--space-3); align-items: center; border-color: var(--accent); }
+  .mgoffer h3 { margin: 0; font-size: 22px; line-height: 28px; }
+  .mgoffer p { margin: 0; color: var(--fg-muted); }
+  .mgoffer .row2 { display: flex; gap: var(--space-3); width: 100%; }
+  .mgoffer .row2 .big-btn { margin: 0; flex: 1; }
+  .hm { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); }
+  .hm svg { width: 150px; height: auto; }
+  .hm .hint { color: var(--fg-muted); margin: 0; font-size: 16px; text-align: center; }
+  .slots { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .slot { min-width: 28px; height: 44px; border-bottom: 4px solid var(--fg-muted); font-size: 30px; line-height: 40px; font-weight: 600; text-align: center; text-transform: uppercase; }
+  .slot.lost { color: var(--accent-text); }
+  .kb { margin-top: var(--space-4); display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .key { width: 42px; height: 48px; padding: 0; border-radius: var(--radius-md); background: var(--bg-raised); border: 2px solid var(--line); color: var(--fg); font: inherit; font-size: 20px; font-weight: 600; text-transform: uppercase; }
+  .key:not(:disabled):hover { border-color: var(--accent); }
+  .key.hit { background: var(--accent); border-color: var(--accent); color: var(--brand-black); }
+  .key.miss { border-style: dashed; border-color: var(--fg-muted); color: var(--fg-muted); text-decoration: line-through; }
+  .hm .lives { color: var(--fg-muted); margin: 0; font-size: 15px; }
   .banner { width: 100%; padding: var(--space-3) var(--space-4); border: 1px solid var(--accent); border-radius: var(--radius-md); color: var(--accent-text); font-weight: 600; }
   .newb { width: 100%; display: flex; flex-direction: column; gap: var(--space-2); }
   .newb .it { display: flex; align-items: center; gap: var(--space-3); text-align: left; padding: var(--space-3) var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-md); }
@@ -673,7 +690,7 @@
 
   /* ================= mentés ================= */
   const KEY = 'gyakorlo.v1';
-  const def = () => ({ points: 0, answered: 0, correct: 0, rounds: 0, perfect: 0, best: {}, played: {}, badges: {}, days: 0, lastDay: '' });
+  const def = () => ({ points: 0, answered: 0, correct: 0, rounds: 0, perfect: 0, best: {}, played: {}, badges: {}, days: 0, lastDay: '', mgDone: 0, mgWins: 0 });
   function load() { try { return Object.assign(def(), JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) { return def(); } }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* nincs tárhely: a játék működik tovább */ } }
   let S = load();
@@ -692,6 +709,7 @@
     { id: 'minden', ico: '🧭', name: 'Mindent kipróbáltam', desc: 'Játssz végig egy kört minden témából.', ok: s => TOPICS.every(t => s.played[t.id]) },
     { id: 'harom', ico: '📅', name: 'Három nap egymás után', desc: 'Gyakorolj három egymást követő napon.', ok: s => s.days >= 3 },
     { id: 'szaz', ico: '💯', name: 'Száz jó válasz', desc: 'Gyűjts össze 100 helyes választ.', ok: s => s.correct >= 100 },
+    { id: 'szojatek', ico: '🔤', name: 'Szókitaláló', desc: 'Találj ki egy szót az akasztófa játékban.', ok: s => s.mgWins >= 1 },
     { id: 'ot-szint', ico: '🏆', name: 'Ötödik szint', desc: 'Érd el az 5. szintet.', ok: s => levelOf(s.points) >= 5 }
   ];
 
@@ -704,7 +722,7 @@
   }
 
   /* ================= állapot ================= */
-  let view = 'home', Q = null, R = null;
+  let view = 'home', Q = null, R = null, MG = null;
 
   function start(topic) {
     Q = { topic, qs: buildRound(topic), i: 0, picked: null, res: [], score: 0, streak: 0, bestStreak: 0, lv0: levelOf(S.points) };
@@ -728,9 +746,54 @@
     touchDay();
     const fresh = [], ctx = { topic: Q.topic, score: Q.score, bestStreak: Q.bestStreak };
     BADGES.forEach(b => { if (!S.badges[b.id] && b.ok(S, ctx)) { S.badges[b.id] = dayStr(new Date()); fresh.push(b); } });
+    const mgNow = Math.floor(S.points / 50), mgOffer = mgNow > S.mgDone; S.mgDone = mgNow;
     save();
-    R = { topic: Q.topic, score: Q.score, res: Q.res.slice(), earned: Q.score * 10 + bonus, bonus, lv0: Q.lv0, lv1: levelOf(S.points), fresh };
+    R = { mg: mgOffer, topic: Q.topic, score: Q.score, res: Q.res.slice(), earned: Q.score * 10 + bonus, bonus, lv0: Q.lv0, lv1: levelOf(S.points), fresh };
     view = 'result'; render(); window.scrollTo(0, 0);
+  }
+
+
+  /* ================= mini játék: akasztófa ================= */
+  const HM_WORDS = [['Állat', ALLN.concat(['pók', 'csiga', 'giliszta', 'szitakötő'])],
+    ['Természet', ['víz', 'levegő', 'fény', 'meleg', 'táplálék', 'szőr', 'toll', 'pikkely', 'kitinpáncél', 'emlős', 'madár', 'hüllő', 'kétéltű', 'rovar', 'gerinc', 'csontváz', 'ikra', 'ebihal', 'hernyó', 'báb', 'tojás', 'fészek', 'növény', 'állat']],
+    ['Matek', ['összeadás', 'kivonás', 'szorzás', 'osztás', 'számegyenes', 'kerekítés', 'tízes', 'százas', 'egyes', 'páros', 'páratlan', 'mérleg', 'forint', 'visszajáró', 'kilogramm', 'méter', 'centiméter', 'dekagramm', 'szomszéd']],
+    ['Nyelvtan', ['főnév', 'melléknév', 'ige', 'mondat', 'kérdő', 'kijelentő', 'felkiáltó', 'óhajtó', 'betű', 'ábécé', 'szófaj', 'helyesírás', 'játék', 'hajó', 'király', 'bagoly', 'kölyök']]];
+  const HM_KEYS = 'aábcdeéfghiíjklmnoóöőprstuúüűvyz'.split('');
+  const HM_MAX = 7;
+  let hmLast = '';
+  function hmStart() {
+    const pool = [];
+    HM_WORDS.forEach(([cat, ws]) => ws.forEach(w => { if (w.length >= 3 && w.split('').every(c => HM_KEYS.indexOf(c) >= 0) && w !== hmLast) pool.push([cat, w]); }));
+    const [cat, word] = pick(pool); hmLast = word;
+    MG = { cat, word, got: [], miss: [], done: 0 }; view = 'mg'; render(); window.scrollTo(0, 0);
+  }
+  function hmGuess(k) {
+    if (!MG || MG.done || MG.got.indexOf(k) >= 0 || MG.miss.indexOf(k) >= 0 || HM_KEYS.indexOf(k) < 0) return;
+    (MG.word.indexOf(k) >= 0 ? MG.got : MG.miss).push(k);
+    if (MG.word.split('').every(c => MG.got.indexOf(c) >= 0)) {
+      MG.done = 1; S.points += 10; S.mgWins++;
+      BADGES.forEach(b => { if (!S.badges[b.id] && b.ok(S, {})) { S.badges[b.id] = dayStr(new Date()); MG.badge = b; } });
+      save();
+    } else if (MG.miss.length >= HM_MAX) MG.done = 2;
+    render();
+  }
+  function hmSvg(n) {
+    const st = 'stroke="var(--fg)" stroke-width="4" stroke-linecap="round" fill="none"', ac = 'stroke="var(--accent)" stroke-width="4" stroke-linecap="round" fill="none"';
+    const base = `<line x1="10" y1="170" x2="110" y2="170" ${st}/><line x1="35" y1="170" x2="35" y2="14" ${st}/><path d="M35 14 H100" ${st}/>`;
+    const P = [`<line x1="100" y1="14" x2="100" y2="36" ${st}/>`, `<circle cx="100" cy="48" r="12" ${ac}/>`, `<line x1="100" y1="60" x2="100" y2="112" ${ac}/>`,
+      `<line x1="100" y1="74" x2="82" y2="96" ${ac}/>`, `<line x1="100" y1="74" x2="118" y2="96" ${ac}/>`, `<line x1="100" y1="112" x2="84" y2="142" ${ac}/>`, `<line x1="100" y1="112" x2="116" y2="142" ${ac}/>`];
+    return `<svg viewBox="0 0 140 184" role="img" aria-label="${n} hiba a ${HM_MAX}-ből">${base}${P.slice(0, n).join('')}</svg>`;
+  }
+  function mgView() {
+    const w = MG.word, lost = MG.done === 2;
+    const slots = w.split('').map(c => { const on = MG.got.indexOf(c) >= 0; return `<span class="slot${!on && lost ? ' lost' : ''}">${on || lost ? c : ''}</span>`; }).join('');
+    const keys = HM_KEYS.map(k => `<button class="key${MG.got.indexOf(k) >= 0 ? ' hit' : MG.miss.indexOf(k) >= 0 ? ' miss' : ''}" data-k="${k}"${MG.done || MG.got.indexOf(k) >= 0 || MG.miss.indexOf(k) >= 0 ? ' disabled' : ''} aria-label="${k}">${k}</button>`).join('');
+    const end = MG.done === 1 ? `<div class="banner">Kitaláltad! +10 pont${MG.badge ? ' · Új jelvény: ' + MG.badge.ico + ' ' + MG.badge.name : ''}</div>` : lost ? `<div class="banner">Most nem sikerült. A szó: <b>${w}</b></div>` : '';
+    const btns = MG.done ? `<button class="big-btn" data-go="mg">Még egy szó</button><button class="big-btn ghost" data-go="home">Vissza a témákhoz</button>` : '';
+    return `<div class="qbar"><button class="icon-btn" data-go="home" aria-label="Kilépés a játékból">←</button><div class="qtitle">Akasztófa</div></div>
+<section class="card hm"><p class="hint">Tipp: ${MG.cat} · ${w.length} betű</p>${hmSvg(MG.miss.length)}<div class="slots" aria-label="A kitalálandó szó">${slots}</div>${end}
+${MG.done ? '' : `<p class="lives">Hibázhatsz még ${HM_MAX - MG.miss.length}-szer.</p>`}</section>
+${MG.done ? '' : `<div class="kb" role="group" aria-label="Betűk">${keys}</div>`}${btns}`;
   }
 
   /* ================= nézetek ================= */
@@ -797,7 +860,7 @@ ${dotsHtml(Q.res, Q.i)}
     const nb = R.fresh.length ? `<div class="newb" aria-label="Új jelvények">${R.fresh.map(b => `<div class="it"><span class="ic" aria-hidden="true">${b.ico}</span><div class="tx"><b>${b.name}</b><br><span class="sub">${b.desc}</span></div></div>`).join('')}</div>` : '';
     return `<div class="qbar"><button class="icon-btn" data-go="home" aria-label="Vissza a témákhoz">←</button><div class="qtitle">${TNAME[R.topic]}</div></div>
 <section class="card result"><div class="score">${s}<small>/10</small></div>${dotsHtml(R.res, -1, true)}<h2>${msg}</h2>
-<p class="earn">+${R.earned} pont${R.bonus ? ' (benne: +' + R.bonus + ' bónusz a hibátlan körért)' : ''}</p>${up}${nb}</section>
+<p class="earn">+${R.earned} pont${R.bonus ? ' (benne: +' + R.bonus + ' bónusz a hibátlan körért)' : ''}</p>${up}${nb}</section>${R.mg ? `<section class="card mgoffer"><h3>🔤 Mini játék: akasztófa</h3><p>Összegyűjtöttél újabb 50 pontot. Kitalálsz egy szót?</p><div class="row2"><button class="big-btn" data-go="mg">Játszom</button><button class="big-btn ghost" data-go="nomg">Most nem</button></div></section>` : ''}
 <button class="big-btn" data-go="${R.topic}">Még egy kör</button><button class="big-btn ghost" data-go="home">Vissza a témákhoz</button>`;
   }
 
@@ -807,18 +870,22 @@ ${dotsHtml(Q.res, Q.i)}
   }
 
   function render() {
-    $app.innerHTML = view === 'quiz' ? quizView() : view === 'result' ? resultView() : view === 'badges' ? badgesView() : homeView();
+    $app.innerHTML = view === 'quiz' ? quizView() : view === 'result' ? resultView() : view === 'badges' ? badgesView() : view === 'mg' ? mgView() : homeView();
   }
 
   /* ================= események ================= */
   $app.addEventListener('click', e => {
-    const t = e.target.closest('[data-go],[data-pick],[data-next]'); if (!t) return;
+    const t = e.target.closest('[data-go],[data-pick],[data-next],[data-k]'); if (!t) return;
+    if (t.hasAttribute('data-k')) return hmGuess(t.dataset.k);
     if (t.hasAttribute('data-pick')) return answer(+t.dataset.pick);
     if (t.hasAttribute('data-next')) return next();
     const g = t.dataset.go;
+    if (g === 'mg') return hmStart();
+    if (g === 'nomg') { R.mg = false; render(); return; }
     if (g === 'home' || g === 'badges') { view = g; render(); window.scrollTo(0, 0); } else start(g);
   });
   document.addEventListener('keydown', e => {
+    if (view === 'mg' && !e.ctrlKey && !e.metaKey && !e.altKey && e.key.length === 1) return hmGuess(e.key.toLowerCase());
     if (view !== 'quiz' || !Q || Q.picked !== null || e.ctrlKey || e.metaKey || e.altKey) return;
     const n = parseInt(e.key, 10), q = Q.qs[Q.i];
     if (n >= 1 && n <= q.choices.length) answer(n - 1);
@@ -827,7 +894,7 @@ ${dotsHtml(Q.res, Q.i)}
   if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
   }
-  window.__gyakorlo = { GEN, TOPICS, makeQuestion, GR, GOF };
+  window.__gyakorlo = { get MG() { return MG; }, HM_WORDS, HM_KEYS, GEN, TOPICS, makeQuestion, GR, GOF };
   render();
 })();
 </script>
