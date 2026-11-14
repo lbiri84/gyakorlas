@@ -806,7 +806,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   let kidExitWarn = false;
   let reports = null;           // a szülői nézet nyitott jelentései
   let reportOpen = false;       // a kérdésnél nyitva van-e a „Mi a hiba?” doboz
-  const APP_VERSION = 'gyakorlo-v10';
+  const APP_VERSION = 'gyakorlo-v11';
   const REASONS = { wrong_answer: 'Rossz a megoldás', bad_question: 'Hibás a kérdés', other: 'Más baj van' };
 
   function emptyCache() { return { pupils: [], results: {}, badges: {}, current: null, userId: null, householdId: null }; }
@@ -1437,6 +1437,7 @@ ${dotsHtml(Q.res, Q.i)}${box}
   }
 
   function render() {
+    if (updateReady && RELOAD_SAFE_VIEWS.includes(view)) { reloadIfSafe(); return; }
     applyTheme();
     $app.innerHTML = view === 'quiz' ? quizView() : view === 'result' ? resultView() : view === 'badges' ? badgesView() : view === 'mg' ? mgView() : view === 'ws' ? wsView()
       : view === 'who' ? whoView() : view === 'parent' ? parentView() : view === 'pair' ? pairView() : view === 'kidexit' ? kidExitView()
@@ -1481,8 +1482,29 @@ ${dotsHtml(Q.res, Q.i)}${box}
     if (n >= 1 && n <= q.choices.length) answer(n - 1);
   });
 
+  /* ================= automatikus frissítés ================= */
+  // A kezdőképernyőre tett app (főleg iPaden) a háttérben nyitva marad, és előtérbe hozáskor nem
+  // tölt újra, így egy új változat csak a teljes újraindításkor jönne le. Ezért előtérbe kerüléskor
+  // és félóránként új változatot keresünk; ha van, a service worker átveszi az oldalt
+  // (skipWaiting + clients.claim), és akkor töltünk újra, amikor nem zavar: háttérben, vagy a
+  // kezdő / „Ki gyakorol?” / jelvények képernyőn. Kör, minijáték, szülői űrlap közben soha.
+  let updateReady = false;
+  const RELOAD_SAFE_VIEWS = ['home', 'who', 'badges'];
+  function reloadIfSafe() {
+    if (updateReady && (document.visibilityState === 'hidden' || RELOAD_SAFE_VIEWS.includes(view))) location.reload();
+  }
   if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+    let hadController = !!navigator.serviceWorker.controller;   // az első átvétel (telepítés) nem frissítés
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController) { hadController = true; return; }
+      updateReady = true;
+      reloadIfSafe();
+    });
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').then(reg => {
+      const check = () => reg.update().catch(() => {});
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); else reloadIfSafe(); });
+      setInterval(check, 30 * 60 * 1000);
+    }).catch(() => {}));
   }
   window.__gyakorlo = { get MG() { return MG; }, get WS() { return WS; }, HM_WORDS, HM_KEYS, GEN, TOPICS, makeQuestion, GR, GOF };
   init();
