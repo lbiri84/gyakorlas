@@ -325,12 +325,14 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
         'kérdő': ['Hová mész?', 'Mikor jössz haza?', 'Kié ez a táska?', 'Szereted a süteményt?', 'Mit csinálsz?'],
         'felkiáltó': ['Milyen gyönyörű a szivárvány!', 'De hideg van ma!', 'Hű, de nagy ez a labda!', 'Milyen finom ez a leves!'],
         'óhajtó': ['Bárcsak itt lenne már a nyár!', 'Bárcsak elmúlna már az eső!', 'Bárcsak minden nap vasárnap lenne!'],
-        'felszólító': ['Pakold el a játékokat.', 'Gyere ide.', 'Nyisd ki az ablakot.', 'Írd le a leckét.', 'Mosd meg a kezed.']
+        // A felszólító mondat végére felkiáltójel kerül (3. osztályos tananyag); ponttal kijelentőnek látszana.
+        'felszólító': ['Pakold el a játékokat!', 'Gyere ide!', 'Nyisd ki az ablakot!', 'Írd le a leckét!', 'Mosd meg a kezed!']
       };
       const E = { 'kijelentő': 'közöl valamit', 'kérdő': 'kérdez valamit', 'felkiáltó': 'érzelmet fejez ki', 'óhajtó': 'valamit kíván (bárcsak…)', 'felszólító': 'kér vagy parancsol valamit' };
+      const P = { 'kijelentő': 'pont', 'kérdő': 'kérdőjel', 'felkiáltó': 'felkiáltójel', 'óhajtó': 'felkiáltójel', 'felszólító': 'felkiáltójel' };
       const types = Object.keys(S), t = pick(types), s = pick(S[t]);
       const ch = shuffle([t].concat(shuffle(types.filter(x => x !== t)).slice(0, 3)));
-      return { prompt: 'Milyen mondat ez?', text: s, long: true, choices: ch, correct: ch.indexOf(t), layout: 'list', explain: `${t} mondat: ${E[t]}.` };
+      return { prompt: 'Milyen mondat ez?', text: s, long: true, choices: ch, correct: ch.indexOf(t), layout: 'list', key: 'mondat:' + s, explain: `${t} mondat: ${E[t]}. A végére ${P[t]} kerül.` };
     },
     abc() {
       const P = ['alma', 'barack', 'citrom', 'dió', 'eper', 'füge', 'gomba', 'ház', 'iskola', 'jég', 'kutya', 'labda', 'madár', 'narancs', 'olló', 'pálma', 'répa', 'sál', 'tányér', 'uszoda', 'vonat', 'zebra'];
@@ -804,7 +806,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   let kidExitWarn = false;
   let reports = null;           // a szülői nézet nyitott jelentései
   let reportOpen = false;       // a kérdésnél nyitva van-e a „Mi a hiba?” doboz
-  const APP_VERSION = 'gyakorlo-v9';
+  const APP_VERSION = 'gyakorlo-v10';
   const REASONS = { wrong_answer: 'Rossz a megoldás', bad_question: 'Hibás a kérdés', other: 'Más baj van' };
 
   function emptyCache() { return { pupils: [], results: {}, badges: {}, current: null, userId: null, householdId: null }; }
