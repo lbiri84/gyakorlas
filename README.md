@@ -2,7 +2,7 @@
 
 Gyakorló oldal 3. osztályosoknak: matek, nyelvtan és környezetismeret, kérdés-felelet formában, pontokkal és jelvényekkel. Egyetlen `index.html`, build nélkül. Nincs fiók, semmit nem küld sehová: a pontok és jelvények csak a készülék böngészőjében (localStorage) vannak.
 
-- **Matek:** összeadás, kivonás (1000-ig), szorzótábla, osztás (maradékossal), sorozatok, mértékegységek, szöveges feladatok.
+- **Matek (számok és műveletek 200-ig, mérések):** számok 200-ig, helyi érték, számegyenes, számszomszédok és kerekítés, összeadás-kivonás, szorzás-osztás, szöveges feladatok, mérések (tömeg, hossz), pénz és visszajáró. A feladatok generáltak, minden kör új számokkal.
 - **Nyelvtan:** j vagy ly?, szófajok, mondatfajták, ABC-sorrend.
 - **Környezetismeret:** az élet feltételei (élő és élettelen, életfeltételek, táplálkozás), állatcsoportok vegyesen, valamint külön az emlősök, madarak, hüllők, kétéltűek és a rovarok (bogarak): testtakaró, belső vagy külső váz, testfelépítés, szaporodás, kicsinyek, fejlődés.
 - **Vegyes kör:** 10 kérdés az összes témából.

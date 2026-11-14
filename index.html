@@ -112,16 +112,22 @@
   .qcard { padding: var(--space-8) var(--space-6); text-align: center; display: flex; flex-direction: column; gap: var(--space-3); align-items: center; }
   .qprompt { font-size: 16px; line-height: 22px; color: var(--fg-muted); }
   .qtext { font-size: 38px; line-height: 46px; font-weight: 600; letter-spacing: -0.02em; overflow-wrap: anywhere; }
+  .hl { color: var(--accent-text); border-bottom: 3px solid var(--accent); padding: 0 2px; }
+  .qtext.svg { font-size: 16px; width: 100%; }
+  .qtext.svg svg { width: 100%; height: auto; display: block; }
+  .qtext.mid { font-size: 30px; line-height: 38px; }
   .qtext.long { font-size: 22px; line-height: 32px; font-weight: 500; letter-spacing: 0; text-align: left; }
   .blank { display: inline-block; min-width: 1.5em; margin: 0 .1em; border-bottom: 4px solid var(--accent); color: var(--accent-text); text-align: center; line-height: 1; }
 
   .choices { display: grid; gap: var(--space-3); margin-top: var(--space-4); grid-template-columns: 1fr; }
   .choices.grid { grid-template-columns: repeat(2, 1fr); }
+  .choices.grid3 { grid-template-columns: repeat(3, 1fr); }
   .choice {
     position: relative; min-height: 68px; padding: var(--space-3) var(--space-4);
     background: var(--bg-raised); border: 2px solid var(--line); border-radius: var(--radius-lg);
     font-size: 20px; line-height: 26px; font-weight: 600; text-align: center;
   }
+  .choices.grid3 .choice { font-size: 30px; line-height: 36px; min-height: 76px; padding: var(--space-3) var(--space-2); }
   .choices.grid .choice { font-size: 30px; line-height: 36px; min-height: 76px; }
   .choice:not(:disabled):hover { border-color: var(--accent); }
   .choice:disabled { cursor: default; }
@@ -193,70 +199,6 @@
 
   /* ================= témák és feladatgenerátorok ================= */
   const GEN = {
-    osszeadas() {
-      const t = rnd(1, 3); let a, b;
-      if (t === 1) { a = rnd(11, 60); b = rnd(11, 100 - a); }
-      else if (t === 2) { a = rnd(1, 7) * 100 + rnd(0, 9) * 10; b = rnd(1, 99 - 0) * 10; if (a + b > 990) b = 990 - a - (990 - a) % 10; if (b < 10) b = 10; }
-      else { a = rnd(101, 600); b = rnd(11, Math.min(399, 999 - a)); }
-      const c = a + b;
-      return numQ(c, near(c).concat([c + 20, c - 20, a + b + 9, a + b - 9]), { prompt: 'Számold ki!', text: `${a} + ${b} = ?`, explain: `${a} + ${b} = ${c}` });
-    },
-    kivonas() {
-      const t = rnd(1, 3); let a, b;
-      if (t === 1) { a = rnd(31, 100); b = rnd(11, a - 10); }
-      else if (t === 2) { a = rnd(3, 10) * 100 - rnd(0, 5) * 100; if (a < 300) a = 300; a += rnd(0, 9) * 10; b = rnd(1, Math.floor((a - 10) / 10)) * 10; }
-      else { a = rnd(201, 999); b = rnd(11, a - 50); }
-      const c = a - b;
-      return numQ(c, near(c).concat([c + 20, c - 20, a + b, c + 9, c - 9]), { prompt: 'Számold ki!', text: `${a} − ${b} = ?`, explain: `${a} − ${b} = ${c}` });
-    },
-    szorzas() {
-      const a = rnd(2, 10), b = rnd(2, 10), c = a * b;
-      return numQ(c, [c + a, c - a, c + b, c - b, c + 10, c - 10, (a + 1) * b, a * (b + 1), a + b, c + 1, c - 1], { prompt: 'Szorzótábla', text: `${a} · ${b} = ?`, explain: `${a} · ${b} = ${c}` });
-    },
-    osztas() {
-      if (Math.random() < 0.25) {
-        const d = rnd(3, 9), q = rnd(2, 9), r = rnd(1, d - 1), n = d * q + r;
-        const opts = []; for (let i = 0; i < d; i++) if (i !== r) opts.push(i);
-        const o = shuffle(opts).slice(0, 3);
-        while (o.length < 3) o.push(d + o.length);
-        const all = shuffle([r].concat(o));
-        return { prompt: 'Maradékos osztás', text: `${n} : ${d} = ${q} (maradék: ?)`, choices: all.map(String), correct: all.indexOf(r), layout: 'grid', explain: `${n} = ${d} · ${q} + ${r}, tehát a maradék ${r}.` };
-      }
-      const d = rnd(2, 10), q = rnd(2, 10), n = d * q;
-      return numQ(q, [q + 1, q - 1, q + 2, q - 2, d, n - d, q + 10], { prompt: 'Osztás', text: `${n} : ${d} = ?`, explain: `${n} : ${d} = ${q}, mert ${d} · ${q} = ${n}.` });
-    },
-    sorozat() {
-      const s = pick([2, 3, 4, 5, 10, 20, 25, 50, 100]); const up = Math.random() < 0.7;
-      let start;
-      if (s >= 20) start = rnd(0, Math.floor((1000 - 4 * s) / s)) * s; else start = rnd(1, 40);
-      const t = []; for (let i = 0; i < 5; i++) t.push(start + i * s);
-      const seq = up ? t : t.slice().reverse();
-      const h = rnd(1, 4), c = seq[h];
-      const txt = seq.map((v, i) => i === h ? '<span class="blank">?</span>' : v).join(', ');
-      return numQ(c, [c + s, c - s, c + 2 * s, c - 2 * s, c + 1, c - 1, c + 10], { prompt: 'Melyik szám hiányzik?', text: txt, explain: `A lépés: ${s} (${up ? 'nő' : 'csökken'}). Teljes sor: ${seq.join(', ')}.` });
-    },
-    mertek() {
-      const F = [['m', 'cm', 100, 9], ['dm', 'cm', 10, 9], ['m', 'dm', 10, 9], ['km', 'm', 1000, 5], ['kg', 'dkg', 100, 9], ['kg', 'g', 1000, 5], ['l', 'dl', 10, 9], ['óra', 'perc', 60, 4]];
-      const [big, small, f, mx] = pick(F), n = rnd(1, mx), rev = Math.random() < 0.35;
-      const c = rev ? n : n * f, text = rev ? `${n * f} ${small} = ? ${big}` : `${n} ${big} = ? ${small}`;
-      return numQ(c, [c * 10, c % 10 === 0 ? c / 10 : -1, c + 10, c - 10, c + 1, c - 1, c * 2, c % 2 === 0 ? c / 2 : -1], { prompt: 'Váltsd át!', text, explain: `1 ${big} = ${f} ${small}, ezért ${n} ${big} = ${n * f} ${small}.` });
-    },
-    szoveges() {
-      const NAMES = [['Anna', 'Bence'], ['Dóri', 'Máté'], ['Zsófi', 'Levente'], ['Réka', 'Marci']];
-      const T = [
-        () => { const [a, b] = pick(NAMES), x = rnd(12, 60), y = rnd(12, 60); return { text: `${a} ${x} matricát gyűjtött, ${b} ${y} matricát. Hány matricájuk van együtt?`, ans: x + y, ex: `${x} + ${y} = ${x + y}`, alt: [Math.abs(x - y)] }; },
-        () => { const x = rnd(120, 500), y = rnd(110, 400); return { text: `A könyvtárban a polcon ${x} mesekönyv volt. Hoztak még ${y} könyvet. Hány könyv van most a polcon?`, ans: x + y, ex: `${x} + ${y} = ${x + y}`, alt: [x - y] }; },
-        () => { const x = rnd(60, 200), y = rnd(11, x - 10); return { text: `A boltban ${x} alma volt. Eladtak ${y} almát. Hány alma maradt?`, ans: x - y, ex: `${x} − ${y} = ${x - y}`, alt: [x + y] }; },
-        () => { const a = rnd(3, 9), b = rnd(2, 9); return { text: `Egy dobozban ${a} ceruza van. ${b} dobozban hány ceruza van összesen?`, ans: a * b, ex: `${a} · ${b} = ${a * b}`, alt: [a + b] }; },
-        () => { const d = rnd(2, 9), q = rnd(2, 10), p = d * q; return { text: `${p} cukorkát egyenlően elosztunk ${d} gyerek között. Hány cukorka jut egy gyereknek?`, ans: q, ex: `${p} : ${d} = ${q}`, alt: [p - d, d] }; },
-        () => { const n = pick(['Dóri', 'Anna', 'Réka', 'Zsófi']), a = rnd(3, 6), b = rnd(4, 9), c = rnd(3, a * b - 5); return { text: `${n} ${a} csomag matricát vett, egy csomagban ${b} matrica van. ${c} matricát odaadott a testvérének. Hány matricája maradt?`, ans: a * b - c, ex: `${a} · ${b} = ${a * b}, majd ${a * b} − ${c} = ${a * b - c}`, alt: [a * b + c, a * b] }; },
-        () => { const x = rnd(25, 60), y = rnd(5, x - 5), z = rnd(3, 20); return { text: `A buszon ${x} utas ült. A megállóban ${y} utas leszállt, ${z} felszállt. Hány utas van most a buszon?`, ans: x - y + z, ex: `${x} − ${y} + ${z} = ${x - y + z}`, alt: [x - y - z, x + y + z] }; },
-        () => { const x = rnd(10, 50) * 10, y = rnd(5, x / 10 - 1) * 10; return { text: `Máté ${x} forintot tett a perselybe, Réka ${y} forintot. Hány forinttal tett Máté többet?`, ans: x - y, ex: `${x} − ${y} = ${x - y}`, alt: [x + y] }; },
-        () => { const p = rnd(4, 12) * 10, n = rnd(2, 6); return { text: `Egy füzet ${p} forint. ${n} füzet hány forintba kerül?`, ans: p * n, ex: `${n} · ${p} = ${p * n}`, alt: [p + n, p * n / 10] }; }
-      ];
-      const q = pick(T)();
-      return numQ(q.ans, q.alt.concat(near(q.ans)), { prompt: 'Szöveges feladat', text: q.text, long: true, explain: q.ex });
-    },
     jly() {
       const LY = [['he', ''], ['go', 'ó'], ['fo', 'ó'], ['kirá', ''], ['mé', ''], ['', 'uk'], ['pehe', ''], ['kö', 'ök'], ['bago', ''], ['gó', 'a'], ['fo', 'ik'], ['hó', 'ag'], ['me', 'ik'], ['mi', 'en']];
       const J = [['', 'áték'], ['ha', 'ó'], ['a', 'tó'], ['ma', 'om'], ['pa', 'tás'], ['a', 'ándék'], ['é', 'szaka'], ['ba', 'usz'], ['te', ''], ['fe', ''], ['va', 'on'], ['sa', 't'], ['ha', 'nal']];
@@ -444,14 +386,263 @@
     }
   });
 
+
+  /* ================= Matek: számok és műveletek 200-ig, mérések ================= */
+  const UW = ['', 'egy', 'kettő', 'három', 'négy', 'öt', 'hat', 'hét', 'nyolc', 'kilenc'];
+  const TW = ['', 'tizen', 'huszon', 'harminc', 'negyven', 'ötven', 'hatvan', 'hetven', 'nyolcvan', 'kilencven'];
+  function numWord(n) {
+    if (n === 200) return 'kétszáz';
+    if (n >= 100) return 'száz' + (n === 100 ? '' : numWord(n - 100));
+    if (n === 10) return 'tíz';
+    if (n === 20) return 'húsz';
+    if (n < 10) return UW[n];
+    return TW[Math.floor(n / 10)] + UW[n % 10];
+  }
+  const t10 = (a, b) => rnd(a / 10, b / 10) * 10;
+  const swap2 = n => n >= 100 ? 100 * Math.floor(n / 100) + 10 * (n % 10) + Math.floor((n % 100) / 10) : 10 * (n % 10) + Math.floor(n / 10);
+  const NAMES1 = ['Anna', 'Bence', 'Dóri', 'Máté', 'Zsófi', 'Levente', 'Réka', 'Marci'];
+
+  function cmpQ(prompt, text, l, r, explain, extra) {
+    return Object.assign({ prompt, text, choices: ['<', '=', '>'], correct: l < r ? 0 : l === r ? 1 : 2, layout: 'grid3', explain, meta: { cmp: [l, r] } }, extra);
+  }
+  const tf = (prompt, text, truth, explain, extra) => Object.assign({ prompt, text, choices: ['igaz', 'hamis'], correct: truth ? 0 : 1, layout: 'grid', explain, long: true, meta: { truth } }, extra);
+  const exprQ = (prompt, text, ans, expr, cands, explain, extra) => numQ(ans, cands, Object.assign({ prompt, text, explain, meta: { expr } }, extra));
+
+  /* számegyenes SVG: a jelölt szám helyét kell leolvasni */
+  function nlSvg(lo, hi, v) {
+    const L = 24, R = 376, y = 46, sc = (R - L) / (hi - lo), X = i => (L + (i - lo) * sc).toFixed(1);
+    let s = `<svg viewBox="0 0 400 90" role="img" aria-label="Számegyenes ${lo} és ${hi} között, egy szám helye jelölve">`;
+    s += `<line x1="${L - 10}" y1="${y}" x2="${R + 12}" y2="${y}" stroke="var(--fg-muted)" stroke-width="2"/><path d="M${R + 12} ${y} l-8 -4.5 v9z" fill="var(--fg-muted)"/>`;
+    for (let i = lo; i <= hi; i++) {
+      const big = i % 10 === 0, t = big ? 16 : i % 5 === 0 ? 11 : 6;
+      s += `<line x1="${X(i)}" y1="${y}" x2="${X(i)}" y2="${y + t}" stroke="var(--fg-muted)" stroke-width="${big ? 2 : 1}"/>`;
+    }
+    for (let i = lo; i <= hi; i += 10) s += `<text x="${X(i)}" y="${y + 33}" text-anchor="middle" font-size="12" style="fill:var(--fg)">${i}</text>`;
+    s += `<path d="M${X(v)} ${y - 3} l-7 -15 h14z" fill="var(--accent)"/><circle cx="${X(v)}" cy="${y}" r="3.5" fill="var(--accent)"/></svg>`;
+    return s;
+  }
+  const hl = s => `<span class="hl">${s}</span>`;
+  const num200 = () => { let n = Math.random() < 0.7 ? rnd(101, 199) : rnd(21, 99); if (n % 10 === 0 && Math.random() < 0.8) n += rnd(1, 9); return n; };
+  const wordsOf = (arr, n) => arr.filter(v => v >= 1 && v <= 200 && v !== n).map(numWord);
+  const SYM = [['♣', 20], ['▲', 30], ['●', 40], ['■', 50]];
+  const COIN = [20, 50, 100];
+  const coinsLabel = c => c.slice().sort((a, b) => b - a).join(' + ');
+  function randCoins() { for (;;) { const k = rnd(2, 4), c = []; for (let i = 0; i < k; i++) c.push(pick(COIN)); if (c.reduce((a, b) => a + b, 0) <= 200) return c; } }
+
+  Object.assign(GEN, {
+    szamok200() {
+      const T = [
+        () => { const n = num200(), w = numWord(n); return numQ(n, [swap2(n), n + 10, n - 10, n + 1, n - 1, n + 100, n - 100], { prompt: 'Írd le számmal!', text: w, key: 'w2n:' + n, explain: `${w} = ${n}`, meta: { expr: String(n) } }); },
+        () => { const n = num200(), w = numWord(n); return mc('Írd le betűvel!', String(n), w, wordsOf([swap2(n), n + 10, n - 10, n + 1, n - 1], n), `${n} = ${w}`, { key: 'n2w:' + n, meta: { word: [n, w] } }); },
+        () => { const n = rnd(100, 200); return { prompt: 'Páros vagy páratlan?', text: String(n), choices: ['páros', 'páratlan'], correct: n % 2, layout: 'grid', key: 'par:' + n, explain: n % 2 ? `${n} páratlan: az egyesek helyén ${n % 10} áll.` : `${n} páros: az egyesek helyén ${n % 10} áll.`, meta: { par: n } }; },
+        () => { const a = rnd(100, 199), b = Math.random() < 0.15 ? a : a + rnd(-6, 6); return cmpQ('Hasonlítsd össze!', `${a} ○ ${b}`, a, b, `${a} ${a < b ? '<' : a === b ? '=' : '>'} ${b}`, { key: `cmp:${a}:${b}` }); },
+        () => {
+          const s = rnd(111, 190), col = (s - 101) % 10, row = Math.floor((s - 101) / 10), kind = rnd(1, 3);
+          let h = 0, v = 0;
+          if (kind !== 2) { do { h = rnd(-Math.min(col, 6), Math.min(9 - col, 6)); } while (h === 0); }
+          if (kind !== 1) { do { v = rnd(-Math.min(row, 4), Math.min(9 - row, 4)); } while (v === 0); }
+          const parts = [];
+          if (v) parts.push(`${Math.abs(v)} ${v > 0 ? 'le' : 'fel'}`);
+          if (h) parts.push(`${Math.abs(h)} ${h > 0 ? 'jobbra' : 'balra'}`);
+          const ans = s + h + 10 * v;
+          return numQ(ans, [s - h + 10 * v, s + h - 10 * v, s + h + v, s - h - 10 * v, ans + 1, ans - 1, ans + 10, ans - 10], { prompt: 'A számtáblában lépkedsz. Melyik számra érkezel?', text: `${s}: ${parts.join(', ')}`, long: true, key: 'grid:' + s + parts.join(), explain: 'Jobbra +1, balra −1, le +10, fel −10 egy lépés.', meta: { expr: `${s}+${h}+10*${v}` } });
+        },
+        () => {
+          const S = rnd(6, 14), ok = [], bad = [];
+          for (let n = 101; n <= 199; n++) ((1 + Math.floor((n % 100) / 10) + n % 10) === S ? ok : bad).push(String(n));
+          const c = pick(ok); return mc(`Melyik szám számjegyeinek összege ${S}?`, `Számjegyek összege: ${S}`, c, bad, `${c}: ${c.split('').join(' + ')} = ${S}`, { key: 'dsum:' + S + ':' + c, meta: { dsum: S } });
+        }
+      ];
+      return pick(T)();
+    },
+
+    helyiertek() {
+      const T = [
+        () => {
+          const n = rnd(101, 199), p = [1, Math.floor((n % 100) / 10), n % 10], miss = pick([1, 2]) , nm = ['százas', 'tízes', 'egyes'];
+          const txt = `${n} = ${miss === 1 ? '?' : p[0]} ${nm[0]} + ${miss === 1 ? '?' : p[1]} ${nm[1]} + ${miss === 2 ? '?' : p[2]} ${nm[2]}`.replace(/\? (százas|tízes|egyes)/, '? $1');
+          const d = p[miss]; return numQ(d, [d + 1, d - 1, d + 2, d - 2, p[0], p[1], p[2], 9 - d], { prompt: 'Pótold a hiányzó számot!', text: txt, long: true, key: 'bont:' + n + miss, explain: `${n} = ${p[0]} százas + ${p[1]} tízes + ${p[2]} egyes`, meta: { expr: String(d) } });
+        },
+        () => { const t = rnd(0, 8), e = rnd(10, 15), n = 100 + 10 * t + e; return numQ(n, [n - 10, n + 10, n + 1, n - 1, 100 + 10 * t, 100 + 10 * t + e % 10, n - 9], { prompt: 'Számold ki!', text: `1 százas + ${t} tízes + ${e} egyes = ?`, long: true, key: 'ossz:' + t + ':' + e, explain: `${e} egyes = 1 tízes + ${e - 10} egyes, ezért az eredmény ${n}.`, meta: { expr: `100+10*${t}+${e}` } }); },
+        () => {
+          const n = rnd(101, 199), dg = [Math.floor(n / 100), Math.floor((n % 100) / 10), n % 10], pl = [100, 10, 1], nm = ['százas', 'tízes', 'egyes'];
+          const opts = [0, 1, 2].filter(i => dg[i] > 0), i = pick(opts);
+          const marked = dg.map((x, j) => j === i ? hl(x) : x).join('');
+          if (Math.random() < 0.5) { const c = dg[i] * pl[i]; return numQ(c, [dg[i], dg[i] * 10, dg[i] * 100, dg[i] * pl[i] * 10, c + 10, c - 10].filter(v => v > 0), { prompt: 'Mi a kiemelt számjegy valódi értéke?', text: marked, key: 'val:' + n + i, explain: `A kiemelt számjegy alaki értéke ${dg[i]}, helye a ${nm[i]}, valódi értéke ${c}.`, meta: { expr: `${dg[i]}*${pl[i]}` } }); }
+          return { prompt: 'Melyik helyi értéken áll a kiemelt számjegy?', text: marked, choices: ['egyes', 'tízes', 'százas'], correct: 2 - i, layout: 'list', key: 'hely:' + n + i, explain: `A kiemelt számjegy a ${nm[i]} helyén áll.`, meta: { place: [n, i] } };
+        },
+        () => {
+          const t = rnd(1, 3);
+          if (t === 1) {
+            const d = rnd(2, 9), u = rnd(0, 9), c = 100 + 10 * d + u, bad = new Set();
+            if (u !== d) bad.add(String(100 + 10 * u + d));
+            while (bad.size < 3) { const d2 = rnd(0, 9), u2 = rnd(0, 9); if (d2 !== d) bad.add(String(100 + 10 * d2 + u2)); }
+            return mc('Melyik szám ez?', `A tízesek helyén álló számjegy valódi értéke ${10 * d}.`, String(c), Array.from(bad), `${c}: a tízesek helyén ${d} áll, ez ${10 * d}.`, { key: 'allt:' + c, meta: { tens: [c, d] } });
+          }
+          if (t === 2) {
+            const d = rnd(1, 9), tt = rnd(0, 9), c = 100 + 10 * tt + d, bad = new Set();
+            if (tt !== d) bad.add(String(100 + 10 * d + tt));
+            while (bad.size < 3) { const d2 = rnd(0, 9), t2 = rnd(0, 9); if (d2 !== d) bad.add(String(100 + 10 * t2 + d2)); }
+            return mc('Melyik szám ez?', `Az egyesek helyén álló számjegy alaki értéke ${d}.`, String(c), Array.from(bad), `${c}: az egyesek helyén ${d} áll.`, { key: 'alle:' + c, meta: { ones: [c, d] } });
+          }
+          const u = rnd(0, 9), c = 110 + u, bad = new Set();
+          while (bad.size < 3) { const t2 = rnd(0, 9), u2 = rnd(0, 9); if (t2 !== 1) bad.add(String(100 + 10 * t2 + u2)); }
+          return mc('Melyik szám ez?', 'A százasok és a tízesek helyén ugyanaz a számjegy áll.', String(c), Array.from(bad), `${c}: a százasok helyén 1, a tízesek helyén is 1 áll.`, { key: 'allh:' + c, meta: { same: c } });
+        }
+      ];
+      return pick(T)();
+    },
+
+    szamegyenes() {
+      const T = [
+        () => { const lo = pick([0, 100]), v = rnd(lo, lo + 100); return numQ(v, [v + 10, v - 10, v + 5, v - 5, v + 1, v - 1], { prompt: 'Melyik számot jelöltük a számegyenesen?', text: nlSvg(lo, lo + 100, v), svg: true, key: 'nl:' + lo + ':' + v, explain: `A jelölt szám: ${v}.`, meta: { nl: [lo, lo + 100, v] } }); },
+        () => { const a = rnd(101, 190), b = a + rnd(3, 9), c = rnd(a + 1, b - 1); return numQ(c, [a, b, a - 1, b + 1, a - 2, b + 2, a - 3, b + 3], { prompt: 'Melyik szám van a két szám között?', text: `${a} és ${b}`, key: `btw:${a}:${b}:${c}`, explain: `${a} < ${c} < ${b}`, meta: { between: [a, b] } }); },
+        () => {
+          if (Math.random() < 0.5) { const a = rnd(110, 180), b = a + rnd(4, 14), c = Math.random() < 0.5 ? rnd(a + 1, b - 1) : (Math.random() < 0.5 ? rnd(a - 8, a - 1) : rnd(b + 1, b + 8)); const truth = c > a && c < b; return tf('Igaz vagy hamis?', `A ${a} és a ${b} között van a ${c}.`, truth, truth ? `${a} < ${c} < ${b}, tehát igaz.` : `A ${c} nincs a ${a} és a ${b} között.`, { key: `tfb:${a}:${b}:${c}` }); }
+          const a = t10(100, 180), k = rnd(2, 9), b = a + 2 * k, mid = a + k, m = Math.random() < 0.5 ? mid : mid + pick([-3, -2, -1, 1, 2, 3]); const truth = m === mid;
+          return tf('Igaz vagy hamis?', `A ${m} pontosan középen van a ${a} és a ${b} között.`, truth, `A ${a} és a ${b} közti középső szám: ${mid}.`, { key: `tfm:${a}:${b}:${m}` });
+        },
+        () => { const s = rnd(100, 200), k = rnd(1, 9), dir = (s - k < 100) ? 'jobbra' : (s + k > 200) ? 'balra' : pick(['jobbra', 'balra']), ans = dir === 'jobbra' ? s + k : s - k; return numQ(ans, [dir === 'jobbra' ? s - k : s + k, ans + 1, ans - 1, ans + 10, ans - 10], { prompt: 'Melyik számra ugrik a szöcske?', text: `Start: ${s}, ${k} egység ${dir}`, long: true, key: `jump:${s}:${k}:${dir}`, explain: `${s} ${dir === 'jobbra' ? '+' : '−'} ${k} = ${ans}`, meta: { expr: `${s}${dir === 'jobbra' ? '+' : '-'}${k}` } }); }
+      ];
+      return pick(T)();
+    },
+
+    szomszed() {
+      const T = [
+        () => {
+          const n = rnd(101, 199), lo = n - (n % 10 === 0 ? 10 : n % 10), hi = lo + 10;
+          const K = [['kisebb tízes számszomszéd', lo], ['nagyobb tízes számszomszéd', hi], ['kisebb egyes számszomszéd', n - 1], ['nagyobb egyes számszomszéd', n + 1]], [nm, ans] = pick(K);
+          return numQ(ans, [lo, hi, n - 1, n + 1, ans + 10, ans - 10].filter(v => v !== ans), { prompt: `Mi ennek a számnak a ${nm}ja?`, text: String(n), key: 'nb:' + n + nm, explain: `A(z) ${n} ${nm}ja: ${ans}.`, meta: { expr: String(ans) } });
+        },
+        () => { const n = rnd(101, 199); if (n % 10 === 0) return GEN.szomszed(); const lo = n - (n % 10), hi = lo + 10, ans = n % 10 >= 5 ? hi : lo; return numQ(ans, [lo, hi, ans + 10, ans - 10, ans + 20, ans - 20], { prompt: 'Kerekítsd tízesre!', text: `${n} ≈ ?`, key: 'rnd:' + n, explain: `${n} közelebb van a(z) ${ans}-hez (5 vagy több egyesnél felfelé kerekítünk).`, meta: { expr: `Math.round(${n}/10)*10` } }); },
+        () => { const t = t10(110, 190), c = rnd(t - 5, t + 4), bad = []; for (let i = 6; i <= 9; i++) { bad.push(t - i, t + i); } return numQ(c, bad, { prompt: 'Válaszd ki!', text: `Melyik szám tízesre kerekített értéke ${t}?`, long: true, key: `rt:${t}:${c}`, explain: `A(z) ${c} tízesre kerekítve ${t}.`, meta: { rnd: [c, t] } }); }
+      ];
+      return pick(T)();
+    },
+
+    osszkiv() {
+      const mkExpr = r => { const plus = Math.random() < 0.5; if (plus) { const a = t10(10, r - 10 >= 10 ? r - 10 : r), b = r - a; if (b >= 10 && a >= 10) return [`${a} + ${b}`, r]; } const b = t10(10, 100); return [`${r + b} − ${b}`, r]; };
+      const T = [
+        () => { const a = t10(10, 190), b = t10(10, 200 - a), c = a + b; return exprQ('Számold ki!', `${a} + ${b} = ?`, c, `${a}+${b}`, [c + 10, c - 10, c + 20, c - 20, c + 100, Math.abs(a - b)], `${a} + ${b} = ${c}`, { key: `add:${a}:${b}` }); },
+        () => { const a = t10(20, 200), b = t10(10, a - 10), c = a - b; return exprQ('Számold ki!', `${a} − ${b} = ?`, c, `${a}-${b}`, [c + 10, c - 10, c + 20, c - 20, a + b > 200 ? c + 30 : a + b, c + 100], `${a} − ${b} = ${c}`, { key: `sub:${a}:${b}` }); },
+        () => {
+          const a = t10(10, 180), b = t10(10, 200 - a), s = a + b, k = rnd(1, 4);
+          const V = [[`${a} + ? = ${s}`, b, `${s}-${a}`], [`? + ${b} = ${s}`, a, `${s}-${b}`], [`${s} − ? = ${a}`, b, `${s}-${a}`], [`? − ${b} = ${a}`, s, `${a}+${b}`]], [text, ans, expr] = V[k - 1];
+          return exprQ('Melyik szám hiányzik?', text, ans, expr, [ans + 10, ans - 10, ans + 20, ans - 20, s, a, b], `A hiányzó szám ${ans}.`, { key: 'miss:' + text });
+        },
+        () => {
+          const eq = Math.random() < 0.2, r1 = t10(10, 100), [e1, v1] = mkExpr(r1); let r2 = eq ? r1 : r1 + pick([-30, -20, -10, 10, 20, 30]); if (r2 < 10) r2 = r1 + 10;
+          const [e2, v2] = mkExpr(r2); return cmpQ('Hasonlítsd össze az eredményeket!', `${e1} ○ ${e2}`, v1, v2, `${e1} = ${v1}, ${e2} = ${v2}`, { key: `cmpr:${e1}:${e2}`, long: false });
+        },
+        () => {
+          let s, start; do { s = pick([10, 20, 30, 40, 50]); start = t10(10, 80); } while (start + 4 * s > 200);
+          const up = Math.random() < 0.7, t = []; for (let i = 0; i < 5; i++) t.push(start + i * s); const seq = up ? t : t.slice().reverse(), h = rnd(1, 4), c = seq[h];
+          return numQ(c, [c + s, c - s, c + 10, c - 10, c + 2 * s, c - 2 * s], { prompt: 'Melyik szám hiányzik a sorozatból?', text: seq.map((v, i) => i === h ? '<span class="blank">?</span>' : v).join(', '), key: 'seq:' + seq.join() + h, explain: `A lépés: ${s} (${up ? 'nő' : 'csökken'}). A sor: ${seq.join(', ')}.`, meta: { seq: [seq, h] } });
+        },
+        () => { const s = pick([20, 30, 40, 50, 90]), x = t10(100, 200 - s - 10), x2 = x + 10; const wrong = [s + 10, s - 10 >= 10 ? s - 10 : s + 20, s + 20].map(v => '+ ' + v); return mc('Melyik művelet szerint változnak a számok?', `${x} → ${x + s}, ${x2} → ${x2 + s}`, '+ ' + s, wrong.concat(['− ' + s]), `${x} + ${s} = ${x + s}, ${x2} + ${s} = ${x2 + s}`, { key: 'rule:' + s + ':' + x, long: false }); },
+        () => {
+          const [A1, A2] = shuffle(SYM).slice(0, 2), sub = Math.random() < 0.7, sy = pick([A1, A2]);
+          const a = sub ? t10(sy[1] + 10, 200) : t10(10, 200 - sy[1]), c = sub ? a - sy[1] : a + sy[1];
+          return exprQ('Számold ki! Az azonos jelek azonos számot takarnak.', `${A1[0]} = ${A1[1]} · ${A2[0]} = ${A2[1]}<br>${a} ${sub ? '−' : '+'} ${sy[0]} = ?`, c, `${a}${sub ? '-' : '+'}${sy[1]}`, [c + 10, c - 10, c + 20, c - 20, sub ? a + sy[1] : a - sy[1]], `${a} ${sub ? '−' : '+'} ${sy[1]} = ${c}`, { key: `sym:${A1[0]}${A2[0]}${a}${sy[0]}${sub}`, long: false });
+        }
+      ];
+      return pick(T)();
+    },
+
+    szorosz() {
+      const P = []; for (let k = 2; k <= 10; k++) for (let t = 10; t <= 100; t += 10) if (k * t <= 200) P.push([k, t, k * t]);
+      const T = [
+        () => { const [k, t, p] = pick(P), sw = Math.random() < 0.4; return exprQ('Szorzás', sw ? `${t} · ${k} = ?` : `${k} · ${t} = ?`, p, `${k}*${t}`, [p + 10, p - 10, p + t, p - t, p + k * 10, k + t], `${k} · ${t} = ${p}`, { key: `mul:${k}:${t}:${sw}` }); },
+        () => { const [k, t, p] = pick(P.filter(x => x[0] < 10)), byK = Math.random() < 0.5, d = byK ? k : t, q = byK ? t : k; return exprQ('Osztás', `${p} : ${d} = ?`, q, `${p}/${d}`, [q + 1, q - 1, q + 10, q - 10, d, p - d], `${p} : ${d} = ${q}, mert ${d} · ${q} = ${p}.`, { key: `div:${p}:${d}` }); },
+        () => {
+          const [k, t, p] = pick(P.filter(x => x[0] < 10)), V = [[`${p} : ? = ${t}`, k, `${p}/${t}`], [`${p} : ? = ${k}`, t, `${p}/${k}`], [`? : ${k} = ${t}`, p, `${t}*${k}`], [`${k} · ? = ${p}`, t, `${p}/${k}`], [`? · ${t} = ${p}`, k, `${p}/${t}`]], [text, ans, expr] = pick(V);
+          return exprQ('Melyik szám hiányzik?', text, ans, expr, [ans + 1, ans - 1, ans + 10, ans - 10, ans * 2, p, k, t], `A hiányzó szám ${ans}.`, { key: 'smiss:' + text });
+        },
+        () => {
+          const [k, t] = pick(P.filter(x => x[0] >= 2 && x[0] <= 5)), plus = Array(k).fill(t).join(' + '), good = `${k} · ${t}`;
+          return mc('Melyik szorzással egyenlő?', plus, good, [`${k + 1} · ${t}`, `${k} · ${t + 10}`, `${k - 1 >= 1 ? k - 1 : k + 2} · ${t}`, `${k} · ${t - 10 >= 10 ? t - 10 : t + 20}`], `${plus} = ${k} · ${t}, mert ${k}-szor ${t} van.`, { key: `rep:${k}:${t}`, long: false, meta: { rep: [k, t] } });
+        },
+        () => { const [k, t, p] = pick(P.filter(x => x[0] < 10)), kind = rnd(1, 2); return kind === 1 ? exprQ('Melyik osztás igaz?', `${k} · ${t} = ${p}, tehát ${p} : ${k} = ?`, t, String(t), [t + 10, t - 10, k, p - t, t * 2], `${p} : ${k} = ${t}`, { key: `rel1:${k}:${t}` }) : exprQ('Melyik osztás igaz?', `${k} · ${t} = ${p}, tehát ${p} : ${t} = ?`, k, String(k), [k + 1, k - 1, t, k + 10, p - t], `${p} : ${t} = ${k}`, { key: `rel2:${k}:${t}` }); }
+      ];
+      return pick(T)();
+    },
+
+    szoveges() {
+      const T = [
+        () => { const n = pick(NAMES1), p = t10(30, 90), c = 200 - 2 * p; return exprQ('Szöveges feladat', `${n} 200 Ft-ot kapott. Két egyforma virágot vett, egy virág ${p} Ft. Hány forint a visszajáró?`, c, `200-2*${p}`, [200 - p, 2 * p, c + 10, c - 10, c + 20], `2 · ${p} = ${2 * p}, és 200 − ${2 * p} = ${c}.`, { key: 'sz1:' + p, long: true }); },
+        () => { const per = pick([20, 30, 40]), q = rnd(2, Math.min(9, Math.floor(200 / per))), tot = per * q; return exprQ('Szöveges feladat', `Egy gyereknek ${per} virághagymát adtak. Összesen ${tot} hagymát kell elültetni. Hány gyerekre van szükség?`, q, `${tot}/${per}`, [q + 1, q - 1, q + 2, q - 2, per], `${tot} : ${per} = ${q}`, { key: `sz2:${per}:${q}`, long: true }); },
+        () => { const a = rnd(20, 70), b = rnd(20, 70), s = a + b + 50; return exprQ('Szöveges feladat', `Csenge gyümölcssalátát készít. ${a} dkg mandarint, ${b} dkg ananászt és fél kg almát vásárolt. Hány dkg gyümölcsöt vásárolt összesen?`, s, `${a}+${b}+50`, [s - 50, s + 50, s + 10, s - 10, s - 100, a + b + 5], `Fél kg = 50 dkg, így ${a} + ${b} + 50 = ${s}.`, { key: `sz3:${a}:${b}`, long: true }); },
+        () => { const x = rnd(1, 19) * 5; return exprQ('Szöveges feladat', `A recept ${x} dkg lisztet kér. Hány dkg lisztet kell venni dupla adaghoz?`, 2 * x, `2*${x}`, [x, x + 10, 2 * x + 10, 2 * x - 10, 2 * x + 5], `Dupla adag: 2 · ${x} = ${2 * x}.`, { key: 'sz4:' + x, long: true }); },
+        () => { const p = pick([20, 30, 40, 50]), k = rnd(2, Math.min(9, Math.floor(200 / p))), c = p * k; return exprQ('Szöveges feladat', `Egy füzet ${p} Ft. ${k} füzet hány forintba kerül?`, c, `${p}*${k}`, [c + p, c - p, c + 10, c - 10, p + k], `${k} · ${p} = ${c}`, { key: `sz5:${p}:${k}`, long: true }); },
+        () => { const n = pick(NAMES1), a = t10(20, 120), b = t10(10, 200 - a), c = a + b; return exprQ('Szöveges feladat', `${n} ${a} Ft-ért ceruzát és ${b} Ft-ért radírt vett. Mennyit fizetett összesen?`, c, `${a}+${b}`, [c + 10, c - 10, a - b > 0 ? a - b : c + 20, c + 20, c - 20], `${a} + ${b} = ${c}`, { key: `sz6:${a}:${b}`, long: true }); },
+        () => { const g = pick([20, 30, 40, 50, 60]), q = rnd(2, Math.min(9, Math.floor(200 / g))), tot = g * q; return exprQ('Szöveges feladat', `Egy gyerek ${tot} Ft-ot oszt ${g} Ft-os csoportokra. Hány csoport lesz?`, q, `${tot}/${g}`, [q + 1, q - 1, q + 2, q - 2, g], `${tot} : ${g} = ${q}`, { key: `sz7:${g}:${q}`, long: true }); },
+        () => { const x = rnd(10, 19) * 10 + rnd(0, 9), y = rnd(30, x - 20), d = x - y; return exprQ('Szöveges feladat', `Máté ${x} dkg lisztet használt, Réka ${y} dkg lisztet. Hány dkg a különbség?`, d, `${x}-${y}`, [d + 10, d - 10, x + y > 200 ? d + 20 : x + y, d + 1, d - 1], `${x} − ${y} = ${d}`, { key: `sz8:${x}:${y}`, long: true }); },
+        () => { const k = rnd(2, 6), t = t10(10, Math.floor(200 / k / 10) * 10), c = k * t; return exprQ('Szöveges feladat', `Egy dobozban ${t} ceruza van. ${k} dobozban hány ceruza van összesen?`, c, `${k}*${t}`, [c + t, c - t, c + 10, c - 10, k + t], `${k} · ${t} = ${c}`, { key: `sz9:${k}:${t}`, long: true }); },
+        () => { const k = rnd(2, 8), t = t10(10, Math.floor(200 / k / 10) * 10), p = k * t; return exprQ('Szöveges feladat', `${p} Ft-ot egyenlően elosztanak ${k} gyerek között. Hány forint jut egy gyereknek?`, t, `${p}/${k}`, [t + 10, t - 10 >= 10 ? t - 10 : t + 20, k, p - k, t + 20], `${p} : ${k} = ${t}`, { key: `sz10:${k}:${t}`, long: true }); }
+      ];
+      return pick(T)();
+    },
+
+    meres() {
+      const T = [
+        () => {
+          const K = [
+            () => { const k = rnd(1, 2); return [`${k} kg = ? dkg`, k * 100, `${k} kg = ${k * 100} dkg`, `${k}*100`]; },
+            () => [`fél kg = ? dkg`, 50, 'Fél kg = 50 dkg', '50'],
+            () => { const d = rnd(1, 99); return [`1 kg ${d} dkg = ? dkg`, 100 + d, `1 kg = 100 dkg, így 1 kg ${d} dkg = ${100 + d} dkg.`, `100+${d}`]; },
+            () => { const k = rnd(1, 2); return [`${k} m = ? cm`, k * 100, `${k} m = ${k * 100} cm`, `${k}*100`]; },
+            () => { const c = rnd(1, 99); return [`1 m ${c} cm = ? cm`, 100 + c, `1 m = 100 cm, így 1 m ${c} cm = ${100 + c} cm.`, `100+${c}`]; },
+            () => { const k = rnd(1, 2); return [`${k * 100} dkg = ? kg`, k, `${k * 100} dkg = ${k} kg`, String(k)]; },
+            () => { const k = rnd(1, 2); return [`${k * 100} cm = ? m`, k, `${k * 100} cm = ${k} m`, String(k)]; }
+          ], [text, ans, ex, expr] = pick(K)();
+          return exprQ('Váltsd át!', text, ans, expr, [ans * 10, ans % 10 === 0 ? ans / 10 : ans + 10, ans + 10, ans - 10, ans + 1, ans - 1, ans + 50].filter(v => v > 0), ex, { key: 'conv:' + text });
+        },
+        () => {
+          const n = rnd(101, 199), d = n - 100, unit = pick([['kg', 'dkg'], ['m', 'cm']]), good = `1 ${unit[0]} ${d} ${unit[1]}`;
+          const pool = [`1 ${unit[0]} ${d + 10 <= 99 ? d + 10 : d - 10 >= 1 ? d - 10 : d + 1} ${unit[1]}`, `2 ${unit[0]} ${d} ${unit[1]}`, `1 ${unit[0]} ${d % 10 * 10 + Math.floor(d / 10)} ${unit[1]}`, `11 ${unit[0]} ${d} ${unit[1]}`, `1 ${unit[0]} ${d + 1 <= 99 ? d + 1 : d - 1} ${unit[1]}`];
+          return mc('Váltsd át!', `${n} ${unit[1]} = ?`, good, pool, `${n} ${unit[1]} = 100 ${unit[1]} + ${d} ${unit[1]} = ${good}`, { key: `conv2:${n}:${unit[0]}`, meta: { conv2: [n, good] } });
+        },
+        () => {
+          const [big, small] = pick([['kg', 'dkg'], ['m', 'cm']]), k = rnd(1, 2), eq = Math.random() < 0.2, d = eq ? k * 100 : rnd(30, 199), left = Math.random() < 0.5;
+          const bt = `${k} ${big}`, st = `${d} ${small}`; const l = left ? k * 100 : d, r = left ? d : k * 100;
+          return cmpQ('Hasonlítsd össze a mennyiségeket!', left ? `${bt} ○ ${st}` : `${st} ○ ${bt}`, l, r, `1 ${big} = 100 ${small}, így ${k} ${big} = ${k * 100} ${small}.`, { key: `cmpm:${bt}:${st}:${left}`, long: false });
+        },
+        () => {
+          const lo = rnd(30, 190), hi = lo + rnd(3, 12), c = rnd(lo + 1, hi - 1), big = hi === 100;
+          return numQ(c, [lo, hi, lo - 1, hi + 1, lo - 2, hi + 2, lo - 3, hi + 3], { prompt: 'Melyik szám lehet a ? helyén (dkg)?', text: big ? `${100} dkg > ? > ${lo} dkg`.replace('100 dkg', '1 kg') : `${lo} dkg < ? < ${hi} dkg`, long: false, key: `mbtw:${lo}:${hi}:${c}`, explain: `${lo} < ${c} < ${hi}`, meta: { between: [lo, hi] } });
+        },
+        () => {
+          const x = t10(10, 100), y = t10(10, 100), s = x + y, z = t10(10, s - 10), c = s - z;
+          return exprQ('Hány dkg kell a jobb serpenyőbe, hogy a mérleg egyensúlyban legyen?', `Bal: ${x} dkg + ${y} dkg<br>Jobb: ${z} dkg + ? dkg`, c, `${x}+${y}-${z}`, [c + 10, c - 10, s, z, c + 20, c - 20], `Bal: ${x} + ${y} = ${s} dkg. ${s} − ${z} = ${c}.`, { key: `bal:${x}:${y}:${z}`, long: false });
+        }
+      ];
+      return pick(T)();
+    },
+
+    penz() {
+      const T = [
+        () => { const c = randCoins(), s = c.reduce((a, b) => a + b, 0); return exprQ('Mennyi pénz van a tárcában?', c.slice().sort((a, b) => b - a).map(v => v + ' Ft').join(' · '), s, c.join('+'), [s + 10, s - 10, s + 20, s - 20, s + 30, s - 30, s + 50, s - 50], `${c.join(' + ')} = ${s} Ft`, { key: 'wal:' + c.slice().sort().join(), long: false }); },
+        () => {
+          const c = randCoins(), s = c.reduce((a, b) => a + b, 0), good = coinsLabel(c), bad = new Set();
+          for (let i = 0; i < 80 && bad.size < 3; i++) { const o = randCoins(); const so = o.reduce((a, b) => a + b, 0); if (so !== s) bad.add(coinsLabel(o)); }
+          return mc('Melyik érmékkel fizethető ki pontosan?', `${s} Ft`, good, Array.from(bad), `${good} = ${s}`, { key: 'pay:' + s + ':' + good, meta: { coins: [s, good] } });
+        },
+        () => { const p = t10(20, 190), c = 200 - p; return exprQ('Mennyi a visszajáró?', `Fizetsz 200 Ft-tal. A vásárlás ${p} Ft.`, c, `200-${p}`, [c + 10, c - 10, c + 20, c - 20, p], `200 − ${p} = ${c}`, { key: 'chg:' + p, long: false }); }
+      ];
+      return pick(T)();
+    }
+  });
+
   const TOPICS = [
-    { id: 'osszeadas', g: 'Matek', name: 'Összeadás', ico: '+' },
-    { id: 'kivonas', g: 'Matek', name: 'Kivonás', ico: '−' },
-    { id: 'szorzas', g: 'Matek', name: 'Szorzótábla', ico: '×' },
-    { id: 'osztas', g: 'Matek', name: 'Osztás', ico: ':' },
-    { id: 'sorozat', g: 'Matek', name: 'Sorozatok', ico: '…' },
-    { id: 'mertek', g: 'Matek', name: 'Mértékegységek', ico: 'cm', sm: 1 },
+    { id: 'szamok200', g: 'Matek', name: 'Számok 200-ig', ico: '200', sm: 1 },
+    { id: 'helyiertek', g: 'Matek', name: 'Helyi érték', ico: '123', sm: 1 },
+    { id: 'szamegyenes', g: 'Matek', name: 'Számegyenes', ico: '↔' },
+    { id: 'szomszed', g: 'Matek', name: 'Számszomszédok, kerekítés', ico: '≈' },
+    { id: 'osszkiv', g: 'Matek', name: 'Összeadás, kivonás', ico: '±' },
+    { id: 'szorosz', g: 'Matek', name: 'Szorzás, osztás', ico: '×÷', sm: 1 },
     { id: 'szoveges', g: 'Matek', name: 'Szöveges feladatok', ico: '?' },
+    { id: 'meres', g: 'Matek', name: 'Mérések (tömeg, hossz)', ico: 'kg', sm: 1 },
+    { id: 'penz', g: 'Matek', name: 'Pénz, visszajáró', ico: 'Ft', sm: 1 },
     { id: 'jly', g: 'Nyelvtan', name: 'j vagy ly?', ico: 'ly', sm: 1 },
     { id: 'szofaj', g: 'Nyelvtan', name: 'Szófajok', ico: 'Aa', sm: 1 },
     { id: 'mondat', g: 'Nyelvtan', name: 'Mondatfajták', ico: '!?', sm: 1 },
@@ -496,7 +687,7 @@
     { id: 'elso', ico: '🌱', name: 'Első kör', desc: 'Játssz végig egy kört.', ok: s => s.rounds >= 1 },
     { id: 'tokeletes', ico: '⭐', name: 'Tökéletes kör', desc: 'Válaszolj mind a 10 kérdésre helyesen.', ok: (s, c) => c.score === 10 },
     { id: 'ot', ico: '🔥', name: 'Öt egyvégtében', desc: 'Egy körben 5 jó válasz egymás után.', ok: (s, c) => c.bestStreak >= 5 },
-    { id: 'szorzo', ico: '✖️', name: 'Szorzótábla-mester', desc: 'Hibátlan kör a szorzótáblából.', ok: (s, c) => c.topic === 'szorzas' && c.score === 10 },
+    { id: 'szorzo', ico: '✖️', name: 'Szorzótábla-mester', desc: 'Hibátlan kör a szorzás, osztás témából.', ok: (s, c) => c.topic === 'szorosz' && c.score === 10 },
     { id: 'helyesiras', ico: '✏️', name: 'Helyesírás-bajnok', desc: 'Hibátlan kör a j vagy ly? témából.', ok: (s, c) => c.topic === 'jly' && c.score === 10 },
     { id: 'minden', ico: '🧭', name: 'Mindent kipróbáltam', desc: 'Játssz végig egy kört minden témából.', ok: s => TOPICS.every(t => s.played[t.id]) },
     { id: 'harom', ico: '📅', name: 'Három nap egymás után', desc: 'Gyakorolj három egymást követő napon.', ok: s => s.days >= 3 },
@@ -595,7 +786,7 @@ ${grp('Matek')}${grp('Nyelvtan')}${grp('Környezetismeret')}
     }
     return `<div class="qbar"><button class="icon-btn" data-go="home" aria-label="Vissza a témákhoz">←</button><div class="qtitle">${TNAME[Q.topic]}</div><div class="qcount">${Q.i + 1}/10</div></div>
 ${dotsHtml(Q.res, Q.i)}
-<section class="card qcard"><div>${chips} ${streak}</div><p class="qprompt">${q.prompt}</p><div class="qtext${q.long ? ' long' : ''}">${q.text}</div></section>
+<section class="card qcard"><div>${chips} ${streak}</div><p class="qprompt">${q.prompt}</p><div class="qtext${q.svg ? ' svg' : q.long ? ' long' : (strip(q.text).length > 11 ? ' mid' : '')}">${q.text}</div></section>
 <div class="choices ${q.layout}" role="group" aria-label="Válaszok">${ch}</div>${fb}`;
   }
 
