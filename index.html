@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Gyakorló">
-<meta name="description" content="Gyakorló oldal 3. osztályosoknak: matek és nyelvtan, pontokkal és jelvényekkel.">
+<meta name="description" content="Gyakorló oldal 3. osztályosoknak: matek, nyelvtan és környezetismeret, pontokkal és jelvényekkel.">
 <title>Gyakorló</title>
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -86,6 +86,7 @@
     font-weight: 700; font-size: 20px; line-height: 1; letter-spacing: -0.02em;
   }
   .ico.sm { font-size: 15px; }
+  .ico.emo { font-size: 22px; }
   .topic .name { font-size: 18px; line-height: 22px; font-weight: 600; margin-top: auto; }
   .topic .best { font-size: 14px; line-height: 20px; color: var(--fg-muted); }
 
@@ -293,6 +294,156 @@
     }
   };
 
+
+  /* ================= Környezetismeret ================= */
+  const art = w => /^[aáeéiíoóöőuúüű]/i.test(w) ? 'az' : 'a';
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  const strip = s => s.replace(/<[^>]+>/g, '');
+  const A = w => cap(art(w)) + ' ' + w;
+
+  /* egy kérdés 3 rossz válasszal; rövid válaszoknál 2×2 rács, különben lista */
+  function mc(prompt, text, correct, wrongPool, explain, extra) {
+    const wrong = shuffle(Array.from(new Set(wrongPool)).filter(x => x !== correct)).slice(0, 3);
+    const all = shuffle([correct].concat(wrong));
+    const mx = Math.max.apply(null, all.map(s => s.length));
+    return Object.assign({
+      prompt, text, choices: all, correct: all.indexOf(correct), explain,
+      layout: (all.length === 4 && mx <= 12) || all.length === 2 ? 'grid' : 'list',
+      long: strip(text).length > 36
+    }, extra);
+  }
+
+  const EMO = { kutya: '🐕', macska: '🐈', ló: '🐴', tehén: '🐄', nyúl: '🐇', őz: '🦌', farkas: '🐺', elefánt: '🐘', delfin: '🐬', denevér: '🦇', sas: '🦅', pingvin: '🐧', kacsa: '🦆', bagoly: '🦉', galamb: '🕊️', veréb: '🐦', fecske: '🐦', kígyó: '🐍', gyík: '🦎', teknős: '🐢', krokodil: '🐊', béka: '🐸', varangy: '🐸', méh: '🐝', szúnyog: '🦟', hangya: '🐜', pillangó: '🦋', szöcske: '🦗', katicabogár: '🐞', ponty: '🐟', csuka: '🐟', harcsa: '🐟', pisztráng: '🐟', cápa: '🦈', csiga: '🐌', oroszlán: '🦁', tigris: '🐅', ember: '🧑', tyúk: '🐔', disznó: '🐖', juh: '🐑', kecske: '🐐' };
+  const withEmo = w => (EMO[w] ? EMO[w] + ' ' : '') + w;
+
+  const GR = {
+    emlos: { n: 'emlős', pl: 'emlősök', cover: 'szőr', cp: 'testét szőr borítja', rep: 1, bone: true,
+      m: ['kutya', 'macska', 'ló', 'tehén', 'nyúl', 'őz', 'farkas', 'elefánt', 'delfin', 'denevér'], trick: ['pingvin', 'strucc', 'cápa'] },
+    madar: { n: 'madár', pl: 'madarak', cover: 'toll', cp: 'testét toll borítja', rep: 2, bone: true,
+      m: ['veréb', 'gólya', 'sas', 'pingvin', 'strucc', 'kacsa', 'galamb', 'fecske', 'bagoly'], trick: ['denevér', 'szöcske'] },
+    hullo: { n: 'hüllő', pl: 'hüllők', cover: 'pikkely', cp: 'testét pikkelyek borítják', rep: 2, bone: true,
+      m: ['kígyó', 'gyík', 'teknős', 'krokodil'], trick: ['béka', 'gőte', 'szalamandra'] },
+    ketelt: { n: 'kétéltű', pl: 'kétéltűek', cover: 'nyálkás, csupasz bőr', cp: 'bőre nyálkás és csupasz', rep: 3, bone: true,
+      m: ['béka', 'varangy', 'gőte', 'szalamandra'], trick: ['gyík', 'kígyó', 'teknős'] },
+    hal: { n: 'hal', pl: 'halak', cover: 'pikkely', cp: 'testét pikkelyek borítják', rep: 3, bone: true,
+      m: ['ponty', 'csuka', 'harcsa', 'cápa', 'pisztráng'], trick: ['delfin', 'béka'] },
+    rovar: { n: 'rovar', pl: 'rovarok', cover: 'kitinpáncél', cp: 'testét kitinpáncél védi', rep: 2, bone: false,
+      m: ['méh', 'légy', 'szúnyog', 'hangya', 'pillangó', 'szöcske', 'darázs', 'szitakötő', 'katicabogár', 'cserebogár'], trick: ['pók', 'csiga', 'giliszta'] }
+  };
+  const GOF = {}; Object.keys(GR).forEach(k => GR[k].m.forEach(w => GOF[w] = k));
+  const NOCOVER = ['delfin', 'teknős', 'cápa'];           // a testtakarójuk nem egyértelmű: nem kérdezzük
+  const NOREP = ['cápa'];                                  // egyes cápák elevenszülők
+  const COVERS = ['szőr', 'toll', 'pikkely', 'nyálkás, csupasz bőr', 'kitinpáncél'];
+  const REPS = [null, 'Elevenen szül, a kicsinyeit szoptatja.', 'Tojást rak.', 'Ikrát rak a vízbe.'];
+  const REPEX = [null, 'elevenen szülnek, és tejjel szoptatják a kicsinyeiket.', 'tojást raknak.', 'ikrát raknak a vízbe.'];
+  const GNAMES = ['emlős', 'madár', 'hüllő', 'kétéltű', 'hal', 'rovar'];
+  const ALLN = Object.keys(GOF);
+  const PAIRS = [['csikó', 'ló'], ['borjú', 'tehén'], ['bárány', 'juh'], ['malac', 'disznó'], ['gida', 'kecske'], ['csibe', 'tyúk']];
+  const PARENTS = ['ló', 'tehén', 'juh', 'disznó', 'kecske', 'tyúk'];
+  const SEQ = { pillangó: ['tojás', 'hernyó', 'báb', 'pillangó'], béka: ['ikra', 'ebihal', 'béka'] };
+  const CLUES = {
+    emlos: ['Testét szőr borítja, a kicsinyeit tejjel táplálja.', 'Elevenen szül, és szoptatja a kicsinyeit.'],
+    madar: ['Testét toll borítja, tojást rak.', 'Két szárnya van, szája fogatlan csőr.'],
+    hullo: ['Száraz, pikkelyes bőre van, tüdővel lélegzik, a legtöbb tojást rak.', 'Pikkelyes bőrű, szárazföldön él, és sütkérezik a napon.'],
+    ketelt: ['Nyálkás, csupasz bőrű, a kicsinye (az ebihal) vízben él.', 'Ikrát rak a vízbe, a bőrén át is lélegzik.'],
+    hal: ['Vízben él, kopoltyúval lélegzik, testét pikkely borítja.', 'Úszik az uszonyaival, és ikrát rak.'],
+    rovar: ['Hat lába van, teste három részből áll.', 'Testét kitinpáncél védi, hat lába van.']
+  };
+  const FACTS = {
+    emlos: [
+      ['Melyik emlős él a vízben?', '🌊', 'delfin', ['kutya', 'ló', 'nyúl', 'őz', 'macska', 'farkas'], 'A delfin emlős, a vízben él, de tüdővel lélegzik.'],
+      ['Melyik emlős tud repülni?', '🪽', 'denevér', ['kutya', 'macska', 'nyúl', 'őz', 'farkas'], 'A denevér repülő emlős.'],
+      ['Mivel táplálják a kicsinyeiket az emlős anyák?', '🍼', 'tejjel', ['magvakkal', 'rovarokkal', 'falevéllel'], 'Az emlősök kicsinyeiket tejjel szoptatják.']
+    ],
+    madar: [
+      ['Melyik madár nem tud repülni?', '🪽', 'strucc', ['veréb', 'gólya', 'sas', 'fecske', 'galamb', 'kacsa'], 'A strucc nagy, nehéz, ezért nem tud repülni.'],
+      ['Melyik madár nem tud repülni?', '🪽', 'pingvin', ['veréb', 'gólya', 'sas', 'fecske', 'galamb', 'bagoly'], 'A pingvin úszik, de nem tud repülni.'],
+      ['Mivel repülnek a madarak?', '🪽', 'szárnyukkal', ['uszonyukkal', 'lábukkal', 'farkukkal'], 'A madarak szárnyukkal repülnek.'],
+      ['A madarak szája fogatlan. Hogy hívjuk?', '🐦', 'csőr', ['agyar', 'fogsor', 'szarv'], 'A madarak szája a csőr.'],
+      ['Kinek a kicsinye a csibe?', '🐥', 'tyúk', ['ló', 'tehén', 'juh', 'kecske'], 'A csibe a tyúk kicsinye.']
+    ],
+    hullo: [
+      ['Melyik hüllőnek nincs lába?', '🐾', 'kígyó', ['gyík', 'teknős', 'krokodil'], 'A kígyónak nincs lába, csúszva-mászva halad.'],
+      ['Melyik hüllőnek van kemény páncélja?', '🛡️', 'teknős', ['kígyó', 'gyík', 'krokodil'], 'A teknős páncélja védi a testét.'],
+      ['Miért sütkéreznek a hüllők a napon?', '☀️', 'Hogy felmelegedjenek.', ['Hogy vizet igyanak.', 'Hogy elbújjanak.', 'Hogy tollat növesszenek.'], 'A hüllők a nap melegétől melegszenek fel.'],
+      ['Mivel lélegeznek a hüllők?', '🫁', 'tüdővel', ['kopoltyúval', 'uszonnyal', 'szárnnyal'], 'A hüllők tüdővel lélegeznek.']
+    ],
+    ketelt: [
+      ['Mi az ebihal?', '🐸', 'A béka kicsinye.', ['A hal kicsinye.', 'A gyík kicsinye.', 'A madár kicsinye.'], 'Az ebihal a béka kicsinye, vízben él.'],
+      ['Hol él az ebihal?', '💧', 'vízben', ['fán', 'föld alatt', 'a levegőben'], 'Az ebihal a vízben él.'],
+      ['Mivel lélegzik az ebihal?', '🫧', 'kopoltyúval', ['tüdővel', 'csőrrel', 'szőrrel'], 'Az ebihal kopoltyúval lélegzik, mint a halak.'],
+      ['Miért hívjuk őket kétéltűeknek?', '🐸', 'Vízben is és szárazföldön is élnek.', ['Két lábuk van.', 'Két szemük van.', 'Kétszer olyan nagyok, mint a halak.'], 'Életük egy részét vízben, másik részét szárazföldön töltik.']
+    ],
+    rovar: [
+      ['Melyik állat bogár?', '🪲', null, null, 'A katicabogár, a cserebogár, a szarvasbogár és az aranybogár bogár.'],
+      ['Melyik a rovarok három testrésze?', '🐝', 'fej, tor, potroh', ['fej, törzs, farok', 'fej, nyak, potroh', 'fej, hát, láb'], 'A rovarok teste fejre, torra és potrohra tagolódik.']
+    ]
+  };
+
+  function seqQ(name) {
+    const s = SEQ[name], good = s.join(' → '), pool = [];
+    for (let i = 0; i < 40 && pool.length < 6; i++) { const p = shuffle(s).join(' → '); if (p !== good && pool.indexOf(p) < 0) pool.push(p); }
+    return mc('Melyik a helyes fejlődési sorrend?', cap(name) + ' fejlődése', good, pool, 'Helyes sorrend: ' + good + '.', { key: 'seq:' + name });
+  }
+
+  function groupQ(gid) {
+    const g = GR[gid], m = g.m, T = [];
+    const covOK = m.filter(x => NOCOVER.indexOf(x) < 0), repOK = m.filter(x => NOREP.indexOf(x) < 0);
+    T.push(() => { const x = pick(covOK); return mc('Mi borítja a testét?', withEmo(x), g.cover, COVERS, `${A(x)} ${g.n}, ${g.cp}.`, { key: 'cov:' + x }); });
+    T.push(() => { const x = pick(m), others = ALLN.filter(n => GOF[n] !== gid); return mc('Válaszd ki!', 'Melyik állat ' + g.n + '?', x, others, `${A(x)} ${g.n}.`, { key: 'in:' + x, meta: { kind: 'in', g: gid } }); });
+    T.push(() => {
+      const out = Math.random() < 0.6 ? pick(g.trick) : pick(ALLN.filter(n => GOF[n] !== gid));
+      const real = GOF[out] ? GR[GOF[out]].n : out === 'pók' ? 'pók' : out === 'csiga' ? 'csiga' : out === 'giliszta' ? 'giliszta' : 'más állat';
+      const why = GOF[out] ? `${A(out)} ${real}.` : `${A(out)} nem ${g.n}.`;
+      const wrong = shuffle(m.filter(x => x !== out)).slice(0, 3), all = shuffle(wrong.concat([out]));
+      return { prompt: 'Válaszd ki!', text: 'Melyik állat NEM ' + g.n + '?', choices: all, correct: all.indexOf(out), layout: 'grid', explain: why, key: 'out:' + out, meta: { kind: 'out', g: gid, out } };
+    });
+    T.push(() => { const x = pick(m); return { prompt: 'Gerinces vagy gerinctelen?', text: withEmo(x), choices: ['gerinces', 'gerinctelen'], correct: g.bone ? 0 : 1, layout: 'grid', key: 'bone:' + x, explain: g.bone ? `${A(x)} ${g.n}, belső csontváza (gerince) van.` : `${A(x)} rovar: nincs gerince, testét kívülről kitinpáncél védi (külső váz).` }; });
+    T.push(() => { const x = pick(repOK); return { prompt: 'Hogyan szaporodik?', text: withEmo(x), choices: REPS.slice(1), correct: g.rep - 1, layout: 'list', key: 'rep:' + x, explain: `${A(x)} ${g.n}: ${REPEX[g.rep]}` }; });
+    (FACTS[gid] || []).forEach((f, i) => T.push(() => {
+      if (f[2] === null) {  // bogár
+        const B = ['katicabogár', 'cserebogár', 'szarvasbogár', 'aranybogár'], N = ['méh', 'légy', 'hangya', 'pillangó', 'szúnyog', 'darázs'];
+        const c = pick(B); return mc(f[0], f[1], c, N, f[4], { key: 'f:bogar:' + c });
+      }
+      return mc(f[0], f[1], f[2], f[3], f[4], { key: 'f:' + gid + i });
+    }));
+    if (gid === 'ketelt') T.push(() => seqQ('béka'));
+    if (gid === 'rovar') {
+      T.push(() => seqQ('pillangó'));
+      T.push(() => numQ(6, [4, 8, 10, 2], { prompt: 'Hány lába van a rovaroknak?', text: '🐝', explain: 'A rovaroknak 6 lábuk van.', key: 'f:legs' }));
+      T.push(() => numQ(3, [2, 4, 5, 6], { prompt: 'Hány testrészből áll a rovarok teste?', text: '🐜', explain: 'Három testrészből: fej, tor, potroh.', key: 'f:parts' }));
+    }
+    if (gid === 'emlos') T.push(() => { const [y, p] = pick(PAIRS.slice(0, 5)); return mc('Kinek a kicsinye?', y, p, PARENTS.filter(x => x !== 'tyúk'), `${A(y)} ${art(p)} ${p} kicsinye.`, { key: 'young:' + y }); });
+    return pick(T)();
+  }
+
+  const mk = gid => () => groupQ(gid);
+  Object.assign(GEN, {
+    emlos: mk('emlos'), madar: mk('madar'), hullo: mk('hullo'), ketelt: mk('ketelt'), rovar: mk('rovar'),
+    elet() {
+      const LIV = ['fa', 'kutya', 'virág', 'ember', 'béka', 'madár', 'fű', 'méh'], NON = ['kő', 'víz', 'levegő', 'homok', 'autó', 'asztal', 'labda', 'felhő'];
+      const HERB = ['tehén', 'nyúl', 'őz', 'ló', 'kecske', 'juh'], CARN = ['oroszlán', 'farkas', 'tigris', 'macska', 'kígyó', 'cápa'], OMNI = ['ember', 'barna medve', 'vaddisznó', 'varjú'];
+      const T = [
+        () => { const live = Math.random() < 0.5, w = pick(live ? LIV : NON); return { prompt: 'Élő vagy élettelen?', text: withEmo(w), choices: ['élő', 'élettelen'], correct: live ? 0 : 1, layout: 'grid', key: 'liv:' + w, explain: live ? `${A(w)} élőlény: táplálkozik, lélegzik, növekszik és szaporodik.` : `${A(w)} élettelen: nem táplálkozik, nem nő és nem szaporodik.` }; },
+        () => { const c = pick(['víz', 'levegő', 'táplálék', 'megfelelő hőmérséklet']); return mc('Melyik az élőlények életfeltétele?', 'Mi kell az élethez?', c, ['televízió', 'labda', 'hinta', 'telefon', 'kavics'], 'Az élőlényeknek víz, levegő, táplálék és megfelelő hőmérséklet kell.', { key: 'cond:' + c }); },
+        () => { const c = pick(['fény', 'víz', 'levegő', 'tápanyag a talajból']); return mc('Mire van szüksége a növénynek a növekedéshez?', '🌱', c, ['zene', 'tej', 'ketrec', 'kavics'], 'A növénynek fény, víz, levegő és tápanyag (talaj) kell.', { key: 'plant:' + c }); },
+        () => { const t = pick([[HERB, 0], [CARN, 1], [OMNI, 2]]), w = pick(t[0]); return { prompt: 'Mivel táplálkozik?', text: withEmo(w), choices: ['növényevő', 'húsevő', 'mindenevő'], correct: t[1], layout: 'list', key: 'eat:' + w, explain: ['növényeket eszik (növényevő).', 'más állatokat eszik (húsevő).', 'növényt és állatot is eszik (mindenevő).'][t[1]].replace(/^/, A(w) + ' ') }; },
+        () => { const c = pick(['tulipán', 'fa', 'fű', 'búza', 'napraforgó', 'rózsa']); return mc('Melyik élőlény készíti el maga a táplálékát?', '☀️', c, ['kutya', 'béka', 'veréb', 'tehén', 'ember', 'méh'], 'A zöld növények a fény segítségével maguk készítik a táplálékukat.', { key: 'prod:' + c }); }
+      ];
+      return pick(T)();
+    },
+    allat() {
+      const T = [
+        () => { const x = pick(ALLN); const g = GR[GOF[x]]; return mc('Melyik állatcsoportba tartozik?', withEmo(x), g.n, GNAMES, `${A(x)} ${g.n}.`, { key: 'cl:' + x }); },
+        () => { const gid = pick(Object.keys(CLUES)), c = pick(CLUES[gid]); return mc('Melyik állatcsoportra igaz?', c, GR[gid].n, GNAMES, `A helyes válasz: ${GR[gid].n}.`, { key: 'clue:' + c }); },
+        () => { const x = pick(ALLN.filter(n => NOCOVER.indexOf(n) < 0)), g = GR[GOF[x]]; return mc('Mi borítja a testét?', withEmo(x), g.cover, COVERS, `${A(x)} ${g.n}, ${g.cp}.`, { key: 'cov:' + x }); },
+        () => { const x = pick(ALLN.filter(n => NOREP.indexOf(n) < 0)), g = GR[GOF[x]]; return { prompt: 'Hogyan szaporodik?', text: withEmo(x), choices: REPS.slice(1), correct: g.rep - 1, layout: 'list', key: 'rep:' + x, explain: `${A(x)} ${g.n}: ${REPEX[g.rep]}` }; },
+        () => { const no = pick(['csiga', 'giliszta', 'méh', 'hangya', 'pillangó', 'légy']), yes = ['kutya', 'béka', 'veréb', 'ponty', 'gyík', 'macska']; return mc('Melyik állatnak nincs gerince?', 'Melyiknek nincs belső csontváza?', no, yes, 'A gerinctelen állatoknak nincs belső csontvázuk (pl. csiga, giliszta, rovarok).', { key: 'nobone:' + no }); }
+      ];
+      return pick(T)();
+    }
+  });
+
   const TOPICS = [
     { id: 'osszeadas', g: 'Matek', name: 'Összeadás', ico: '+' },
     { id: 'kivonas', g: 'Matek', name: 'Kivonás', ico: '−' },
@@ -304,7 +455,14 @@
     { id: 'jly', g: 'Nyelvtan', name: 'j vagy ly?', ico: 'ly', sm: 1 },
     { id: 'szofaj', g: 'Nyelvtan', name: 'Szófajok', ico: 'Aa', sm: 1 },
     { id: 'mondat', g: 'Nyelvtan', name: 'Mondatfajták', ico: '!?', sm: 1 },
-    { id: 'abc', g: 'Nyelvtan', name: 'ABC-sorrend', ico: 'A–Z', sm: 1 }
+    { id: 'abc', g: 'Nyelvtan', name: 'ABC-sorrend', ico: 'A–Z', sm: 1 },
+    { id: 'elet', g: 'Környezetismeret', name: 'Az élet feltételei', ico: '🌱', emo: 1 },
+    { id: 'allat', g: 'Környezetismeret', name: 'Állatcsoportok', ico: '🐾', emo: 1 },
+    { id: 'emlos', g: 'Környezetismeret', name: 'Emlősök', ico: '🐕', emo: 1 },
+    { id: 'madar', g: 'Környezetismeret', name: 'Madarak', ico: '🐦', emo: 1 },
+    { id: 'hullo', g: 'Környezetismeret', name: 'Hüllők', ico: '🐍', emo: 1 },
+    { id: 'ketelt', g: 'Környezetismeret', name: 'Kétéltűek', ico: '🐸', emo: 1 },
+    { id: 'rovar', g: 'Környezetismeret', name: 'Rovarok és bogarak', ico: '🐞', emo: 1 }
   ];
   const TNAME = {}; TOPICS.forEach(t => TNAME[t.id] = t.name); TNAME.vegyes = 'Vegyes kör';
 
@@ -316,7 +474,7 @@
     const qs = [], seen = {};
     for (let tries = 0; qs.length < 10 && tries < 400; tries++) {
       const q = makeQuestion(topic);
-      if (!seen[q.topic + q.text]) { seen[q.topic + q.text] = 1; qs.push(q); }
+      const k = q.topic + (q.key || q.text); if (!seen[k]) { seen[k] = 1; qs.push(q); }
     }
     while (qs.length < 10) qs.push(makeQuestion(topic));
     return qs;
@@ -340,7 +498,7 @@
     { id: 'ot', ico: '🔥', name: 'Öt egyvégtében', desc: 'Egy körben 5 jó válasz egymás után.', ok: (s, c) => c.bestStreak >= 5 },
     { id: 'szorzo', ico: '✖️', name: 'Szorzótábla-mester', desc: 'Hibátlan kör a szorzótáblából.', ok: (s, c) => c.topic === 'szorzas' && c.score === 10 },
     { id: 'helyesiras', ico: '✏️', name: 'Helyesírás-bajnok', desc: 'Hibátlan kör a j vagy ly? témából.', ok: (s, c) => c.topic === 'jly' && c.score === 10 },
-    { id: 'minden', ico: '🧭', name: 'Mindent kipróbáltam', desc: 'Játssz végig egy kört mind a 11 témából.', ok: s => TOPICS.every(t => s.played[t.id]) },
+    { id: 'minden', ico: '🧭', name: 'Mindent kipróbáltam', desc: 'Játssz végig egy kört minden témából.', ok: s => TOPICS.every(t => s.played[t.id]) },
     { id: 'harom', ico: '📅', name: 'Három nap egymás után', desc: 'Gyakorolj három egymást követő napon.', ok: s => s.days >= 3 },
     { id: 'szaz', ico: '💯', name: 'Száz jó válasz', desc: 'Gyűjts össze 100 helyes választ.', ok: s => s.correct >= 100 },
     { id: 'ot-szint', ico: '🏆', name: 'Ötödik szint', desc: 'Érd el az 5. szintet.', ok: s => levelOf(s.points) >= 5 }
@@ -397,11 +555,11 @@
     const L = levelOf(S.points), a = need(L), b = need(L + 1), pct = Math.round((S.points - a) / (b - a) * 100);
     const topicBtn = t => {
       const best = S.best[t.id];
-      return `<button class="topic" data-go="${t.id}"><span class="ico${t.sm ? ' sm' : ''}" aria-hidden="true">${t.ico}</span><span class="name">${t.name}</span><span class="best">${best === undefined ? 'még nem játszottad' : 'legjobb: ' + best + '/10'}</span></button>`;
+      return `<button class="topic" data-go="${t.id}"><span class="ico${t.sm ? ' sm' : ''}${t.emo ? ' emo' : ''}" aria-hidden="true">${t.ico}</span><span class="name">${t.name}</span><span class="best">${best === undefined ? 'még nem játszottad' : 'legjobb: ' + best + '/10'}</span></button>`;
     };
     const grp = g => `<h2 class="group">${g}</h2><div class="topics">${TOPICS.filter(t => t.g === g).map(topicBtn).join('')}</div>`;
     const got = Object.keys(S.badges).length;
-    return `<header class="head">${MARK}<div><h1>Gyakorló</h1><p class="sub">3. osztály · matek és nyelvtan</p></div></header>
+    return `<header class="head">${MARK}<div><h1>Gyakorló</h1><p class="sub">3. osztály · matek, nyelvtan, környezetismeret</p></div></header>
 <section class="card level" aria-label="Szinted">
   <div class="row"><div class="lv">${L}. szint<small>${lvName(L)}</small></div><div class="pts">${S.points} pont</div></div>
   <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div>
@@ -409,7 +567,7 @@
   <div class="mini"><div><b>${S.days}</b>napja gyakorolsz egymás után</div><div><b>${S.correct}</b>jó válasz összesen</div><div><b>${got}/${BADGES.length}</b><button class="link-btn" data-go="badges">jelvényeim</button></div></div>
 </section>
 <button class="big-btn" data-go="vegyes"><span aria-hidden="true">★</span> Vegyes kör mindenből</button>
-${grp('Matek')}${grp('Nyelvtan')}
+${grp('Matek')}${grp('Nyelvtan')}${grp('Környezetismeret')}
 <p class="foot">A pontjaid csak ezen az eszközön vannak elmentve.</p>`;
   }
 
@@ -478,7 +636,7 @@ ${dotsHtml(Q.res, Q.i)}
   if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) {
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
   }
-  window.__gyakorlo = { GEN, TOPICS, makeQuestion };
+  window.__gyakorlo = { GEN, TOPICS, makeQuestion, GR, GOF };
   render();
 })();
 </script>
