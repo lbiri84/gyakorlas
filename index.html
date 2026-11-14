@@ -384,7 +384,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   const NOREP = ['cápa'];                                  // egyes cápák elevenszülők
   const COVERS = ['szőr', 'toll', 'pikkely', 'nyálkás, csupasz bőr', 'kitinpáncél'];
   const REPS = [null, 'Elevenen szül, a kicsinyeit szoptatja.', 'Tojást rak.', 'Ikrát rak a vízbe.'];
-  const REPEX = [null, 'elevenen szülnek, és tejjel szoptatják a kicsinyeiket.', 'tojást raknak.', 'ikrát raknak a vízbe.'];
+  const REPEX = [null, 'elevenen szül, és szoptatja a kicsinyeit.', 'tojást rak.', 'ikrát rak a vízbe.'];
   const GNAMES = ['emlős', 'madár', 'hüllő', 'kétéltű', 'hal', 'rovar'];
   const ALLN = Object.keys(GOF);
   const PAIRS = [['csikó', 'ló'], ['borjú', 'tehén'], ['bárány', 'juh'], ['malac', 'disznó'], ['gida', 'kecske'], ['csibe', 'tyúk']];
@@ -392,8 +392,8 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   const SEQ = { pillangó: ['tojás', 'hernyó', 'báb', 'pillangó'], béka: ['ikra', 'ebihal', 'béka'] };
   const CLUES = {
     emlos: ['Testét szőr borítja, a kicsinyeit tejjel táplálja.', 'Elevenen szül, és szoptatja a kicsinyeit.'],
-    madar: ['Testét toll borítja, tojást rak.', 'Két szárnya van, szája fogatlan csőr.'],
-    hullo: ['Száraz, pikkelyes bőre van, tüdővel lélegzik, a legtöbb tojást rak.', 'Pikkelyes bőrű, szárazföldön él, és sütkérezik a napon.'],
+    madar: ['Testét toll borítja, tojást rak.', 'Két szárnya és fogatlan csőre van.'],
+    hullo: ['Száraz, pikkelyes bőre van, tüdővel lélegzik, többnyire tojást rak.', 'Pikkelyes bőrű, szárazföldön él, és sütkérezik a napon.'],
     ketelt: ['Nyálkás, csupasz bőrű, a kicsinye (az ebihal) vízben él.', 'Ikrát rak a vízbe, a bőrén át is lélegzik.'],
     hal: ['Vízben él, kopoltyúval lélegzik, testét pikkely borítja.', 'Úszik az uszonyaival, és ikrát rak.'],
     rovar: ['Hat lába van, teste három részből áll.', 'Testét kitinpáncél védi, hat lába van.']
@@ -402,13 +402,13 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     emlos: [
       ['Melyik emlős él a vízben?', '🌊', 'delfin', ['kutya', 'ló', 'nyúl', 'őz', 'macska', 'farkas'], 'A delfin emlős, a vízben él, de tüdővel lélegzik.'],
       ['Melyik emlős tud repülni?', '🪽', 'denevér', ['kutya', 'macska', 'nyúl', 'őz', 'farkas'], 'A denevér repülő emlős.'],
-      ['Mivel táplálják a kicsinyeiket az emlős anyák?', '🍼', 'tejjel', ['magvakkal', 'rovarokkal', 'falevéllel'], 'Az emlősök kicsinyeiket tejjel szoptatják.']
+      ['Mivel táplálják a kicsinyeiket az emlős anyák?', '🍼', 'tejjel', ['magvakkal', 'rovarokkal', 'falevéllel'], 'Az emlős anyák tejjel táplálják (szoptatják) a kicsinyeiket.']
     ],
     madar: [
       ['Melyik madár nem tud repülni?', '🪽', 'strucc', ['veréb', 'gólya', 'sas', 'fecske', 'galamb', 'kacsa'], 'A strucc nagy, nehéz, ezért nem tud repülni.'],
       ['Melyik madár nem tud repülni?', '🪽', 'pingvin', ['veréb', 'gólya', 'sas', 'fecske', 'galamb', 'bagoly'], 'A pingvin úszik, de nem tud repülni.'],
       ['Mivel repülnek a madarak?', '🪽', 'szárnyukkal', ['uszonyukkal', 'lábukkal', 'farkukkal'], 'A madarak szárnyukkal repülnek.'],
-      ['A madarak szája fogatlan. Hogy hívjuk?', '🐦', 'csőr', ['agyar', 'fogsor', 'szarv'], 'A madarak szája a csőr.'],
+      ['Hogy nevezzük a madár száját?', '🐦', 'csőr', ['agyar', 'fogsor', 'szarv'], 'A madár szája a csőr. Foga nincs, a csőrével csipegeti fel az eleségét.'],
       ['Kinek a kicsinye a csibe?', '🐥', 'tyúk', ['ló', 'tehén', 'juh', 'kecske'], 'A csibe a tyúk kicsinye.']
     ],
     hullo: [
@@ -421,11 +421,11 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
       ['Mi az ebihal?', '🐸', 'A béka kicsinye.', ['A hal kicsinye.', 'A gyík kicsinye.', 'A madár kicsinye.'], 'Az ebihal a béka kicsinye, vízben él.'],
       ['Hol él az ebihal?', '💧', 'vízben', ['fán', 'föld alatt', 'a levegőben'], 'Az ebihal a vízben él.'],
       ['Mivel lélegzik az ebihal?', '🫧', 'kopoltyúval', ['tüdővel', 'csőrrel', 'szőrrel'], 'Az ebihal kopoltyúval lélegzik, mint a halak.'],
-      ['Miért hívjuk őket kétéltűeknek?', '🐸', 'Vízben is és szárazföldön is élnek.', ['Két lábuk van.', 'Két szemük van.', 'Kétszer olyan nagyok, mint a halak.'], 'Életük egy részét vízben, másik részét szárazföldön töltik.']
+      ['Miért nevezzük a békát kétéltűnek?', '🐸', 'Vízben is és szárazföldön is él.', ['Két lába van.', 'Két szeme van.', 'Kétszer akkora, mint egy hal.'], 'A kétéltűek életük egy részét vízben, másik részét szárazföldön töltik.']
     ],
     rovar: [
-      ['Melyik állat bogár?', '🪲', null, null, 'A katicabogár, a cserebogár, a szarvasbogár és az aranybogár bogár.'],
-      ['Melyik a rovarok három testrésze?', '🐝', 'fej, tor, potroh', ['fej, törzs, farok', 'fej, nyak, potroh', 'fej, hát, láb'], 'A rovarok teste fejre, torra és potrohra tagolódik.']
+      ['Melyik állat bogár?', '🪲', null, null, 'A katicabogár, a cserebogár, a szarvasbogár és az aranybogár mind bogarak.'],
+      ['Melyik három részből áll a rovarok teste?', '🐝', 'fej, tor, potroh', ['fej, törzs, farok', 'fej, nyak, potroh', 'fej, hát, láb'], 'A rovarok teste fejre, torra és potrohra tagolódik.']
     ]
   };
 
@@ -836,7 +836,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   let kidExitWarn = false;
   let reports = null;           // a szülői nézet nyitott jelentései
   let reportOpen = false;       // a kérdésnél nyitva van-e a „Mi a hiba?” doboz
-  const APP_VERSION = 'gyakorlo-v12';
+  const APP_VERSION = 'gyakorlo-v13';
   const REASONS = { wrong_answer: 'Rossz a megoldás', bad_question: 'Hibás a kérdés', other: 'Más baj van' };
 
   function emptyCache() { return { pupils: [], results: {}, badges: {}, current: null, userId: null, householdId: null }; }
