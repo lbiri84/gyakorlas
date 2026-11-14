@@ -14,7 +14,8 @@ Gyakorló oldal 3. osztályosoknak: matek, nyelvtan és környezetismeret, kérd
 ## Gyerekprofilok, szülői nézet, gyerek mód
 
 - **Szülő**: Google-belépéssel (`https://laszlobiri.com/belepes/`). A kezdőképernyőn „Ki gyakorol?”: a gyerek kiválasztása; a „Szülői nézet”-ben gyerekprofil létrehozása és törlése, a gyerekek eredményei, a gyerek tabletek listája és párosítása.
-- **Gyerekprofil**: csak becenév és egy ikon. A gyereknek nincs fiókja.
+- **Gyerekprofil**: csak becenév, egy ikon és egy színtéma. A gyereknek nincs fiókja.
+- **Színtéma**: gyerekenként választható a szülői nézetben: palakék (alap) vagy rózsaszín (`#ebcddb`, `#e6abc0`, `#d77ca2`, `#3c3737`, `#261d1b`). A téma a gyerek saját nézeteiben él (kezdőképernyő, kör, eredmény, jelvények, minijátékok), a szülő telefonján és a gyerek tabletjén is; a „Ki gyakorol?” és a szülői nézet palakék marad. A rózsaszín téma a tokenek felülírásával készül az oldal saját CSS-ében (`data-theme="rose"`), a központi `tokens.css` változatlan; a laszlobiri jel színei nem változnak.
 - **Eredmények**: csak a befejezett kör és a megnyert minijáték mentődik (`results`, `pupil_badges`). A pont, a szint, a napi sorozat és a témánkénti legjobb ezekből számolódik. Offline is működik: a laszlobiri.com/lib/v1/outbox.js kimenő sorból visszatérő hálózatnál elmegy.
 - **Gyerek mód** (a gyerek saját tabletje): a szülő a „Szülői nézet” → „Párosító kód kérése” gombbal 10 percig érvényes kódot kap, a tableten a `gyakorlas.laszlobiri.com/#parositas` oldalon beírja, és megad egy 4 jegyű PIN-t. A tablet egy névtelen eszközfiókkal (laszlobiri.com/lib/v1/device.js) csak a hozzá rendelt gyerekprofilokat éri el, a bevásárlólistát és a többi oldalt nem. Kilépés: „Szülő” → PIN. Visszavonás: a szülői nézet „Visszavonás” gombja.
 - A régi, belépés nélküli pontok (`gyakorlo.v1`) nem kerülnek át: az első indításkor törlődnek.

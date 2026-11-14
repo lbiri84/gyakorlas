@@ -24,12 +24,33 @@
 <link rel="preconnect" href="https://laszlobiri.com">
 <link rel="stylesheet" href="https://laszlobiri.com/design-system/tokens.css">
 <script>
-  // Mindig a palakék (slate) téma, mint a többi laszlobiri oldalon.
-  document.documentElement.dataset.theme = 'slate';
+  // Palakék (slate) téma, mint a többi laszlobiri oldalon; ha a legutóbb kiválasztott
+  // gyerekprofil rózsaszínt választott, már az első rajzolás is azzal megy (nincs villanás).
+  (function () {
+    var t = 'slate';
+    try {
+      var c = JSON.parse(localStorage.getItem('gyakorlo.v2'));
+      var p = c && c.pupils && c.pupils.filter(function (x) { return x.id === c.current; })[0];
+      if (p && p.theme === 'rose' && location.hash !== '#parositas') t = 'rose';
+    } catch (e) {}
+    document.documentElement.dataset.theme = t;
+  })();
 </script>
 <style>
-  /* A laszlobiri design system alapján (tokens.css a laszlobiri.com-ról). Egyetlen, sötét (palakék) megjelenés. */
+  /* A laszlobiri design system alapján (tokens.css a laszlobiri.com-ról). Sötét (palakék) megjelenés;
+     gyerekprofilonként választható a rózsaszín téma (data-theme="rose"), lent. */
   :root { color-scheme: dark; }
+  /* Rózsaszín téma: a gyerekprofil saját palettája (#ebcddb, #e6abc0, #d77ca2, #3c3737, #261d1b).
+     Kontraszt: fg 11,2:1 a háttéren; fg-muted 5,3:1 és accent-text 6,1:1 a kártyán; a gombok
+     fekete felirata 7,3:1 az accent-en. A jel (mark-*) színei a márkaszabály szerint nem változnak. */
+  :root[data-theme="rose"] {
+    --bg: #261d1b; --bg-raised: #3c3737; --fg: #ebcddb; --fg-muted: #bfa8b2;
+    --accent: #d77ca2; --accent-text: #e6abc0; --line: #5f5558;
+  }
+  .themes { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+  .themes button { min-height: 40px; padding: 0 var(--space-4); border-radius: var(--radius-full); border: 1px solid var(--line); background: transparent; color: var(--fg); font: inherit; font-size: 15px; }
+  .themes button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
+  .sw { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
   * { box-sizing: border-box; }
   html { background: var(--bg); }
   body {
@@ -743,6 +764,8 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   const def = () => ({ points: 0, answered: 0, correct: 0, rounds: 0, perfect: 0, best: {}, played: {}, badges: {}, days: 0, lastDay: '', mgDone: 0, mgWins: 0, mgN: 0, wsWins: 0 });
   const CACHE_KEY = 'gyakorlo.v2';
   const outbox = createOutbox('gyakorlo.outbox.v1');
+  // Gyerekprofilonként választható színtéma (pupils.theme).
+  const THEMES = { slate: { name: 'Palakék', bg: '#293c4b', dot: '#ee8643' }, rose: { name: 'Rózsaszín', bg: '#261d1b', dot: '#d77ca2' } };
   const AVATARS = { fox: '🦊', owl: '🦉', cat: '🐱', bear: '🐻', frog: '🐸', bee: '🐝', rabbit: '🐰', turtle: '🐢' };
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const esc = v => String(v).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
@@ -817,9 +840,9 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   }
 
   async function pull() {
-    const pr = await sb.from('pupils').select('id, nickname, avatar').order('created_at');
+    const pr = await sb.from('pupils').select('id, nickname, avatar, theme').order('created_at');
     if (pr.error) throw pr.error;
-    C.pupils = pr.data.filter(p => UUID.test(p.id)).map(p => ({ id: p.id, nickname: String(p.nickname), avatar: AVATARS[p.avatar] ? p.avatar : 'fox' }));
+    C.pupils = pr.data.filter(p => UUID.test(p.id)).map(p => ({ id: p.id, nickname: String(p.nickname), avatar: AVATARS[p.avatar] ? p.avatar : 'fox', theme: THEMES[p.theme] ? p.theme : 'slate' }));
     const ids = C.pupils.map(p => p.id);
     C.results = {}; C.badges = {};
     if (ids.length) {
@@ -1110,7 +1133,7 @@ ${footHtml()}`;
       const s = computeState(p.id), L = levelOf(s.points);
       const last = (C.results[p.id] || []).filter(r => r.kind === 'round').slice(-5).reverse()
         .map(r => `<li>${esc(dayStr(new Date(r.created_at)))} · ${esc(TNAME[r.topic] || r.topic)}: <b>${r.score | 0}/10</b></li>`).join('');
-      return `<div class="rowi"><div><b>${AVATARS[p.avatar]} ${esc(p.nickname)}</b><p class="sub">${L}. szint · ${s.points} pont · ${s.rounds} kör · ${Object.keys(s.badges).length} jelvény${s.lastDay ? ' · utoljára: ' + esc(s.lastDay) : ''}</p>${last ? `<ul class="recent">${last}</ul>` : ''}</div><button class="small-btn danger" data-delpupil="${p.id}">Törlés</button></div>`;
+      return `<div class="rowi"><div><b>${AVATARS[p.avatar]} ${esc(p.nickname)}</b><p class="sub">${L}. szint · ${s.points} pont · ${s.rounds} kör · ${Object.keys(s.badges).length} jelvény${s.lastDay ? ' · utoljára: ' + esc(s.lastDay) : ''}</p>${last ? `<ul class="recent">${last}</ul>` : ''}<div class="themes" role="group" aria-label="${esc(p.nickname)} színe">${themeBtns(p)}</div></div><button class="small-btn danger" data-delpupil="${p.id}">Törlés</button></div>`;
     }).join('');
     const avs = Object.entries(AVATARS).map(([k, v], i) => `<label><input type="radio" name="av" value="${k}"${i === 0 ? ' checked' : ''}><span aria-label="${k}">${v}</span></label>`).join('');
     const devs = devices === null ? '<p class="sub">Betöltés…</p>' : devices.length ? devices.map(d => `<div class="rowi"><div><b>${esc(d.label)}</b><p class="sub">${esc(d.names)} · utoljára: ${esc(dayStr(new Date(d.last_seen_at)))}</p></div><button class="small-btn danger" data-revoke="${d.user_id}">Visszavonás</button></div>`).join('') : '<p class="sub">Nincs párosított gyerek tablet.</p>';
@@ -1122,6 +1145,7 @@ ${footHtml()}`;
 <section class="card stack"><h3>Új gyerekprofil</h3><p class="sub">Csak becenevet adj meg, teljes nevet ne.</p>
 <input class="inp" id="nick" maxlength="20" autocomplete="off" placeholder="Becenév" aria-label="Becenév">
 <fieldset class="avs"><legend class="sub">Ikon</legend>${avs}</fieldset>
+<fieldset class="avs"><legend class="sub">Szín</legend>${Object.entries(THEMES).map(([k, t], i) => `<label><input type="radio" name="th" value="${k}"${i === 0 ? ' checked' : ''}><span aria-label="${t.name}" title="${t.name}" style="background:${t.bg}"><i class="sw" style="background:${t.dot};margin:0"></i></span></label>`).join('')}</fieldset>
 <button class="big-btn" data-go="addpupil">Létrehozás</button></section>
 <section class="card stack"><h3>Gyerek tabletek</h3>${devs}
 ${C.pupils.length ? `<h3>Új tablet párosítása</h3><div class="checks">${checks}</div>
@@ -1147,11 +1171,24 @@ ${footHtml()}`;
     const av = document.querySelector('input[name=av]:checked')?.value || 'fox';
     if (!nick || nick.length > 20) { msg = 'A becenév 1–20 karakter.'; return render(); }
     if (!C.householdId) { msg = 'Ehhez a fiókhoz nem tartozik háztartás.'; return render(); }
-    const { error } = await sb.from('pupils').insert({ id: crypto.randomUUID(), household_id: C.householdId, nickname: nick, avatar: av });
+    const th = document.querySelector('input[name=th]:checked')?.value || 'slate';
+    const { error } = await sb.from('pupils').insert({ id: crypto.randomUUID(), household_id: C.householdId, nickname: nick, avatar: av, theme: th });
     msg = error ? (error.code === '23505' ? 'Ilyen becenév már van.' : 'Nem sikerült létrehozni (van internet?).') : `${nick} profilja elkészült.`;
     if (!error) await pull().catch(() => {});
     render();
   }
+  function themeBtns(p) {
+    return Object.entries(THEMES).map(([k, t]) => `<button type="button" data-theme-pupil="${p.id}" data-theme-val="${k}" aria-pressed="${p.theme === k}"><i class="sw" style="background:${t.dot}"></i>${t.name}</button>`).join('');
+  }
+  async function setTheme(id, theme) {
+    const p = C.pupils.find(x => x.id === id); if (!p || !THEMES[theme] || p.theme === theme) return;
+    const { error } = await sb.from('pupils').update({ theme }).eq('id', id);
+    if (error) { msg = 'Nem sikerült menteni a színt (van internet?).'; return render(); }
+    p.theme = theme; saveCache();
+    msg = `${p.nickname} színe: ${THEMES[theme].name}.`;
+    render();
+  }
+
   async function delPupil(id) {
     const p = C.pupils.find(x => x.id === id); if (!p) return;
     if (!confirm(`Biztosan törlöd ${p.nickname} profilját? Az összes eredménye és jelvénye is törlődik.`)) return;
@@ -1288,7 +1325,16 @@ ${dotsHtml(Q.res, Q.i)}
 <div class="badges">${BADGES.map(b => { const d = S.badges[b.id]; return `<div class="badge${d ? ' got' : ''}"><div class="bi" aria-hidden="true">${b.ico}</div><div><b>${b.name}</b><span>${b.desc}${d ? ' · megszerezted: ' + d : ''}</span></div></div>`; }).join('')}</div>`;
   }
 
+  const PLAY_VIEWS = ['home', 'quiz', 'result', 'badges', 'mg', 'ws', 'kidexit'];
+  function applyTheme() {
+    const p = pupil();
+    const theme = p && PLAY_VIEWS.includes(view) ? p.theme : 'slate';
+    document.documentElement.dataset.theme = theme === 'rose' ? 'rose' : 'slate';
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', THEMES[theme]?.bg || THEMES.slate.bg);
+  }
+
   function render() {
+    applyTheme();
     $app.innerHTML = view === 'quiz' ? quizView() : view === 'result' ? resultView() : view === 'badges' ? badgesView() : view === 'mg' ? mgView() : view === 'ws' ? wsView()
       : view === 'who' ? whoView() : view === 'parent' ? parentView() : view === 'pair' ? pairView() : view === 'kidexit' ? kidExitView()
       : pupil() ? homeView() : whoView();
@@ -1296,7 +1342,8 @@ ${dotsHtml(Q.res, Q.i)}
 
   /* ================= események ================= */
   $app.addEventListener('click', e => {
-    const t = e.target.closest('[data-go],[data-pick],[data-next],[data-k],[data-r],[data-pupil],[data-delpupil],[data-revoke]'); if (!t) return;
+    const t = e.target.closest('[data-go],[data-pick],[data-next],[data-k],[data-r],[data-pupil],[data-delpupil],[data-revoke],[data-theme-pupil]'); if (!t) return;
+    if (t.dataset.themePupil) return setTheme(t.dataset.themePupil, t.dataset.themeVal);
     if (t.dataset.pupil) { C.current = t.dataset.pupil; saveCache(); refreshS(); view = 'home'; render(); window.scrollTo(0, 0); return; }
     if (t.dataset.delpupil) return delPupil(t.dataset.delpupil);
     if (t.dataset.revoke) return revoke(t.dataset.revoke);
