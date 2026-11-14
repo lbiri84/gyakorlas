@@ -47,6 +47,13 @@
     --bg: #261d1b; --bg-raised: #3c3737; --fg: #ebcddb; --fg-muted: #bfa8b2;
     --accent: #d77ca2; --accent-text: #e6abc0; --line: #5f5558;
   }
+  .flag { font-size: 20px; }
+  .flag[aria-pressed="true"] { color: var(--accent-text); border-color: var(--accent); }
+  .reportbox { margin-top: var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); }
+  .reportbox h3 { margin: 0 0 var(--space-2); font-size: 20px; line-height: 26px; font-weight: 600; }
+  .reportbox .big-btn { margin: 0; }
+  .rep p { margin: var(--space-1) 0 0; }
+  .rep .acts { display: flex; flex-direction: column; gap: var(--space-2); flex: none; }
   .themes { display: flex; gap: var(--space-2); flex-wrap: wrap; }
   .themes button { min-height: 40px; padding: 0 var(--space-4); border-radius: var(--radius-full); border: 1px solid var(--line); background: transparent; color: var(--fg); font: inherit; font-size: 15px; }
   .themes button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
@@ -780,6 +787,10 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   let pairCode = null;          // a legutóbb kért párosító kód
   let pairFromParent = false;   // a szülő ezt az eszközt teszi gyerek tabletté
   let kidExitWarn = false;
+  let reports = null;           // a szülői nézet nyitott jelentései
+  let reportOpen = false;       // a kérdésnél nyitva van-e a „Mi a hiba?” doboz
+  const APP_VERSION = 'gyakorlo-v7';
+  const REASONS = { wrong_answer: 'Rossz a megoldás', bad_question: 'Hibás a kérdés', other: 'Más baj van' };
 
   function emptyCache() { return { pupils: [], results: {}, badges: {}, current: null, userId: null, householdId: null }; }
   function loadCache() {
@@ -835,6 +846,11 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   }
 
   async function handle(op) {
+    if (op.t === 'report') {
+      const { error } = await sb.from('question_reports').insert(op.row);
+      if (error && error.code !== '23505') throw error;
+      return;
+    }
     if (op.t === 'theme') {
       const { error } = await sb.from('pupils').update({ theme: op.theme }).eq('id', op.id);
       if (error) throw error;
@@ -958,7 +974,8 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
 
   function start(topic) {
     if (!pupil()) { view = 'who'; render(); return; }
-    Q = { topic, qs: buildRound(topic), i: 0, picked: null, res: [], score: 0, streak: 0, bestStreak: 0, lv0: levelOf(S.points) };
+    Q = { topic, qs: buildRound(topic), i: 0, picked: null, res: [], score: 0, streak: 0, bestStreak: 0, lv0: levelOf(S.points), reported: {} };
+    reportOpen = false;
     view = 'quiz'; render();
   }
   function answer(i) {
@@ -969,8 +986,26 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     render(); const b = document.getElementById('next'); if (b) { b.focus({ preventScroll: true }); b.scrollIntoView({ block: 'nearest' }); }
   }
   function next() {
+    reportOpen = false;
     if (Q.i < 9) { Q.i++; Q.picked = null; render(); window.scrollTo(0, 0); } else finish();
   }
+  // Hibás feladat jelentése: a kérdés pillanatképe, szabad szöveg nélkül.
+  function sendReport(reason) {
+    const p = pupil(), q = Q && Q.qs[Q.i];
+    if (!p || !q || !REASONS[reason] || Q.reported[Q.i]) return;
+    const plain = v => strip(String(v ?? '')).replace(/\s+/g, ' ').trim();
+    const row = {
+      id: crypto.randomUUID(), pupil_id: p.id, topic: q.topic, qkey: q.key ? String(q.key).slice(0, 100) : null,
+      prompt: plain(q.prompt).slice(0, 300), body: (plain(q.text) || (q.svg ? '[ábra]' : '')).slice(0, 500),
+      choices: q.choices.slice(0, 6).map(c => plain(c).slice(0, 120)),
+      correct: Number.isInteger(q.correct) ? q.correct : null, picked: Q.picked,
+      explain: plain(q.explain).slice(0, 600), reason, app_version: APP_VERSION,
+    };
+    outbox.enqueue({ t: 'report', row });
+    Q.reported[Q.i] = true; reportOpen = false;
+    kick(); render();
+  }
+
   function finish() {
     // Döntés: csak a befejezett kör számít; a pontok itt, egyszerre íródnak.
     const bonus = Q.score === 10 ? 50 : 0;
@@ -1153,6 +1188,7 @@ ${footHtml()}`;
 <input class="inp" id="nick" maxlength="20" autocomplete="off" placeholder="Becenév" aria-label="Becenév">
 <fieldset class="avs"><legend class="sub">Ikon</legend>${avs}</fieldset>
 <button class="big-btn" data-go="addpupil">Létrehozás</button></section>
+<section class="card stack"><h3>Jelentett feladatok${reports && reports.length ? ` (${reports.length})` : ''}</h3>${reportsHtml()}</section>
 <section class="card stack"><h3>Gyerek tabletek</h3>${devs}
 ${C.pupils.length ? `<h3>Új tablet párosítása</h3><div class="checks">${checks}</div>
 <input class="inp" id="dlabel" maxlength="30" value="Tablet" aria-label="A tablet neve">
@@ -1170,7 +1206,48 @@ ${footHtml()}`;
     devices = d.data.filter(x => UUID.test(x.user_id)).map(x => ({ ...x,
       names: dp.data.filter(y => y.device_user_id === x.user_id).map(y => C.pupils.find(p => p.id === y.pupil_id)?.nickname).filter(Boolean).join(', ') || 'nincs gyerek' }));
   }
-  async function openParent() { view = 'parent'; msg = ''; devices = null; render(); window.scrollTo(0, 0); await loadDevices(); if (view === 'parent') render(); }
+  async function openParent() { view = 'parent'; msg = ''; devices = null; reports = null; render(); window.scrollTo(0, 0); await Promise.all([loadDevices(), loadReports()]); if (view === 'parent') render(); }
+
+  async function loadReports() {
+    const r = await sb.from('question_reports').select('id, pupil_id, topic, qkey, prompt, body, choices, correct, picked, explain, reason, created_at')
+      .eq('status', 'new').order('created_at', { ascending: false }).limit(100);
+    reports = r.error ? [] : r.data.filter(x => UUID.test(x.id));
+    if (r.error) msg = 'A jelentett feladatok nem tölthetők be.';
+  }
+  function reportsHtml() {
+    if (reports === null) return '<p class="sub">Betöltés…</p>';
+    if (!reports.length) return '<p class="sub">Nincs nyitott jelentés.</p>';
+    const L = 'abcdef';
+    const items = reports.map(r => {
+      const who = C.pupils.find(p => p.id === r.pupil_id);
+      const ch = (r.choices || []).map((c, i) => `<li>${L[i]}) ${esc(c)}${i === r.correct ? ' ✓ <b>helyes</b>' : ''}${i === r.picked ? ' ← ezt jelölte' : ''}</li>`).join('');
+      return `<div class="rowi rep"><div><b>${esc(dayStr(new Date(r.created_at)))} · ${esc(TNAME[r.topic] || r.topic)}${who ? ' · ' + esc(who.nickname) : ''}</b>
+<p class="sub">${esc(REASONS[r.reason] || r.reason)}</p><p>${esc(r.prompt)}</p>${r.body ? `<p><b>${esc(r.body)}</b></p>` : ''}<ul class="recent">${ch}</ul>${r.explain ? `<p class="sub">${esc(r.explain)}</p>` : ''}</div>
+<div class="acts"><button class="small-btn" data-repstatus="fixed" data-rep="${r.id}">Javítva</button><button class="small-btn danger" data-repstatus="dismissed" data-rep="${r.id}">Elvetés</button></div></div>`;
+    }).join('');
+    return items + `<button class="big-btn ghost" data-go="copyreports">Szövegként másolás (a javításhoz)</button>`;
+  }
+  // A javításhoz átadható szöveg; a gyerek neve szándékosan nincs benne.
+  function reportsText() {
+    const L = 'abcdef';
+    return `Hibás feladat jelentések (gyakorlas.laszlobiri.com, ${APP_VERSION}), ${reports.length} db\n` + reports.map((r, n) => [
+      `---\n${n + 1}. ${dayStr(new Date(r.created_at))} · ${TNAME[r.topic] || r.topic} (téma: ${r.topic}) · ${REASONS[r.reason] || r.reason}`,
+      `Kérdés: ${r.prompt}`, r.body ? `Feladat: ${r.body}` : '',
+      `Válaszok: ${(r.choices || []).map((c, i) => `${L[i]}) ${c}${i === r.correct ? ' [helyes]' : ''}${i === r.picked ? ' [ezt jelölte]' : ''}`).join(' | ')}`,
+      r.explain ? `Magyarázat: ${r.explain}` : '', r.qkey ? `Kulcs: ${r.qkey}` : '',
+    ].filter(Boolean).join('\n')).join('\n');
+  }
+  async function copyReports() {
+    try { await navigator.clipboard.writeText(reportsText()); msg = 'A jelentések a vágólapon. Küldd el a javításhoz.'; }
+    catch (e) { msg = 'A másolás nem sikerült.'; }
+    render();
+  }
+  async function setReportStatus(id, status) {
+    const { error } = await sb.from('question_reports').update({ status }).eq('id', id);
+    msg = error ? 'Nem sikerült menteni (van internet?).' : status === 'fixed' ? 'Javítottként lezárva.' : 'Elvetve.';
+    if (!error) reports = reports.filter(r => r.id !== id);
+    render();
+  }
 
   async function addPupil() {
     const nick = document.getElementById('nick').value.trim();
@@ -1308,8 +1385,12 @@ ${n && kidExitWarn ? `<p class="msg">Még ${n} eredmény nincs elmentve (nincs i
       const ok = Q.picked === q.correct, last = Q.i === 9;
       fb = `<div class="fb ${ok ? 'good' : ''}" role="status"><h3>${ok ? '<span class="plus">+10</span>' + pick(PRAISE) : pick(OOPS)}</h3><p>${q.explain}</p></div><button class="big-btn" id="next" data-next>${last ? 'Eredmény' : 'Tovább'} <span aria-hidden="true">→</span></button>`;
     }
-    return `<div class="qbar"><button class="icon-btn" data-go="home" aria-label="Vissza a témákhoz">←</button><div class="qtitle">${TNAME[Q.topic]}</div><div class="qcount">${Q.i + 1}/10</div></div>
-${dotsHtml(Q.res, Q.i)}
+    const rep = Q.reported[Q.i];
+    const flag = `<button class="icon-btn flag" data-go="report" aria-pressed="${rep || reportOpen ? 'true' : 'false'}" aria-label="${rep ? 'Jelentve' : 'Hibás feladat jelentése'}" title="${rep ? 'Jelentve' : 'Jelentem: hibás a feladat'}"${rep ? ' disabled' : ''}>${rep ? '✓' : '⚑'}</button>`;
+    const box = reportOpen ? `<section class="card reportbox" aria-label="Hibás feladat jelentése"><h3>Mi a hiba?</h3>${Object.entries(REASONS).map(([k, v]) => `<button class="big-btn ghost" data-report="${k}">${v}</button>`).join('')}<button class="link-btn" data-go="report">Mégse</button></section>`
+      : rep ? '<p class="sub" role="status">Köszönjük! A szülő megnézi ezt a feladatot.</p>' : '';
+    return `<div class="qbar"><button class="icon-btn" data-go="home" aria-label="Vissza a témákhoz">←</button><div class="qtitle">${TNAME[Q.topic]}</div><div class="qcount">${Q.i + 1}/10</div>${flag}</div>
+${dotsHtml(Q.res, Q.i)}${box}
 <section class="card qcard"><div>${chips} ${streak}</div><p class="qprompt">${q.prompt}</p><div class="qtext${q.svg ? ' svg' : q.long ? ' long' : (strip(q.text).length > 11 ? ' mid' : '')}">${q.text}</div></section>
 <div class="choices ${q.layout}" role="group" aria-label="Válaszok">${ch}</div>${fb}`;
   }
@@ -1347,11 +1428,13 @@ ${dotsHtml(Q.res, Q.i)}
 
   /* ================= események ================= */
   $app.addEventListener('click', e => {
-    const t = e.target.closest('[data-go],[data-pick],[data-next],[data-k],[data-r],[data-pupil],[data-delpupil],[data-revoke],[data-theme-pupil]'); if (!t) return;
+    const t = e.target.closest('[data-go],[data-pick],[data-next],[data-k],[data-r],[data-pupil],[data-delpupil],[data-revoke],[data-theme-pupil],[data-report],[data-rep]'); if (!t) return;
     if (t.dataset.themePupil) return setTheme(t.dataset.themePupil, t.dataset.themeVal);
     if (t.dataset.pupil) { C.current = t.dataset.pupil; saveCache(); refreshS(); view = 'home'; render(); window.scrollTo(0, 0); return; }
     if (t.dataset.delpupil) return delPupil(t.dataset.delpupil);
     if (t.dataset.revoke) return revoke(t.dataset.revoke);
+    if (t.dataset.report) return sendReport(t.dataset.report);
+    if (t.dataset.rep) return setReportStatus(t.dataset.rep, t.dataset.repstatus);
     if (t.hasAttribute('data-r')) return wsTap(+t.dataset.r, +t.dataset.c);
     if (t.hasAttribute('data-k')) return hmGuess(t.dataset.k);
     if (t.hasAttribute('data-pick')) return answer(+t.dataset.pick);
@@ -1363,6 +1446,8 @@ ${dotsHtml(Q.res, Q.i)}
     if (g === 'who') { refreshS(); view = 'who'; msg = ''; render(); window.scrollTo(0, 0); return; }
     if (g === 'parent') { if (MODE === 'parent') { pairFromParent = false; openParent(); } return; }
     if (g === 'addpupil') return addPupil();
+    if (g === 'report') { if (Q && !Q.reported[Q.i]) { reportOpen = !reportOpen; render(); } return; }
+    if (g === 'copyreports') return copyReports();
     if (g === 'newcode') return newCode();
     if (g === 'thisdevice') { pairFromParent = true; msg = ''; return newCode().then(c => { if (c) { view = 'pair'; render(); window.scrollTo(0, 0); } }); }
     if (g === 'dopair') return doPair();
