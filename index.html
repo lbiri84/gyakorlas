@@ -206,6 +206,9 @@
   .hm { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); }
   .hm svg { width: 150px; height: auto; }
   .hm .hint { color: var(--fg-muted); margin: 0; font-size: 16px; text-align: center; }
+  .hm .hmhint { color: var(--fg); }
+  .hm .hmhelp { display: flex; justify-content: center; min-height: 0; }
+  .hm .hmhelp:empty { display: none; }
   .slots { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
   .slot { min-width: 28px; height: 44px; border-bottom: 4px solid var(--fg-muted); font-size: 30px; line-height: 40px; font-weight: 600; text-align: center; text-transform: uppercase; }
   .slot.lost { color: var(--accent-text); }
@@ -862,7 +865,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   let kidExitWarn = false;
   let reports = null;           // a szülői nézet nyitott jelentései
   let reportOpen = false;       // a kérdésnél nyitva van-e a „Mi a hiba?” doboz
-  const APP_VERSION = 'gyakorlo-v16';
+  const APP_VERSION = 'gyakorlo-v17';
   const REASONS = { wrong_answer: 'Rossz a megoldás', bad_question: 'Hibás a kérdés', other: 'Más baj van' };
 
   function emptyCache() { return { pupils: [], results: {}, badges: {}, current: null, userId: null, householdId: null }; }
@@ -1110,7 +1113,29 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     const pool = [];
     HM_WORDS.forEach(([cat, ws]) => ws.forEach(w => { if (w.length >= 3 && w.split('').every(c => HM_KEYS.indexOf(c) >= 0) && w !== hmLast) pool.push([cat, w]); }));
     const [cat, word] = pick(pool); hmLast = word;
-    MG = { cat, word, got: [], miss: [], done: 0 }; view = 'mg'; render(); window.scrollTo(0, 0);
+    MG = { cat, word, got: [], miss: [], done: 0, hints: [] }; view = 'mg'; render(); window.scrollTo(0, 0);
+  }
+  // Segítség az akasztófában, kérésre (életet nem visz el).
+  // 1.: egy betű a szó elejéről (az első még ismeretlen), minden előfordulásával.
+  // 2.: állatnál tartalmi utalás (kép és állatcsoport); más szónál még egy betű (a leggyakoribb ismeretlen).
+  function hmHint() {
+    if (!MG || MG.done || MG.hints.length >= 2) return;
+    const unknown = MG.word.split('').filter(c => MG.got.indexOf(c) < 0);
+    if (!unknown.length) return;
+    if (MG.hints.length === 0) {
+      const k = unknown[0];
+      MG.hints.push(`1. segítség: megmutattam egy betűt: <b>${k.toUpperCase()}</b>`);
+      return hmGuess(k);
+    }
+    const g = GOF[MG.word] && GR[GOF[MG.word]], emo = EMO[MG.word];
+    if (MG.cat === 'Állat' && (g || emo)) {
+      MG.hints.push(`2. segítség: ${emo ? emo + ' ' : ''}${g ? 'Ez egy ' + g.n + '.' : 'Ez egy állat.'}`);
+      return render();
+    }
+    const freq = {}; unknown.forEach(c => { freq[c] = (freq[c] || 0) + 1; });
+    const k = Object.keys(freq).sort((a, b) => freq[b] - freq[a])[0];
+    MG.hints.push(`2. segítség: még egy betű: <b>${k.toUpperCase()}</b>`);
+    hmGuess(k);
   }
   function hmGuess(k) {
     if (!MG || MG.done || MG.got.indexOf(k) >= 0 || MG.miss.indexOf(k) >= 0 || HM_KEYS.indexOf(k) < 0) return;
@@ -1136,7 +1161,8 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     const end = MG.done === 1 ? `<div class="banner">Kitaláltad! +10 pont${MG.badge ? ' · Új jelvény: ' + MG.badge.ico + ' ' + MG.badge.name : ''}</div>` : lost ? `<div class="banner">Most nem sikerült. A szó: <b>${w}</b></div>` : '';
     const btns = MG.done ? `<button class="big-btn" data-go="home">Vissza a témákhoz</button>` : '';
     return `<div class="qbar"><button class="icon-btn" data-go="home" aria-label="Kilépés a játékból">←</button><div class="qtitle">Akasztófa</div></div>
-<section class="card hm"><p class="hint">Tipp: ${MG.cat} · ${w.length} betű</p>${hmSvg(MG.miss.length)}<div class="slots" aria-label="A kitalálandó szó">${slots}</div>${end}
+<section class="card hm"><p class="hint">Tipp: ${MG.cat} · ${w.length} betű</p>${MG.hints.map(h => `<p class="hint hmhint">${h}</p>`).join('')}${hmSvg(MG.miss.length)}<div class="slots" aria-label="A kitalálandó szó">${slots}</div>${end}
+${MG.done ? '' : `<div class="hmhelp">${MG.hints.length < 2 ? `<button class="small-btn" data-go="hmhint">💡 ${MG.hints.length + 1}. segítség</button>` : ''}</div>`}
 ${MG.done ? '' : `<p class="lives">Hibázhatsz még ${HM_MAX - MG.miss.length}-szer.</p>`}</section>
 ${MG.done ? '' : `<div class="kb" role="group" aria-label="Betűk">${keys}</div>`}${btns}`;
   }
@@ -1613,6 +1639,7 @@ ${dotsHtml(Q.res, Q.i)}${box}
     if (g === 'mg-hm') return hmStart();
     if (g === 'mg-ws') return wsStart();
     if (g === 'mg-bo') return boStart();
+    if (g === 'hmhint') return hmHint();
     if (g === 'nomg') { R.mg = false; render(); return; }
     if (g === 'who') { refreshS(); view = 'who'; msg = ''; render(); window.scrollTo(0, 0); return; }
     if (g === 'parent') { if (MODE === 'parent') { pairFromParent = false; openParent(); } return; }

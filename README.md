@@ -3,7 +3,7 @@
 Gyakorló oldal 3. osztályosoknak: matek, nyelvtan és környezetismeret, kérdés-felelet formában, pontokkal és jelvényekkel. Egyetlen `index.html`, build nélkül. Csak belépve használható; a pontok és jelvények a laszlobiri közös backendjébe mentődnek, gyerekprofilonként.
 
 - **Matek (számok és műveletek 200-ig, mérések):** számok 200-ig, helyi érték, számegyenes, számszomszédok és kerekítés, összeadás-kivonás, szorzás-osztás, szöveges feladatok, mérések (tömeg, hossz), pénz és visszajáró. A feladatok generáltak, minden kör új számokkal.
-- **Mini játékok:** 500 pontonként a kör végén jutalom: a gyerek választ akasztófa, szókereső (10×10-es tábla, 5–6 elrejtett szó) és falbontó (2 × 6 tégla, 3 élet, a téma színeivel) közül, vagy elveti. Egy jutalom egy játék. A szavak az anyagból valók. Siker +10 pont, az első győzelem jelvényt ad.
+- **Mini játékok:** 500 pontonként a kör végén jutalom: a gyerek választ akasztófa, szókereső (10×10-es tábla, 5–6 elrejtett szó) és falbontó (2 × 6 tégla, 3 élet, a téma színeivel) közül, vagy elveti. Egy jutalom egy játék. Az akasztófában két, kérésre megjelenő segítség van (1.: egy betű a szó elejéről; 2.: állatnál kép és állatcsoport, egyébként még egy betű); életet nem visz el. A szavak az anyagból valók. Siker +10 pont, az első győzelem jelvényt ad.
 - **Nyelvtan:** j vagy ly?, szófajok, mondatfajták, ABC-sorrend.
 - **Környezetismeret:** az élet feltételei (élő és élettelen, életfeltételek, táplálkozás), állatcsoportok vegyesen, valamint külön az emlősök, madarak, hüllők, kétéltűek és a rovarok (bogarak): testtakaró, belső vagy külső váz, testfelépítés, szaporodás, kicsinyek, fejlődés.
 - **Vegyes kör:** 10 kérdés az összes témából.
