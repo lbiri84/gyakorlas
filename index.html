@@ -514,9 +514,8 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     [['A fák szára a törzs.', 0], ['Vastag, kemény és kéreggel borított.', 0], ['Zöld színű, puha, hajlékony.', 1], ['Nedvdús: összenyomva levet ereszt.', 1],
       ['A mezőkön, réteken élő színes virágú növények szára.', 1], ['A cserjék (bokrok) szára.', 0], ['A lombkorona ágai, gallyai és vesszői.', 0]]
       .map(([t, i]) => KB('Fás szár vagy lágy szár?', t, N12_SZAR, i, i ? 'Ez a lágy szár: zöld, puha, hajlékony, nedvdús.' : 'Ez a fás szár: a törzs vastag, kemény és kéreggel borított.')),
-    // munkafüzet 3.: gyümölcstalálós
+    // munkafüzet 3.: gyümölcstalálós (az „Érett, lédús… nehogy a magomba harapj!” kimaradt: a szilvára és a meggyre is igaz)
     [['Gyümölcsöm húsa harsog a fogad alatt. Jól rágd meg! A fogaidnak is jót teszel vele, és vitamint is tartalmaz.', 0],
-      ['Érett, lédús gyümölcsöm héja könnyen lehúzható. Vigyázz, nehogy a magomba harapj!', 1],
       ['Gyümölcsöm hamvaslila színe páratlan. A belőle főzött lekvár ízesíti a süteményeket.', 2], ['Bordó gyümölcsöm kissé savanyú. Fülbevalónak is kiváló!', 3]]
       .map(([t, i]) => KM('Mi a nevem?', t, N12_GY[i], N12_GY, `A megfejtés: ${N12_GY[i]}. A gyümölcsöskert fái lombhullató fák.`)),
     // munkafüzet 4.: termés és fa
@@ -1292,7 +1291,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   let kidExitWarn = false;
   let reports = null;           // a szülői nézet nyitott jelentései
   let reportOpen = false;       // a kérdésnél nyitva van-e a „Mi a hiba?” doboz
-  const APP_VERSION = 'gyakorlo-v21';
+  const APP_VERSION = 'gyakorlo-v22';
   const REASONS = { wrong_answer: 'Rossz a megoldás', bad_question: 'Hibás a kérdés', other: 'Más baj van' };
 
   function emptyCache() { return { pupils: [], results: {}, badges: {}, current: null, userId: null, householdId: null }; }
