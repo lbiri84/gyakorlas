@@ -376,7 +376,9 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   const EMO = { varjú: '🐦', macska: '🐈', juh: '🐑', tehén: '🐄', ember: '🧑', fa: '🌳', virág: '🌼', méh: '🐝', csibe: '🐥',
     tyúk: '🐔', kakas: '🐓', paradicsom: '🍅', káposzta: '🥬', repülőgép: '✈️', sárkány: '🪁', traktor: '🚜', ház: '🏠', létra: '🪜',
     seprű: '🧹', vödör: '🪣', baba: '👶', gyerek: '🧒', 'idős asszony': '👵', nő: '👩', szöcske: '🦗', ponty: '🐟', papagáj: '🦜',
-    róka: '🦊', tulipán: '🌷', vadgesztenye: '🌰', 'zöld levelibéka': '🐸', 'barna varangy': '🐸', 'fürge gyík': '🦎', krokodil: '🐊', 'ékszerteknős': '🐢', kaméleon: '🦎', vízisikló: '🐍', keszeg: '🐟', harcsa: '🐟', pisztráng: '🐟', fecske: '🐦', fácán: '', 'házi tyúk': '🐔', 'tőkés réce': '🦆', 'fehér gólya': '', hattyú: '🦢', harkály: '', sas: '🦅', 'barna medve': '🐻', delfin: '🐬', bálna: '🐋', fóka: '🦭', denevér: '🦇', elefánt: '🐘', kutya: '🐕', liba: '', pulyka: '🦃', tengerimalac: '', kanári: '🐤', hörcsög: '🐹', farkas: '🐺', vaddisznó: '🐗',
+    róka: '🦊', tulipán: '🌷', vadgesztenye: '🌰', 'nagy szarvasbogár': '🪲', szarvasbogár: '🪲', 'hétpettyes katicabogár': '🐞', 'májusi cserebogár': '🪲', burgonyabogár: '🪲', rózsabogár: '🪲',
+    'nagy búvárbogár': '🪲', 'házi méh': '🐝', 'nappali pávaszem': '🦋', szitakötő: '', hangya: '🐜', légy: '🪰', szúnyog: '🦟', tücsök: '🦗', sáska: '🦗', poloska: '',
+    dongó: '🐝', lepke: '🦋', 'káposztalepke hernyója': '🐛', 'zöld tarlósáska': '🦗', 'fecskefarkú lepke': '🦋', 'erdei vöröshangya': '🐜', csibe: '🐥', 'zöld levelibéka': '🐸', 'barna varangy': '🐸', 'fürge gyík': '🦎', krokodil: '🐊', 'ékszerteknős': '🐢', kaméleon: '🦎', vízisikló: '🐍', keszeg: '🐟', harcsa: '🐟', pisztráng: '🐟', fecske: '🐦', fácán: '', 'házi tyúk': '🐔', 'tőkés réce': '🦆', 'fehér gólya': '', hattyú: '🦢', harkály: '', sas: '🦅', 'barna medve': '🐻', delfin: '🐬', bálna: '🐋', fóka: '🦭', denevér: '🦇', elefánt: '🐘', kutya: '🐕', liba: '', pulyka: '🦃', tengerimalac: '', kanári: '🐤', hörcsög: '🐹', farkas: '🐺', vaddisznó: '🐗',
     bagoly: '🦉', szarvas: '🦌', medve: '🐻', vadkacsa: '🦆', koala: '🐨', jegesmedve: '🐻‍❄️', tigris: '🐅', zsiráf: '🦒', oroszlán: '🦁', borz: '🦡',
     kiscica: '🐱', hód: '🦫', teknős: '🐢', kacsa: '🦆', gólya: '', tojás: '🥚', tej: '🥛', hús: '🥩', tollpárna: '', gyapjúsál: '🧣', makk: '🌰', mandula: '🥜', béka: '🐸', kaktusz: '🌵', palánta: '🌱', 'cserepes virág': '🪴',
     kerékpár: '🚲', óra: '🕰️', telefon: '📱', katicabogár: '🐞', nyúl: '🐇', gyík: '🦎', kesztyű: '🧤', laptop: '💻', sün: '🦔',
@@ -812,6 +814,65 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
       .map(([t, c]) => KM('A kaméleon: egészítsd ki a mondatot!', t, c, ['farkukat', 'nyelvüket', 'színüket', 'szemeiket'], 'Vannak emberek, akik hüllőt, például kaméleont tartanak otthonukban háziállatként.'))
   ]);
 
+  // 18. Rovarok (tankönyv 48–49., munkafüzet 50–51. oldal)
+  const R18_SUM = 'A rovaroknak 3 pár ízelt lábuk van. Testük 3 részre tagolódik: fej, tor, potroh. Légcsövekkel lélegeznek. Petével szaporodnak. Van közöttük szárny nélküli, míg másoknak 1 vagy 2 pár szárnya van. A kemény fedőszárnyú rovarokat bogaraknak nevezzük.';
+  const R18_BOG = 'A rovaroknak azokat a tagjait, melyeknek felső szárnyuk megvastagodott, és kemény fedőszárnyként védi az alatta lévő hártyás szárnyat, bogaraknak nevezzük.';
+  const R18_RESZ = ['fej', 'tor', 'potroh'];
+  const R18_TAP = ['nektárszívó', 'növényrágó', 'ragadozó', 'mindenevő'];
+  GEN.rovarok = chapGen([
+    // testfelépítés
+    [KM('Hány részre tagolódik minden rovar teste?', '🐝', '3', ['2', '4', '6'], 'Minden rovar teste 3 részre tagolódik: fej, tor, potroh.'),
+      KM('Melyek a rovarok fő testrészei?', '🐝', 'fej, tor, potroh', ['fej, nyak, törzs', 'fej, törzs, farokrész', 'gyökérzet, szár, levél'], R18_SUM),
+      KM('Hány lába van a rovaroknak?', '🐞', '6 (3 pár)', ['4 (2 pár)', '8 (4 pár)', '2 (1 pár)'], 'A torhoz kapcsolódik a párosával elhelyezkedő 6 ízelt láb, vagyis a 3 pár láb.'),
+      KM('Mi az ízelt láb?', '🦗', 'kisebb részekből, ízekből álló láb', ['úszóhártyás láb', 'tapadókorongos láb', 'láb nélküli test'], 'Ízelt láb: kisebb részekből, úgynevezett ízekből álló láb. A rovarok a lábuk minden ízét külön tudják mozgatni.'),
+      KM('Mivel lélegeznek a rovarok?', '🐝', 'légcsövekkel', ['tüdővel', 'kopoltyúval', 'a szárnyukkal'], 'A potroh két oldalán helyezkednek el a légzést biztosító légcsövek nyílásai.'),
+      KM('Mire valók a csápok?', '🐜', 'tapintásra és szaglásra', ['repülésre', 'úszásra', 'evésre'], 'A fejen találhatók a szemek, a csápok (tapintó- és szaglószerv) és a szájszervek.'),
+      KM('Hány pár szárnya lehet egy szárnyas rovarnak?', '🦋', '1 vagy 2 pár', ['3 vagy 4 pár', 'mindig 5 pár', 'pontosan 10 pár'], 'A szárnyas rovarok esetében a torhoz kapcsolódik a szárny is, melyből lehet 1 vagy 2 pár.'),
+      KM('Hogyan szaporodnak a rovarok?', '🐛', 'petékkel', ['elevenen szülnek', 'meszes héjú tojással', 'ikrával a vízbe'], 'A rovarok petékkel szaporodnak.'),
+      KM('Melyik az állatvilág legnépesebb csoportja?', '🐜', 'a rovarok', ['a halak', 'a madarak', 'az emlősök'], 'Az apró hangyák az állatvilág legnépesebb csoportjának, a rovaroknak a tagjai.')]
+      .concat([['Itt találhatók a szemek, a csápok és a szájszervek.', 0], ['Ide kapcsolódik a 6 ízelt láb és a szárny.', 1], ['A két oldalán vannak a légcsövek nyílásai.', 2]]
+        .map(([t, i]) => KM('Melyik testrész?', t, R18_RESZ[i], R18_RESZ, R18_SUM))),
+    // bogár-e (tankönyv 3.)
+    [['nagy szarvasbogár', 1], ['hétpettyes katicabogár', 1], ['májusi cserebogár', 1], ['burgonyabogár', 1], ['rózsabogár', 1], ['nagy búvárbogár', 1],
+      ['házi méh', 0], ['nappali pávaszem', 0], ['szitakötő', 0], ['hangya', 0], ['légy', 0], ['szúnyog', 0], ['tücsök', 0], ['sáska', 0]]
+      .map(([n, b]) => KB('Bogár vagy nem bogár?', withEmo(n), ['bogár', 'nem bogár'], b ? 0 : 1, b ? R18_BOG : `${A(n)} rovar, de nem bogár. ` + R18_BOG))
+      .concat([KM('Milyen lehet a katicabogár?', '🐞', 'két-, hét-, tíz- vagy tizenhat pettyes, sőt egyszínű fekete is', ['csak hétpettyes', 'csak egyszínű piros', 'csak csíkos'], 'A katicabogár nemcsak hétpettyes lehet. Különböző fajainak eltérő számú pettyei és színei vannak.')]),
+    // a lepke fejlődése (tankönyv 5., munkafüzet 2.)
+    [KM('Melyik a lepke kifejlődésének helyes sorrendje?', '🦋', 'pete → lárva → báb → kifejlett lepke', ['lárva → pete → báb → kifejlett lepke', 'pete → báb → lárva → kifejlett lepke', 'báb → pete → lárva → kifejlett lepke'], 'A petéből gyönyörű lepkévé válás időtartamának 4 szakasza van: pete, lárva, báb, kifejlett lepke.'),
+      KM('Hány szakasza van a petéből lepkévé válásnak?', '🦋', '4', ['2', '3', '6'], 'A petéből gyönyörű lepkévé válás időtartamának 4 szakasza van.'),
+      KM('Mi fejlődik a petéből?', '🐛', 'lárva', ['báb', 'kifejlett lepke', 'ebihal'], 'A petéből lárva fejlődik, amely folyamatosan növekszik.'),
+      KM('Mit tesz a lárva, amikor kinövi a bőrét?', '🐛', 'levedli („leveszi”)', ['bábba bújik azonnal', 'elrepül', 'petét rak'], 'A lárva növekedése közben kinövi a bőrét, ezért „leveszi”, vagyis levedli. Amikor az új bőrt is kinövi, a vedlés megismétlődik.'),
+      KM('Mivé alakul a lárva, amikor már elég nagy?', '🐛', 'bábbá', ['petévé', 'ikrává', 'ebihallá'], 'Amikor a lárva már elég nagy, bábbá alakul, és a báb burkán belül fejlődik tovább.'),
+      KM('Mi bújik elő a bábból?', '🦋', 'a teljesen kifejlett lepke', ['a pete', 'a lárva', 'a hernyó'], 'A bábból már a teljesen kifejlett lepke bújik elő.'),
+      KM('Hová rakja a rovar a petéit?', '🦋', 'egy védett helyre', ['a nyílt víz közepére', 'a madárfészekbe', 'bárhová, védelem nélkül'], 'A rovar egy védett helyre lerakja a petéit.')],
+    // táplálkozás (tankönyv 6.)
+    [['házi méh', 0], ['dongó', 0], ['lepke', 0], ['burgonyabogár', 1], ['káposztalepke hernyója', 1], ['szitakötő', 2], ['katicabogár', 2], ['tavi molnárpoloska', 2], ['erdei vöröshangya', 3]]
+      .map(([n, i]) => KB('Mivel táplálkozik ez a rovar?', withEmo(n), R18_TAP, i, [
+        'A nektárszívó rovaroknak fontos szerepük van a virágok beporzásában.', 'A növényeket megrágó rovarok és hernyóik az emberek számára sok bosszúság forrásai.',
+        'A ragadozó szitakötő nála kisebb rovarokkal, a katicabogár levéltetvekkel, a tavi molnárpoloska szúnyoggal és azok lárváival táplálkozik.',
+        'Mindenevő rovar az erdei vöröshangya. Fákat károsító rovarokat fogyaszt, ezért hasznos. Kedvenc eleség a mézharmat.'][i]))
+      .concat([KM('Mit végeznek a nektárszívó rovarok?', '🌸', 'a virágok beporzását', ['a levelek megrágását', 'a betegségek terjesztését', 'a víz tisztítását'], 'Amikor virágról virágra szállnak, testük szőrszálain megtapad, majd onnan lehullik a virágpor. Így a növény virágjából termés fejlődhet.'),
+        KM('Mit tesznek a levéltetvek a növénnyel?', '🌿', 'szívogatják a zsenge levelek nedvét', ['beporozzák a virágait', 'megvédik a kártevőktől', 'öntözik'], 'A levéltetvek a növények zsenge levelének nedvét szívogatják, ezzel legyengítik és megfertőzik a növényt.'),
+        KM('Melyik rovar terjeszthet betegséget?', '🦟', 'a szúnyog', ['a katicabogár', 'a házi méh', 'a nappali pávaszem'], 'A betegséget okozó vagy terjesztő rovarok ellen védekezni kell (szúnyogok, legyek, fejtetű, bolha).'),
+        KM('Mi az erdei vöröshangya kedvenc eledele?', '🐜', 'a mézharmat', ['a nektár', 'a fák levele', 'a vér'], 'Kedvenc eleség a mézharmat.')]),
+    // munkafüzet 3.: melyik rovarra ismersz rá
+    [['Virágról virágra szállva nektárt gyűjt, amiből mézet készít.', 'méh'], ['A hím rágója aganccsá fejlődött. Védett állat.', 'szarvasbogár'], ['Mindenre rászáll, betegséget terjeszt.', 'légy'],
+      ['Bolyban él, melyet több ezer példány alkot. Mindenevő.', 'hangya'], ['Nősténye vérszívó, csípése kellemetlen. Vízpartokon gyakori.', 'szúnyog'], ['Kiváló ugró. Hímje hangosan ciripel.', 'tücsök'],
+      ['Hasznos rovar, pusztítja a levéltetveket. Kemény fedőszárnya pöttyös.', 'katicabogár']]
+      .map(([t, a], i, L) => KM('Melyik rovarra ismersz rá a leírásból?', t, withEmo(a), L.map(x => withEmo(x[1])), `Ez ${art(a)} ${a}.`)),
+    // mozgás (tankönyv 4., munkafüzet 4.)
+    [['rózsabogár', 'repül'], ['zöld tarlósáska', 'ugrik'], ['nagy búvárbogár', 'úszik'], ['fecskefarkú lepke', 'repül'], ['erdei vöröshangya', 'fut'], ['sárga szitakötő', 'repül']]
+      .map(([a, m]) => KM('Melyik rovar hogyan mozog?', withEmo(a), m, ['fut', 'ugrik', 'úszik', 'repül'], `${A(a)} ${m}. A rovarok mozgása eltérő: vannak köztük futó-, ugró-, mászó- vagy úszómozgást végzők. Többségük repülni is tud.`))
+      .concat([KM('Hogyan közlekedik a tavi molnárpoloska?', '💧', 'a vízen járva', ['a víz alatt úszva', 'a föld alatt ásva', 'a fák között repülve'], 'A testét és lábát fedő víztaszító, apró szőrszálak miatt a vízen járva közlekedik. Ha megzavarják, magasra ugrik.'),
+        KM('Mi ne kerüljön a természetes vizekbe a tavi molnárpoloska miatt?', '🧴', 'mosó- és mosogatószer', ['esővíz', 'falevél', 'homok'], 'Szennyezett vízen nem tud járni, ezért elpusztul. Figyelnünk kell arra, hogy mosó- és mosogatószer ne kerüljön a természetes vizekbe!')]),
+    // kakukktojás (munkafüzet 1.) és a szólás
+    [() => { const odd = 'csibe', ch = shuffle([odd].concat(shuffle(['poloska', 'burgonyabogár', 'cserebogár', 'fülbemászó']).slice(0, 3)));
+      return { prompt: 'Keresd a kakukktojást!', text: 'Melyik állat nem illik a többi közé?', choices: ch.map(withEmo), correct: ch.indexOf(odd), layout: 'list', key: 'k:kak18',
+        explain: 'A csibe madár, a többi rovar.' }; },
+      KM('Mit jelent a szólás: „Szorgos, mint a hangya.”?', '🐜', 'Nagyon szorgalmas, sokat dolgozik.', ['Nagyon lusta.', 'Nagyon kicsi.', 'Nagyon gyors.'], 'A hangyák szorgalmasan dolgoznak.'),
+      KM('Miért fontos a méhek munkája?', '🐝', 'Szorgos beporzó munkájuk nagyon fontos az emberek számára.', ['Betegségeket terjesztenek.', 'Megrágják a növényeket.', 'Szúnyogokat esznek.'], 'A méhek szorgos beporzó munkája nagyon fontos az emberek számára. Ha óvod a méheket, a természetet véded!')]
+  ]);
+
   Object.assign(GEN, {
     elo() {
       const T = [
@@ -1158,7 +1219,8 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     { id: 'emlosok', g: 'Környezetismeret', name: 'Emlősállatok', ico: '🐻', emo: 1 },
     { id: 'madarak', g: 'Környezetismeret', name: 'Madarak', ico: '🐦', emo: 1 },
     { id: 'halak', g: 'Környezetismeret', name: 'Halak', ico: '🐟', emo: 1 },
-    { id: 'keteltu', g: 'Környezetismeret', name: 'Kétéltűek és hüllők', ico: '🐸', emo: 1 }
+    { id: 'keteltu', g: 'Környezetismeret', name: 'Kétéltűek és hüllők', ico: '🐸', emo: 1 },
+    { id: 'rovarok', g: 'Környezetismeret', name: 'Rovarok', ico: '🐞', emo: 1 }
   ];
   // A régi (2026-11-15 előtti) környezetes témák neve, hogy a korábbi eredmények olvashatók maradjanak.
   const TNAME = { elet: 'Az élet feltételei', allat: 'Állatcsoportok', emlos: 'Emlősök', madar: 'Madarak', hullo: 'Hüllők', ketelt: 'Kétéltűek', rovar: 'Rovarok és bogarak' };
@@ -1464,7 +1526,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
 
 
   /* ================= mini játék: akasztófa ================= */
-  const HM_WORDS = [['Hüllő', ['kígyó', 'gyík', 'teknős', 'krokodil', 'sikló', 'kaméleon', 'béka', 'gőte', 'varangy', 'ebihal', 'lárva', 'pete', 'kétéltű', 'hüllő']], ['Hal', ['ponty', 'csuka', 'harcsa', 'keszeg', 'amur', 'busa', 'süllő', 'compó', 'kárász', 'balin', 'garda', 'pisztráng', 'ikra', 'kopoltyú', 'pikkely', 'úszó', 'ivadék', 'szálka']], ['Madár', ['harkály', 'varjú', 'bagoly', 'veréb', 'gólya', 'fecske', 'cinege', 'fácán', 'zöldike', 'vércse', 'strucc', 'pingvin', 'gyurgyalag', 'sárgarigó', 'kakas', 'hattyú']], ['Növényrész', ['gyökérzet', 'szár', 'levél', 'virág', 'termés', 'törzs', 'tűlevél', 'mag', 'rügy']], ['Állat', ELO.állat.concat(['kígyó', 'csiga', 'galamb', 'mókus', 'őz', 'egér', 'medúza', 'polip', 'kagyló', 'sirály', 'kecske', 'sertés'])], ['Növény', ELO.növény.filter(w => w.indexOf(' ') < 0).concat(['lucfenyő', 'tölgyfa', 'bükkfa', 'bukszus', 'tűztövis', 'vadrózsa', 'kökény', 'mamutfenyő', 'diófa', 'napraforgó', 'cserje'])],
+  const HM_WORDS = [['Rovar', ['hangya', 'méh', 'darázs', 'lepke', 'légy', 'szúnyog', 'szitakötő', 'sáska', 'szöcske', 'tücsök', 'bogár', 'katica', 'cserebogár', 'szarvasbogár', 'báb', 'lárva', 'csáp', 'potroh', 'tor', 'nektár']], ['Hüllő', ['kígyó', 'gyík', 'teknős', 'krokodil', 'sikló', 'kaméleon', 'béka', 'gőte', 'varangy', 'ebihal', 'lárva', 'pete', 'kétéltű', 'hüllő']], ['Hal', ['ponty', 'csuka', 'harcsa', 'keszeg', 'amur', 'busa', 'süllő', 'compó', 'kárász', 'balin', 'garda', 'pisztráng', 'ikra', 'kopoltyú', 'pikkely', 'úszó', 'ivadék', 'szálka']], ['Madár', ['harkály', 'varjú', 'bagoly', 'veréb', 'gólya', 'fecske', 'cinege', 'fácán', 'zöldike', 'vércse', 'strucc', 'pingvin', 'gyurgyalag', 'sárgarigó', 'kakas', 'hattyú']], ['Növényrész', ['gyökérzet', 'szár', 'levél', 'virág', 'termés', 'törzs', 'tűlevél', 'mag', 'rügy']], ['Állat', ELO.állat.concat(['kígyó', 'csiga', 'galamb', 'mókus', 'őz', 'egér', 'medúza', 'polip', 'kagyló', 'sirály', 'kecske', 'sertés'])], ['Növény', ELO.növény.filter(w => w.indexOf(' ') < 0).concat(['lucfenyő', 'tölgyfa', 'bükkfa', 'bukszus', 'tűztövis', 'vadrózsa', 'kökény', 'mamutfenyő', 'diófa', 'napraforgó', 'cserje'])],
     ['Természet', ['élőlény', 'élettelen', 'életjelenség', 'mozgás', 'táplálkozás', 'légzés', 'szaporodás', 'növekedés', 'fejlődés', 'utód', 'kakukktojás', 'víz', 'fény', 'levegő', 'táplálék', 'hőmérséklet', 'ember', 'állat', 'növény', 'gyökér']],
     ['Matek', ['összeadás', 'kivonás', 'szorzás', 'osztás', 'számegyenes', 'kerekítés', 'tízes', 'százas', 'egyes', 'páros', 'páratlan', 'mérleg', 'forint', 'visszajáró', 'kilogramm', 'méter', 'centiméter', 'dekagramm', 'szomszéd']],
     ['Nyelvtan', ['főnév', 'melléknév', 'ige', 'mondat', 'kérdő', 'kijelentő', 'felkiáltó', 'óhajtó', 'betű', 'ábécé', 'szófaj', 'helyesírás', 'játék', 'hajó', 'király', 'bagoly', 'kölyök']]];
