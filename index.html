@@ -1289,7 +1289,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   let kidExitWarn = false;
   let reports = null;           // a szülői nézet nyitott jelentései
   let reportOpen = false;       // a kérdésnél nyitva van-e a „Mi a hiba?” doboz
-  const APP_VERSION = 'gyakorlo-v19';
+  const APP_VERSION = 'gyakorlo-v20';
   const REASONS = { wrong_answer: 'Rossz a megoldás', bad_question: 'Hibás a kérdés', other: 'Más baj van' };
 
   function emptyCache() { return { pupils: [], results: {}, badges: {}, current: null, userId: null, householdId: null }; }
@@ -1460,7 +1460,15 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     { id: 'szojatek', ico: '🔤', name: 'Szókitaláló', desc: 'Találj ki egy szót az akasztófa játékban.', ok: s => s.mgWins >= 1 },
     { id: 'szokereso', ico: '🔎', name: 'Szókereső', desc: 'Találd meg az összes szót a szókeresőben.', ok: s => s.wsWins >= 1 },
     { id: 'falbonto', ico: '🧱', name: 'Falbontó', desc: 'Bonts le minden téglát a falbontóban.', ok: s => s.boWins >= 1 },
-    { id: 'ot-szint', ico: '🏆', name: 'Ötödik szint', desc: 'Érd el az 5. szintet.', ok: s => levelOf(s.points) >= 5 }
+    { id: 'ot-szint', ico: '🏆', name: 'Ötödik szint', desc: 'Érd el az 5. szintet.', ok: s => levelOf(s.points) >= 5 },
+    // sok jó válasz
+    ...[[500, '🎯', 'Ötszáz'], [1000, '🥉', 'Ezer'], [1500, '🥈', 'Ezerötszáz'], [2000, '🥇', 'Kétezer']].map(([n, ico, w]) =>
+      ({ id: 'jo-' + n, ico, name: w + ' jó válasz', desc: `Gyűjts össze ${n} helyes választ.`, ok: s => s.correct >= n })),
+    // környezetismeret: fejezetenként egy, hibátlan körért
+    ...[['elo', 'Élőlény-szakértő'], ['novenyek', 'Növényszakértő'], ['allatok', 'Állatbarát'], ['emlosok', 'Emlős-szakértő'], ['madarak', 'Madárszakértő'],
+      ['halak', 'Halszakértő'], ['keteltu', 'Béka- és gyíkszakértő'], ['rovarok', 'Rovarszakértő']].map(([t, name]) => {
+      const T = TOPICS.find(x => x.id === t);
+      return { id: 'k-' + t, ico: T.ico, name, desc: `Hibátlan kör ebből a fejezetből: ${T.name}.`, ok: (s, c) => c.topic === t && c.score === 10 }; })
   ];
 
   const dayStr = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
