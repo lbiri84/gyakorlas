@@ -376,7 +376,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   const EMO = { varjú: '🐦', macska: '🐈', juh: '🐑', tehén: '🐄', ember: '🧑', fa: '🌳', virág: '🌼', méh: '🐝', csibe: '🐥',
     tyúk: '🐔', kakas: '🐓', paradicsom: '🍅', káposzta: '🥬', repülőgép: '✈️', sárkány: '🪁', traktor: '🚜', ház: '🏠', létra: '🪜',
     seprű: '🧹', vödör: '🪣', baba: '👶', gyerek: '🧒', 'idős asszony': '👵', nő: '👩', szöcske: '🦗', ponty: '🐟', papagáj: '🦜',
-    róka: '🦊', tulipán: '🌷', béka: '🐸', kaktusz: '🌵', palánta: '🌱', 'cserepes virág': '🪴',
+    róka: '🦊', tulipán: '🌷', vadgesztenye: '🌰', makk: '🌰', mandula: '🥜', béka: '🐸', kaktusz: '🌵', palánta: '🌱', 'cserepes virág': '🪴',
     kerékpár: '🚲', óra: '🕰️', telefon: '📱', katicabogár: '🐞', nyúl: '🐇', gyík: '🦎', kesztyű: '🧤', laptop: '💻', sün: '🦔',
     cipő: '👞', lámpa: '💡', zebra: '🦓', pillangó: '🦋', bokor: '🌳', kukorica: '🌽', ló: '🐴', kígyó: '🐍', csiga: '🐌', galamb: '🕊️',
     hal: '🐟', mókus: '🐿️', őz: '🦌', egér: '🐁', dió: '🌰', szendvics: '🥪', 'virágzó ág': '🌸', 'rügyes ág': '🌿',
@@ -442,6 +442,88 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   const ELO_HA = [['a palántát nem locsolnánk?', 0, 'palánta'], ['a kaktuszt egy sötét szobában tartanánk?', 1, 'kaktusz'],
     ['a béka nem tudna feljönni a víz felszínére?', 2, 'béka'], ['a papagájt kutyatáppal etetnénk?', 3, 'papagáj'],
     ['a cserepes virágot betennénk a fagyasztóba?', 4, 'cserepes virág']];
+
+  /* Fejezet-feladatok közös készítője: egy fejezet feladattípusok (készletek) listája; minden készlet
+     elemei közül a kör egyet húz. A feladat szövege a tankönyv vagy a munkafüzet mondata. */
+  const KM = (p, t, c, w, e) => () => mc(p, t, c, w, e, { key: 'k:' + p + t });                     // feleletválasztós
+  const KF = (t, v, e) => () => tf('Igaz vagy hamis?', t, !!v, e || (v ? 'Igaz.' : 'Hamis.'), { key: 'k:tf' + t });  // igaz-hamis
+  const KB = (p, t, ch, ci, e) => () => ({ prompt: p, text: t, choices: ch.slice(), correct: ci, layout: ch.length <= 2 ? 'grid' : 'list', long: strip(t).length > 36, explain: e, key: 'k:' + p + t });
+  // párok mindkét irányban: [a, b]; pa: kérdés a-hoz (b a válasz), pb: kérdés b-hez (a a válasz)
+  const KP = (pa, pb, L, ex, fa = x => x, fb = x => x) => L.map(([a, b]) => () => mc(pa, fa(a), fb(b), L.map(x => fb(x[1])), ex(a, b), { key: 'k:' + pa + a }))
+    .concat(pb ? L.map(([a, b]) => () => mc(pb, fb(b), fa(a), L.map(x => fa(x[0])), ex(a, b), { key: 'k:' + pb + b })) : []);
+  const chapGen = sets => () => { const T = sets.map(set => () => pick(set)()); return pickT(T); };
+
+  // 12. Növények (tankönyv 33–35., munkafüzet 37–38. oldal)
+  const N12_SUM = 'A növények élőlények. Táplálkoznak, lélegeznek, mozognak, növekednek, és szaporodnak. Fő részeik: gyökérzet, szár, levél, virág és termés.';
+  const N12_ORO = 'A fenyők mindig zöldek, mert leveleiket nem egyszerre, hanem folyamatosan hullatják.';
+  const N12_LOMB = 'A lombhullató fák a fenyőkkel ellentétben ősszel lehullatják az összes levelüket.';
+  const N12_RESZ = ['gyökérzet', 'szár', 'levél', 'virág', 'termés'];
+  const N12_SZAR = ['fás szár', 'lágy szár'];
+  const N12_HALM = ['csak az örökzöld fára', 'csak a lombhullató fára', 'mindkettőre', 'egyikre sem'];
+  const N12_GY = ['alma', 'őszibarack', 'szilva', 'meggy'];
+  const N12_MOZ = ['kúszik', 'körbefon', 'szétterül', 'kinyílik'], N12_NEMMOZ = ['ugrik', 'lebeg', 'sétál', 'csoszog', 'kocog'];
+  const N12_EVSZ = ['tavasszal', 'nyáron', 'ősszel', 'télen'];
+  GEN.novenyek = chapGen([
+    // örökzöld vagy lombhullató
+    [['lucfenyő', 0], ['erdei fenyő', 0], ['mamutfenyő', 0], ['bukszus', 0], ['tűztövis', 0], ['tölgyfa', 1], ['bükkfa', 1], ['vadrózsa', 1], ['kökény', 1]]
+      .map(([n, i]) => KB('Örökzöld vagy lombhullató?', n, ['örökzöld', 'lombhullató'], i, i ? `${A(n)} lombhullató. ${N12_LOMB}` : `${A(n)} örökzöld. ${N12_ORO}`))
+      .concat([KB('Örökzöld vagy lombhullató fák alkotják az erdőt?', '🌲 fenyőerdő, télen-nyáron zöld', ['örökzöld', 'lombhullató'], 0, N12_ORO),
+        KB('Örökzöld vagy lombhullató fák alkotják az erdőt?', '🍂 erdő ősszel, sárguló levelekkel', ['örökzöld', 'lombhullató'], 1, N12_LOMB)]),
+    // munkafüzet 2.: halmazok
+    [['levele kemény', 0], ['fenyőfa', 0], ['levele vékony', 0], ['levele puha', 1], ['télen csupasz', 1], ['levele széles', 1],
+      ['fás szárú', 2], ['törzse van', 2], ['növény', 2], ['élőlény', 2], ['életjelenségeket mutat', 2], ['szára hajlékony', 3]]
+      .map(([t, i]) => KB('Melyik fára igaz?', cap(t) + '.', N12_HALM, i,
+        ['A fenyők tűlevele vékony, kemény, hegyes végű.', 'A lombhullató fák levele lapos és általában puha tapintású, ősszel lehullik.',
+          'Mindkettő fa: fás szárú, törzse van. ' + N12_SUM, 'A hajlékony szár a lágy szárú növényeké, a fák szára fás szár.'][i])),
+    // tankönyv: a fenyők és lombhullatók
+    [KM('Mi a fenyőfák érdekes jellemzője?', '🌲', 'a tűlevél', ['a lomblevél', 'a hajlékony szár', 'a termés'], 'A fenyőfák érdekes jellemzője a tűlevél, ami vékony, kemény, hegyes végű alakjáról kapta a nevét.'),
+      KM('Melyek a leggyakoribb fenyőfáink?', '🌲', 'a lucfenyő és az erdei fenyő', ['a tölgyfa és a bükkfa', 'a vadrózsa és a kökény', 'a bukszus és a tűztövis'], 'Leggyakoribb fenyőfáink a lucfenyő és az erdei fenyő.'),
+      KM('Melyek a leggyakoribb lombhullató fáink?', '🍂', 'a tölgyfa és a bükkfa', ['a lucfenyő és az erdei fenyő', 'a vadrózsa és a kökény', 'a bukszus és a tűztövis'], 'Leggyakoribb lombhullató fáink a tölgyfa és a bükkfa.'),
+      KM('Mik a növények leghatalmasabb képviselői?', '🌳', 'a fák', ['a bokrok', 'a virágok', 'a termések'], 'A növények leghatalmasabb képviselői a fák.'),
+      KM('Mi a bokrok másik neve?', '🌿', 'cserje', ['fenyő', 'törzs', 'termés'], 'A bokrok, más néven cserjék, a fáknál alacsonyabb növények.'),
+      KM('Melyek a leghatalmasabb fák?', '🌲', 'az óriás mamutfenyők', ['a tölgyfák', 'a bükkfák', 'a lucfenyők'], 'A leghatalmasabb fák az óriás mamutfenyők.'),
+      KM('Milyen magas lehet egy óriás mamutfenyő?', '🌲', '100 méter', ['10 méter', '25 méter', '1000 méter'], 'Egy-egy példányuk 2500 tonnás és 100 méter magas is lehet.'),
+      KM('Hány éves lehet egy óriás mamutfenyő?', '🌲', 'kb. háromezer', ['kb. harminc', 'kb. háromszáz', 'kb. tíz'], 'Egy ekkora fa életkora kb. háromezer év.'),
+      KM('Mit jelent, hogy a fenyők örökzöld növények?', '🌲', 'Mindig zöldek.', ['Ősszel lehullatják az összes levelüket.', 'Télen csupaszok.', 'Nincs levelük.'], N12_ORO)],
+    // igaz-hamis: tankönyv és munkafüzet 8.
+    [KF('A fenyők örökzöld növények.', 1, N12_ORO), KF('A lombhullató fák ősszel lehullatják az összes levelüket.', 1, N12_LOMB),
+      KF('A fenyők ősszel lehullatják az összes levelüket.', 0, N12_ORO), KF('A bokrok a fáknál magasabb növények.', 0, 'A bokrok, más néven cserjék, a fáknál alacsonyabb növények.'),
+      KF('A növények az állatok számára búvóhelyet nyújtanak.', 1), KF('A növényeket csak az emberek eszik meg.', 0),
+      KF('A növényeket ruhaneműk alapanyagaként hasznosíthatjuk.', 1), KF('Az emberek számára fogyaszthatatlan növényi részeket mindig ki kell dobni.', 0,
+        'Hamis. Az emberi fogyasztásra nem alkalmas növényi részeket az állatok ellátására használhatjuk fel.'),
+      KF('A gyümölcsök és zöldségek fogyasztása egészséges.', 1), KF('A növények oxigént termelnek.', 1, 'Igaz. A növények oxigént termelnek, ételül és italul szolgálnak.'),
+      KF('A komposztálással elkerülhető a kerti hulladékok szemétbe kerülése.', 1, 'Igaz. A komposztált hulladékkal termékenyebbé tehető a talaj.')],
+    // évszakok (tankönyv 3.)
+    [['nyugalmi állapotban vannak, növekedésük szünetel, vízigényük csökken', 3], ['a rügyfakadás jelzi az újraéledésüket', 0],
+      ['dús lombkoronával köszöntik a nyarat, beérnek az első termések', 1], ['leveleik elszíneződnek és lehullanak, az őszi gyümölcsök beérnek', 2]]
+      .map(([t, i]) => KB('Mikor? A lombhullató növények…', t, N12_EVSZ, i, 'A növények alkalmazkodnak a környezetükhöz, és a természet ritmusa szerint élnek.')),
+    // a növény részei (tankönyv 4.)
+    [['rögzíti a növényt a talajban', 0], ['a talajból vizet és tápanyagokat vesz fel', 0], ['szállítja a gyökérből kapott táplálékot a növény többi részébe', 1],
+      ['tartja a leveleket, virágokat, terméseket', 1], ['a növény légzőszerve', 2], ['itt történik a tápanyagkészítés', 2], ['a növény szaporítószerve', 3],
+      ['tartalmazza a magokat', 4]].map(([t, i]) => KM('Melyik növényi rész?', cap(t) + '.', N12_RESZ[i], N12_RESZ, `Ez ${art(N12_RESZ[i])} ${N12_RESZ[i]}. ` + N12_SUM))
+      .concat([KM('Az utcán sétálva a növény melyik része nem látható?', '🌳', 'a gyökérzet', ['a szár', 'a levél', 'a virág'], 'A gyökérzet a talajban van: rögzíti a növényt a talajban.'),
+        KM('Miből fejlődik a termés?', '🌼', 'a virágból', ['a gyökérből', 'a szárból', 'a levélből'], 'A virág a növény szaporítószerve. Belőle fejlődik a termés, ami a magokat tartalmazza.')]),
+    // a szár fajtái (tankönyv 5.)
+    [['A fák szára a törzs.', 0], ['Vastag, kemény és kéreggel borított.', 0], ['Zöld színű, puha, hajlékony.', 1], ['Nedvdús: összenyomva levet ereszt.', 1],
+      ['A mezőkön, réteken élő színes virágú növények szára.', 1], ['A cserjék (bokrok) szára.', 0], ['A lombkorona ágai, gallyai és vesszői.', 0]]
+      .map(([t, i]) => KB('Fás szár vagy lágy szár?', t, N12_SZAR, i, i ? 'Ez a lágy szár: zöld, puha, hajlékony, nedvdús.' : 'Ez a fás szár: a törzs vastag, kemény és kéreggel borított.')),
+    // munkafüzet 3.: gyümölcstalálós
+    [['Gyümölcsöm húsa harsog a fogad alatt. Jól rágd meg! A fogaidnak is jót teszel vele, és vitamint is tartalmaz.', 0],
+      ['Érett, lédús gyümölcsöm héja könnyen lehúzható. Vigyázz, nehogy a magomba harapj!', 1],
+      ['Gyümölcsöm hamvaslila színe páratlan. A belőle főzött lekvár ízesíti a süteményeket.', 2], ['Bordó gyümölcsöm kissé savanyú. Fülbevalónak is kiváló!', 3]]
+      .map(([t, i]) => KM('Mi a nevem?', t, N12_GY[i], N12_GY, `A megfejtés: ${N12_GY[i]}. A gyümölcsöskert fái lombhullató fák.`)),
+    // munkafüzet 4.: termés és fa
+    KP('Melyik fa termése?', 'Melyik a termése?', [['vadgesztenye', 'gesztenyefa'], ['makk', 'tölgyfa'], ['dió', 'diófa'], ['mandula', 'mandulafa']],
+      (a, b) => `${A(a)} ${art(b)} ${b} termése.`, x => withEmo(x)),
+    // munkafüzet 7.: hogyan mozoghat egy növény
+    N12_MOZ.map(c => KM('Hogyan mozoghat egy növény?', '🌱', c, N12_NEMMOZ, 'A növények helyváltoztató mozgásra nem képesek, mégis mozognak: kúszik, körbefon, szétterül, kinyílik.'))
+      .concat(N12_NEMMOZ.map(c => KM('Melyik NEM növényi mozgás?', '🌱', c, N12_MOZ, 'A növények helyváltoztató mozgásra nem képesek: nem ugranak, nem sétálnak.')))
+      .concat([KM('Melyik a növények helyzetváltoztató mozgása?', '🌻', 'a nap felé fordulás', ['a vágtatás', 'az ugrás', 'a sétálás'], 'A rügyfakadás, a virágnyílás, a nap felé fordulás a növények egyik helyzetváltoztató mozgása.'),
+        KM('Melyik húsevő növény képes gyors mozgásra?', '🪴', 'a Vénusz légycsapója', ['a napraforgó', 'a tölgyfa', 'a bukszus'], 'A Vénusz légycsapója nevű húsevő növény gyors mozgásra is képes: levelei csapdaként összezárulnak.')]),
+    // munkafüzet 9.: mamutfenyő átölelése
+    [() => numQ(12, [6, 10, 24, 100], { prompt: 'Hány gyerek kell a fa átöleléséhez?', text: 'Az óriás mamutfenyő törzsének kerülete 12 méter. Egy gyerek 1 métert ér át.', long: true,
+      explain: 'A 12 méteres kört 1 méteres papírszalagokból kialakítva 12 gyerekre lenne szükség.', key: 'k:mamut' })]
+  ]);
 
   Object.assign(GEN, {
     elo() {
@@ -783,7 +865,8 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     { id: 'szofaj', g: 'Nyelvtan', name: 'Szófajok', ico: 'Aa', sm: 1 },
     { id: 'mondat', g: 'Nyelvtan', name: 'Mondatfajták', ico: '!?', sm: 1 },
     { id: 'abc', g: 'Nyelvtan', name: 'ABC-sorrend', ico: 'A–Z', sm: 1 },
-    { id: 'elo', g: 'Környezetismeret', name: 'Az élőlények tulajdonságai', ico: '🌱', emo: 1 }
+    { id: 'elo', g: 'Környezetismeret', name: 'Az élőlények tulajdonságai', ico: '🌱', emo: 1 },
+    { id: 'novenyek', g: 'Környezetismeret', name: 'Növények', ico: '🌳', emo: 1 }
   ];
   // A régi (2026-11-15 előtti) környezetes témák neve, hogy a korábbi eredmények olvashatók maradjanak.
   const TNAME = { elet: 'Az élet feltételei', allat: 'Állatcsoportok', emlos: 'Emlősök', madar: 'Madarak', hullo: 'Hüllők', ketelt: 'Kétéltűek', rovar: 'Rovarok és bogarak' };
@@ -1089,7 +1172,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
 
 
   /* ================= mini játék: akasztófa ================= */
-  const HM_WORDS = [['Állat', ELO.állat.concat(['kígyó', 'csiga', 'galamb', 'mókus', 'őz', 'egér', 'medúza', 'polip', 'kagyló', 'sirály', 'kecske', 'sertés'])], ['Növény', ELO.növény.filter(w => w.indexOf(' ') < 0)],
+  const HM_WORDS = [['Növényrész', ['gyökérzet', 'szár', 'levél', 'virág', 'termés', 'törzs', 'tűlevél', 'mag', 'rügy']], ['Állat', ELO.állat.concat(['kígyó', 'csiga', 'galamb', 'mókus', 'őz', 'egér', 'medúza', 'polip', 'kagyló', 'sirály', 'kecske', 'sertés'])], ['Növény', ELO.növény.filter(w => w.indexOf(' ') < 0).concat(['lucfenyő', 'tölgyfa', 'bükkfa', 'bukszus', 'tűztövis', 'vadrózsa', 'kökény', 'mamutfenyő', 'diófa', 'napraforgó', 'cserje'])],
     ['Természet', ['élőlény', 'élettelen', 'életjelenség', 'mozgás', 'táplálkozás', 'légzés', 'szaporodás', 'növekedés', 'fejlődés', 'utód', 'kakukktojás', 'víz', 'fény', 'levegő', 'táplálék', 'hőmérséklet', 'ember', 'állat', 'növény', 'gyökér']],
     ['Matek', ['összeadás', 'kivonás', 'szorzás', 'osztás', 'számegyenes', 'kerekítés', 'tízes', 'százas', 'egyes', 'páros', 'páratlan', 'mérleg', 'forint', 'visszajáró', 'kilogramm', 'méter', 'centiméter', 'dekagramm', 'szomszéd']],
     ['Nyelvtan', ['főnév', 'melléknév', 'ige', 'mondat', 'kérdő', 'kijelentő', 'felkiáltó', 'óhajtó', 'betű', 'ábécé', 'szófaj', 'helyesírás', 'játék', 'hajó', 'király', 'bagoly', 'kölyök']]];
