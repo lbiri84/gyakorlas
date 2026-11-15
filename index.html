@@ -370,132 +370,79 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     }, extra);
   }
 
-  const EMO = { kutya: '🐕', macska: '🐈', ló: '🐴', tehén: '🐄', nyúl: '🐇', őz: '🦌', farkas: '🐺', elefánt: '🐘', delfin: '🐬', denevér: '🦇', sas: '🦅', pingvin: '🐧', kacsa: '🦆', bagoly: '🦉', galamb: '🕊️', veréb: '🐦', fecske: '🐦', kígyó: '🐍', gyík: '🦎', teknős: '🐢', krokodil: '🐊', béka: '🐸', varangy: '🐸', méh: '🐝', szúnyog: '🦟', hangya: '🐜', pillangó: '🦋', szöcske: '🦗', katicabogár: '🐞', ponty: '🐟', csuka: '🐟', harcsa: '🐟', pisztráng: '🐟', cápa: '🦈', csiga: '🐌', oroszlán: '🦁', tigris: '🐅', ember: '🧑', tyúk: '🐔', disznó: '🐖', juh: '🐑', kecske: '🐐' };
+  /* ================= Környezetismeret: a tankönyv fejezetei =================
+     A feladatok csak a tankönyv szövegét és képeit használják (új tartalmat nem találunk ki).
+     II. Élő környezetünk, 11. Az élőlények tulajdonságai. */
+  const EMO = { varjú: '🐦', macska: '🐈', juh: '🐑', tehén: '🐄', ember: '🧑', fa: '🌳', virág: '🌼', méh: '🐝', csibe: '🐥',
+    tyúk: '🐔', kakas: '🐓', paradicsom: '🍅', káposzta: '🥬', repülőgép: '✈️', sárkány: '🪁', traktor: '🚜', ház: '🏠', létra: '🪜',
+    seprű: '🧹', vödör: '🪣', baba: '👶', gyerek: '🧒', 'idős asszony': '👵', nő: '👩', szöcske: '🦗', ponty: '🐟', papagáj: '🦜',
+    róka: '🦊', tulipán: '🌷', béka: '🐸', kaktusz: '🌵', palánta: '🌱', 'cserepes virág': '🪴' };
   const withEmo = w => (EMO[w] ? EMO[w] + ' ' : '') + w;
+  // A tankönyv képei (30. oldal): élőlények és élettelen dolgok; az élőlények három csoportja.
+  const ELO = { ember: ['ember', 'baba', 'gyerek', 'idős asszony', 'nő'],
+    állat: ['varjú', 'macska', 'juh', 'tehén', 'méh', 'liba', 'csibe', 'tyúk', 'kakas', 'szöcske', 'ponty', 'papagáj', 'róka', 'béka'],
+    növény: ['fa', 'virág', 'tulipán', 'paradicsom', 'káposzta', 'kaktusz', 'palánta', 'cserepes virág'] };
+  const ELOK = [].concat(ELO.ember, ELO.állat, ELO.növény);
+  const ELOOF = {}; Object.keys(ELO).forEach(k => ELO[k].forEach(w => ELOOF[w] = k));
+  const ELETTELEN = ['repülőgép', 'sárkány', 'traktor', 'ház', 'létra', 'locsolókanna', 'seprű', 'vödör'];
+  const ELO_SUM = 'Az élőlények mozognak, táplálkoznak, lélegeznek, szaporodnak, növekednek.';
+  const ELO_COND = 'Az élőlényeknek az élethez vízre, fényre, levegőre, táplálékra és megfelelő hőmérsékletre van szükségük.';
+  // „Melyik csoportra jellemző az állítás?” (tankönyv, 2. feladat)
+  const ELO_GRP = ['az emberekre', 'az állatokra', 'a növényekre', 'az emberekre és az állatokra', 'mindhárom csoportra'];
+  const ELO_STMT = [['helyhez kötöttek', 2], ['idővel változnak', 4], ['gondolkodnak', 0], ['beszélnek', 0], ['hangot adnak', 3], ['gyökerük van', 2]];
+  // igaz-hamis mondatok ugyanezekből: [mondat a csoporttal, igaz-e]
+  const ELO_TF = [
+    ['A növények helyhez kötöttek.', 1], ['Az állatok helyhez kötöttek.', 0], ['Az emberek helyhez kötöttek.', 0],
+    ['Az emberek idővel változnak.', 1], ['Az állatok idővel változnak.', 1], ['A növények idővel változnak.', 1],
+    ['Az emberek gondolkodnak.', 1], ['Az emberek beszélnek.', 1], ['A növények beszélnek.', 0], ['Az állatok beszélnek.', 0],
+    ['Az emberek hangot adnak.', 1], ['Az állatok hangot adnak.', 1], ['A növények hangot adnak.', 0],
+    ['A növényeknek gyökerük van.', 1], ['Az állatoknak gyökerük van.', 0], ['Az embereknek gyökerük van.', 0],
+    ['Az emberek, az állatok és a növények élőlények.', 1],
+    ['Az élőlények érzékelik a környezetükben lejátszódó változásokat, és alkalmazkodnak hozzájuk.', 1],
+    ['Az élőlények közös jellemzői az életjelenségek.', 1]];
+  // Életjelenségek: a tankönyv mondatai, a keresett szó helyén „…”.
+  const ELO_JEL = ['mozgás', 'táplálkozás', 'légzés', 'szaporodás', 'növekedés és fejlődés'];
+  const ELO_JS = [
+    ['Az élőlények legszembetűnőbb életjelensége a …, ami minden cselekvéshez szükséges.', 0, 'Az élőlények legszembetűnőbb életjelensége a mozgás, ami minden cselekvéshez szükséges.'],
+    ['A mozgáshoz energia szükséges. Ezt az élőlények … biztosítják maguknak.', 1, 'A mozgáshoz energia szükséges. Ezt az élőlények táplálkozással biztosítják maguknak.'],
+    ['Minden élőlénynek a számára megfelelő táplálékra van szüksége.', 1, 'Ez a táplálkozás: minden élőlénynek a számára megfelelő táplálékra van szüksége.'],
+    ['Az élőlények az élethez szükséges levegőt a … során veszik magukhoz.', 2, 'Az élőlények az élethez szükséges levegőt a légzés során veszik magukhoz.'],
+    ['Az élőlények fennmaradásának nélkülözhetetlen életjelensége a ….', 3, 'Az élőlények fennmaradásának nélkülözhetetlen életjelensége a szaporodás.'],
+    ['A kifejlett élőlények magukhoz hasonló utódokat hoznak létre.', 3, 'Ez a szaporodás: a kifejlett élőlények magukhoz hasonló utódokat hoznak létre.'],
+    ['Az utódok jellemzője a ….', 4, 'Az utódok jellemzője a növekedés és fejlődés.']];
+  const ELO_COMMON = ['mozognak', 'táplálkoznak', 'lélegeznek', 'szaporodnak', 'növekednek'];
+  const ELO_NOTCOMMON = ['helyhez kötöttek', 'gondolkodnak', 'beszélnek', 'gyökerük van'];
+  // Az élet feltételei: a hiányzó szó a tankönyv összefoglaló mondatából, és a „Mi történne, ha…” helyzetek.
+  const ELO_FN = ['víz', 'fény', 'levegő', 'táplálék', 'megfelelő hőmérséklet'];
+  const ELO_FS = ['vízre', 'fényre', 'levegőre', 'táplálékra', 'megfelelő hőmérsékletre'];
+  const ELO_HA = [['a palántát nem locsolnánk?', 0, 'palánta'], ['a kaktuszt egy sötét szobában tartanánk?', 1, 'kaktusz'],
+    ['a béka nem tudna feljönni a víz felszínére?', 2, 'béka'], ['a papagájt kutyatáppal etetnénk?', 3, 'papagáj'],
+    ['a cserepes virágot betennénk a fagyasztóba?', 4, 'cserepes virág']];
 
-  const GR = {
-    emlos: { n: 'emlős', pl: 'emlősök', cover: 'szőr', cp: 'testét szőr borítja', rep: 1, bone: true,
-      m: ['kutya', 'macska', 'ló', 'tehén', 'nyúl', 'őz', 'farkas', 'elefánt', 'delfin', 'denevér'], trick: ['pingvin', 'strucc', 'cápa'] },
-    madar: { n: 'madár', pl: 'madarak', cover: 'toll', cp: 'testét toll borítja', rep: 2, bone: true,
-      m: ['veréb', 'gólya', 'sas', 'pingvin', 'strucc', 'kacsa', 'galamb', 'fecske', 'bagoly'], trick: ['denevér', 'szöcske'] },
-    hullo: { n: 'hüllő', pl: 'hüllők', cover: 'pikkely', cp: 'testét pikkelyek borítják', rep: 2, bone: true,
-      m: ['kígyó', 'gyík', 'teknős', 'krokodil'], trick: ['béka', 'gőte', 'szalamandra'] },
-    ketelt: { n: 'kétéltű', pl: 'kétéltűek', cover: 'nyálkás, csupasz bőr', cp: 'bőre nyálkás és csupasz', rep: 3, bone: true,
-      m: ['béka', 'varangy', 'gőte', 'szalamandra'], trick: ['gyík', 'kígyó', 'teknős'] },
-    hal: { n: 'hal', pl: 'halak', cover: 'pikkely', cp: 'testét pikkelyek borítják', rep: 3, bone: true,
-      m: ['ponty', 'csuka', 'harcsa', 'cápa', 'pisztráng'], trick: ['delfin', 'béka'] },
-    rovar: { n: 'rovar', pl: 'rovarok', cover: 'kitinpáncél', cp: 'testét kitinpáncél védi', rep: 2, bone: false,
-      m: ['méh', 'légy', 'szúnyog', 'hangya', 'pillangó', 'szöcske', 'darázs', 'szitakötő', 'katicabogár', 'cserebogár'], trick: ['pók', 'csiga', 'giliszta'] }
-  };
-  const GOF = {}; Object.keys(GR).forEach(k => GR[k].m.forEach(w => GOF[w] = k));
-  const NOCOVER = ['delfin', 'teknős', 'cápa'];           // a testtakarójuk nem egyértelmű: nem kérdezzük
-  const NOREP = ['cápa'];                                  // egyes cápák elevenszülők
-  const COVERS = ['szőr', 'toll', 'pikkely', 'nyálkás, csupasz bőr', 'kitinpáncél'];
-  const REPS = [null, 'Elevenen szül, a kicsinyeit szoptatja.', 'Tojást rak.', 'Ikrát rak a vízbe.'];
-  const REPEX = [null, 'elevenen szül, és szoptatja a kicsinyeit.', 'tojást rak.', 'ikrát rak a vízbe.'];
-  const GNAMES = ['emlős', 'madár', 'hüllő', 'kétéltű', 'hal', 'rovar'];
-  const ALLN = Object.keys(GOF);
-  const PAIRS = [['csikó', 'ló'], ['borjú', 'tehén'], ['bárány', 'juh'], ['malac', 'disznó'], ['gida', 'kecske'], ['csibe', 'tyúk']];
-  const PARENTS = ['ló', 'tehén', 'juh', 'disznó', 'kecske', 'tyúk'];
-  const SEQ = { pillangó: ['tojás', 'hernyó', 'báb', 'pillangó'], béka: ['ikra', 'ebihal', 'béka'] };
-  const CLUES = {
-    emlos: ['Testét szőr borítja, a kicsinyeit tejjel táplálja.', 'Elevenen szül, és szoptatja a kicsinyeit.'],
-    madar: ['Testét toll borítja, tojást rak.', 'Két szárnya és fogatlan csőre van.'],
-    hullo: ['Száraz, pikkelyes bőre van, tüdővel lélegzik, többnyire tojást rak.', 'Pikkelyes bőrű, szárazföldön él, és sütkérezik a napon.'],
-    ketelt: ['Nyálkás, csupasz bőrű, a kicsinye (az ebihal) vízben él.', 'Ikrát rak a vízbe, a bőrén át is lélegzik.'],
-    hal: ['Vízben él, kopoltyúval lélegzik, testét pikkely borítja.', 'Úszik az uszonyaival, és ikrát rak.'],
-    rovar: ['Hat lába van, teste három részből áll.', 'Testét kitinpáncél védi, hat lába van.']
-  };
-  const FACTS = {
-    emlos: [
-      ['Melyik emlős él a vízben?', '🌊', 'delfin', ['kutya', 'ló', 'nyúl', 'őz', 'macska', 'farkas'], 'A delfin emlős, a vízben él, de tüdővel lélegzik.'],
-      ['Melyik emlős tud repülni?', '🪽', 'denevér', ['kutya', 'macska', 'nyúl', 'őz', 'farkas'], 'A denevér repülő emlős.'],
-      ['Mivel táplálják a kicsinyeiket az emlős anyák?', '🍼', 'tejjel', ['magvakkal', 'rovarokkal', 'falevéllel'], 'Az emlős anyák tejjel táplálják (szoptatják) a kicsinyeiket.']
-    ],
-    madar: [
-      ['Melyik madár nem tud repülni?', '🪽', 'strucc', ['veréb', 'gólya', 'sas', 'fecske', 'galamb', 'kacsa'], 'A strucc nagy, nehéz, ezért nem tud repülni.'],
-      ['Melyik madár nem tud repülni?', '🪽', 'pingvin', ['veréb', 'gólya', 'sas', 'fecske', 'galamb', 'bagoly'], 'A pingvin úszik, de nem tud repülni.'],
-      ['Mivel repülnek a madarak?', '🪽', 'szárnyukkal', ['uszonyukkal', 'lábukkal', 'farkukkal'], 'A madarak szárnyukkal repülnek.'],
-      ['Hogy nevezzük a madár száját?', '🐦', 'csőr', ['agyar', 'fogsor', 'szarv'], 'A madár szája a csőr. Foga nincs, a csőrével csipegeti fel az eleségét.'],
-      ['Kinek a kicsinye a csibe?', '🐥', 'tyúk', ['ló', 'tehén', 'juh', 'kecske'], 'A csibe a tyúk kicsinye.']
-    ],
-    hullo: [
-      ['Melyik hüllőnek nincs lába?', '🐾', 'kígyó', ['gyík', 'teknős', 'krokodil'], 'A kígyónak nincs lába, csúszva-mászva halad.'],
-      ['Melyik hüllőnek van kemény páncélja?', '🛡️', 'teknős', ['kígyó', 'gyík', 'krokodil'], 'A teknős páncélja védi a testét.'],
-      ['Miért sütkéreznek a hüllők a napon?', '☀️', 'Hogy felmelegedjenek.', ['Hogy vizet igyanak.', 'Hogy elbújjanak.', 'Hogy tollat növesszenek.'], 'A hüllők a nap melegétől melegszenek fel.'],
-      ['Mivel lélegeznek a hüllők?', '🫁', 'tüdővel', ['kopoltyúval', 'uszonnyal', 'szárnnyal'], 'A hüllők tüdővel lélegeznek.']
-    ],
-    ketelt: [
-      ['Mi az ebihal?', '🐸', 'A béka kicsinye.', ['A hal kicsinye.', 'A gyík kicsinye.', 'A madár kicsinye.'], 'Az ebihal a béka kicsinye, vízben él.'],
-      ['Hol él az ebihal?', '💧', 'vízben', ['fán', 'föld alatt', 'a levegőben'], 'Az ebihal a vízben él.'],
-      ['Mivel lélegzik az ebihal?', '🫧', 'kopoltyúval', ['tüdővel', 'csőrrel', 'szőrrel'], 'Az ebihal kopoltyúval lélegzik, mint a halak.'],
-      ['Miért nevezzük a békát kétéltűnek?', '🐸', 'Vízben is és szárazföldön is él.', ['Két lába van.', 'Két szeme van.', 'Kétszer akkora, mint egy hal.'], 'A kétéltűek életük egy részét vízben, másik részét szárazföldön töltik.']
-    ],
-    rovar: [
-      ['Melyik állat bogár?', '🪲', null, null, 'A katicabogár, a cserebogár, a szarvasbogár és az aranybogár mind bogarak.'],
-      ['Melyik három részből áll a rovarok teste?', '🐝', 'fej, tor, potroh', ['fej, törzs, farok', 'fej, nyak, potroh', 'fej, hát, láb'], 'A rovarok teste fejre, torra és potrohra tagolódik.']
-    ]
-  };
-
-  function seqQ(name) {
-    const s = SEQ[name], good = s.join(' → '), pool = [];
-    for (let i = 0; i < 40 && pool.length < 6; i++) { const p = shuffle(s).join(' → '); if (p !== good && pool.indexOf(p) < 0) pool.push(p); }
-    return mc('Melyik a helyes fejlődési sorrend?', cap(name) + ' fejlődése', good, pool, 'Helyes sorrend: ' + good + '.', { key: 'seq:' + name });
-  }
-
-  function groupQ(gid) {
-    const g = GR[gid], m = g.m, T = [];
-    const covOK = m.filter(x => NOCOVER.indexOf(x) < 0), repOK = m.filter(x => NOREP.indexOf(x) < 0);
-    T.push(() => { const x = pick(covOK); return mc('Mi borítja a testét?', withEmo(x), g.cover, COVERS, `${A(x)} ${g.n}, ${g.cp}.`, { key: 'cov:' + x }); });
-    T.push(() => { const x = pick(m), others = ALLN.filter(n => GOF[n] !== gid); return mc('Válaszd ki!', 'Melyik állat ' + g.n + '?', x, others, `${A(x)} ${g.n}.`, { key: 'in:' + x, meta: { kind: 'in', g: gid } }); });
-    T.push(() => {
-      const out = Math.random() < 0.6 ? pick(g.trick) : pick(ALLN.filter(n => GOF[n] !== gid));
-      const real = GOF[out] ? GR[GOF[out]].n : out === 'pók' ? 'pók' : out === 'csiga' ? 'csiga' : out === 'giliszta' ? 'giliszta' : 'más állat';
-      const why = GOF[out] ? `${A(out)} ${real}.` : `${A(out)} nem ${g.n}.`;
-      const wrong = shuffle(m.filter(x => x !== out)).slice(0, 3), all = shuffle(wrong.concat([out]));
-      return { prompt: 'Válaszd ki!', text: 'Melyik állat NEM ' + g.n + '?', choices: all, correct: all.indexOf(out), layout: 'grid', explain: why, key: 'out:' + out, meta: { kind: 'out', g: gid, out } };
-    });
-    T.push(() => { const x = pick(m); return { prompt: 'Gerinces vagy gerinctelen?', text: withEmo(x), choices: ['gerinces', 'gerinctelen'], correct: g.bone ? 0 : 1, layout: 'grid', key: 'bone:' + x, explain: g.bone ? `${A(x)} ${g.n}, belső csontváza (gerince) van.` : `${A(x)} rovar: nincs gerince, testét kívülről kitinpáncél védi (külső váz).` }; });
-    T.push(() => { const x = pick(repOK); return { prompt: 'Hogyan szaporodik?', text: withEmo(x), choices: REPS.slice(1), correct: g.rep - 1, layout: 'list', key: 'rep:' + x, explain: `${A(x)} ${g.n}: ${REPEX[g.rep]}` }; });
-    (FACTS[gid] || []).forEach((f, i) => T.push(() => {
-      if (f[2] === null) {  // bogár
-        const B = ['katicabogár', 'cserebogár', 'szarvasbogár', 'aranybogár'], N = ['méh', 'légy', 'hangya', 'pillangó', 'szúnyog', 'darázs'];
-        const c = pick(B); return mc(f[0], f[1], c, N, f[4], { key: 'f:bogar:' + c });
-      }
-      return mc(f[0], f[1], f[2], f[3], f[4], { key: 'f:' + gid + i });
-    }));
-    if (gid === 'ketelt') T.push(() => seqQ('béka'));
-    if (gid === 'rovar') {
-      T.push(() => seqQ('pillangó'));
-      T.push(() => numQ(6, [4, 8, 10, 2], { prompt: 'Hány lába van a rovaroknak?', text: '🐝', explain: 'A rovaroknak 6 lábuk van.', key: 'f:legs' }));
-      T.push(() => numQ(3, [2, 4, 5, 6], { prompt: 'Hány testrészből áll a rovarok teste?', text: '🐜', explain: 'Három testrészből: fej, tor, potroh.', key: 'f:parts' }));
-    }
-    if (gid === 'emlos') T.push(() => { const [y, p] = pick(PAIRS.slice(0, 5)); return mc('Kinek a kicsinye?', y, p, PARENTS.filter(x => x !== 'tyúk'), `${A(y)} ${art(p)} ${p} kicsinye.`, { key: 'young:' + y }); });
-    return pickT(T);
-  }
-
-  const mk = gid => () => groupQ(gid);
   Object.assign(GEN, {
-    emlos: mk('emlos'), madar: mk('madar'), hullo: mk('hullo'), ketelt: mk('ketelt'), rovar: mk('rovar'),
-    elet() {
-      const LIV = ['fa', 'kutya', 'virág', 'ember', 'béka', 'madár', 'fű', 'méh'], NON = ['kő', 'víz', 'levegő', 'homok', 'autó', 'asztal', 'labda', 'felhő'];
-      const HERB = ['tehén', 'nyúl', 'őz', 'ló', 'kecske', 'juh'], CARN = ['oroszlán', 'farkas', 'tigris', 'macska', 'kígyó', 'cápa'], OMNI = ['ember', 'barna medve', 'vaddisznó', 'varjú'];
+    elo() {
       const T = [
-        () => { const live = Math.random() < 0.5, w = pick(live ? LIV : NON); return { prompt: 'Élő vagy élettelen?', text: withEmo(w), choices: ['élő', 'élettelen'], correct: live ? 0 : 1, layout: 'grid', key: 'liv:' + w, explain: live ? `${A(w)} élőlény: táplálkozik, lélegzik, növekszik és szaporodik.` : `${A(w)} élettelen: nem táplálkozik, nem nő és nem szaporodik.` }; },
-        () => { const c = pick(['víz', 'levegő', 'táplálék', 'megfelelő hőmérséklet']); return mc('Melyik az élőlények életfeltétele?', 'Mi kell az élethez?', c, ['televízió', 'labda', 'hinta', 'telefon', 'kavics'], 'Az élőlényeknek víz, levegő, táplálék és megfelelő hőmérséklet kell.', { key: 'cond:' + c }); },
-        () => { const c = pick(['fény', 'víz', 'levegő', 'tápanyag a talajból']); return mc('Mire van szüksége a növénynek a növekedéshez?', '🌱', c, ['zene', 'tej', 'ketrec', 'kavics'], 'A növénynek fény, víz, levegő és tápanyag (talaj) kell.', { key: 'plant:' + c }); },
-        () => { const t = pick([[HERB, 0], [CARN, 1], [OMNI, 2]]), w = pick(t[0]); return { prompt: 'Mivel táplálkozik?', text: withEmo(w), choices: ['növényevő', 'húsevő', 'mindenevő'], correct: t[1], layout: 'list', key: 'eat:' + w, explain: ['növényeket eszik (növényevő).', 'más állatokat eszik (húsevő).', 'növényt és állatot is eszik (mindenevő).'][t[1]].replace(/^/, A(w) + ' ') }; },
-        () => { const c = pick(['tulipán', 'fa', 'fű', 'búza', 'napraforgó', 'rózsa']); return mc('Melyik élőlény készíti el maga a táplálékát?', '☀️', c, ['kutya', 'béka', 'veréb', 'tehén', 'ember', 'méh'], 'A zöld növények a fény segítségével maguk készítik a táplálékukat.', { key: 'prod:' + c }); }
-      ];
-      return pickT(T);
-    },
-    allat() {
-      const T = [
-        () => { const x = pick(ALLN); const g = GR[GOF[x]]; return mc('Melyik állatcsoportba tartozik?', withEmo(x), g.n, GNAMES, `${A(x)} ${g.n}.`, { key: 'cl:' + x }); },
-        () => { const gid = pick(Object.keys(CLUES)), c = pick(CLUES[gid]); return mc('Melyik állatcsoportra igaz?', c, GR[gid].n, GNAMES, `A helyes válasz: ${GR[gid].n}.`, { key: 'clue:' + c }); },
-        () => { const x = pick(ALLN.filter(n => NOCOVER.indexOf(n) < 0)), g = GR[GOF[x]]; return mc('Mi borítja a testét?', withEmo(x), g.cover, COVERS, `${A(x)} ${g.n}, ${g.cp}.`, { key: 'cov:' + x }); },
-        () => { const x = pick(ALLN.filter(n => NOREP.indexOf(n) < 0)), g = GR[GOF[x]]; return { prompt: 'Hogyan szaporodik?', text: withEmo(x), choices: REPS.slice(1), correct: g.rep - 1, layout: 'list', key: 'rep:' + x, explain: `${A(x)} ${g.n}: ${REPEX[g.rep]}` }; },
-        () => { const no = pick(['csiga', 'giliszta', 'méh', 'hangya', 'pillangó', 'légy']), yes = ['kutya', 'béka', 'veréb', 'ponty', 'gyík', 'macska']; return mc('Melyik állatnak nincs gerince?', 'Melyiknek nincs belső csontváza?', no, yes, 'A gerinctelen állatoknak nincs belső csontvázuk (pl. csiga, giliszta, rovarok).', { key: 'nobone:' + no }); }
+        () => { const live = Math.random() < 0.5, w = pick(live ? ELOK : ELETTELEN);
+          return { prompt: 'Élőlény vagy élettelen?', text: withEmo(w), choices: ['élőlény', 'élettelen'], correct: live ? 0 : 1, layout: 'grid', key: 'liv:' + w,
+            explain: live ? `${A(w)} élőlény. Az emberek, az állatok és a növények élőlények.` : `${A(w)} élettelen. ${ELO_SUM}` }; },
+        () => { const live = Math.random() < 0.5, c = pick(live ? ELOK : ELETTELEN), wr = shuffle(live ? ELETTELEN : ELOK).slice(0, 3), all = shuffle(wr.concat([c]));
+          return { prompt: 'Válaszd ki!', text: live ? 'Melyik élőlény?' : 'Melyik élettelen?', choices: all.map(withEmo), correct: all.indexOf(c), layout: 'list', key: 'liv2:' + c,
+            explain: live ? `${A(c)} élőlény. Az emberek, az állatok és a növények élőlények.` : `${A(c)} élettelen, a többi élőlény.` }; },
+        () => { const w = pick(ELOK), g = ELOOF[w];
+          return { prompt: 'Ember, állat vagy növény?', text: withEmo(w), choices: ['ember', 'állat', 'növény'], correct: ['ember', 'állat', 'növény'].indexOf(g), layout: 'grid',
+            key: 'grp:' + w, explain: `${A(w)} ${g === 'ember' ? 'az emberek' : g === 'állat' ? 'az állatok' : 'a növények'} csoportjába tartozik.` }; },
+        () => { const [st, gi] = pick(ELO_STMT);
+          return mc('Melyik csoportra jellemző az állítás?', cap(st) + '.', ELO_GRP[gi], ELO_GRP, `„${cap(st)}”: ez ${ELO_GRP[gi]} jellemző.`, { key: 'stmt:' + st }); },
+        () => { const [st, t] = pick(ELO_TF); return tf('Igaz vagy hamis?', st, !!t, t ? 'Igaz.' : 'Hamis.', { key: 'tf:' + st }); },
+        () => { const [st, i, ex] = pick(ELO_JS); return mc('Melyik életjelenségről szól a mondat?', st, ELO_JEL[i], ELO_JEL, ex, { key: 'jel:' + st }); },
+        () => { const yes = Math.random() < 0.5, c = pick(yes ? ELO_COMMON : ELO_NOTCOMMON);
+          return mc('Válaszd ki!', yes ? 'Melyik közös jellemzője minden élőlénynek?' : 'Melyik NEM közös jellemzője minden élőlénynek?', c, yes ? ELO_NOTCOMMON : ELO_COMMON,
+            ELO_SUM, { key: 'com:' + yes + c }); },
+        () => { const i = rnd(0, 4), parts = ELO_FS.map((x, j) => j === i ? '…' : x);
+          const txt = `Az élőlényeknek az élethez ${parts.slice(0, 4).join(', ')} és ${parts[4]} van szükségük.`;
+          return { prompt: 'Mi hiányzik a mondatból?', text: txt, choices: ELO_FS.slice(), correct: i, layout: 'list', long: true, key: 'fs:' + i, explain: ELO_COND }; },
+        () => { const [h, i, w] = pick(ELO_HA);
+          return mc('Melyik életfeltétel hiányozna?', `${EMO[w] || ''} Mi történne, ha ${h}`, ELO_FN[i], ELO_FN, ELO_COND, { key: 'ha:' + i }); }
       ];
       return pickT(T);
     }
@@ -792,15 +739,11 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     { id: 'szofaj', g: 'Nyelvtan', name: 'Szófajok', ico: 'Aa', sm: 1 },
     { id: 'mondat', g: 'Nyelvtan', name: 'Mondatfajták', ico: '!?', sm: 1 },
     { id: 'abc', g: 'Nyelvtan', name: 'ABC-sorrend', ico: 'A–Z', sm: 1 },
-    { id: 'elet', g: 'Környezetismeret', name: 'Az élet feltételei', ico: '🌱', emo: 1 },
-    { id: 'allat', g: 'Környezetismeret', name: 'Állatcsoportok', ico: '🐾', emo: 1 },
-    { id: 'emlos', g: 'Környezetismeret', name: 'Emlősök', ico: '🐕', emo: 1 },
-    { id: 'madar', g: 'Környezetismeret', name: 'Madarak', ico: '🐦', emo: 1 },
-    { id: 'hullo', g: 'Környezetismeret', name: 'Hüllők', ico: '🐍', emo: 1 },
-    { id: 'ketelt', g: 'Környezetismeret', name: 'Kétéltűek', ico: '🐸', emo: 1 },
-    { id: 'rovar', g: 'Környezetismeret', name: 'Rovarok és bogarak', ico: '🐞', emo: 1 }
+    { id: 'elo', g: 'Környezetismeret', name: 'Élő környezetünk', ico: '🌱', emo: 1 }
   ];
-  const TNAME = {}; TOPICS.forEach(t => TNAME[t.id] = t.name); TNAME.vegyes = 'Vegyes kör';
+  // A régi (2026-11-15 előtti) környezetes témák neve, hogy a korábbi eredmények olvashatók maradjanak.
+  const TNAME = { elet: 'Az élet feltételei', allat: 'Állatcsoportok', emlos: 'Emlősök', madar: 'Madarak', hullo: 'Hüllők', ketelt: 'Kétéltűek', rovar: 'Rovarok és bogarak' };
+  TOPICS.forEach(t => TNAME[t.id] = t.name); TNAME.vegyes = 'Vegyes kör';
 
   // Egy feladattípus (sablon) kiválasztása; a feladat megjegyzi, melyikből készült (buildRound).
   function pickT(T) { const i = rnd(0, T.length - 1), q = T[i](); q.tpl = i; q.tplN = T.length; return q; }
@@ -865,7 +808,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   let kidExitWarn = false;
   let reports = null;           // a szülői nézet nyitott jelentései
   let reportOpen = false;       // a kérdésnél nyitva van-e a „Mi a hiba?” doboz
-  const APP_VERSION = 'gyakorlo-v18';
+  const APP_VERSION = 'gyakorlo-v19';
   const REASONS = { wrong_answer: 'Rossz a megoldás', bad_question: 'Hibás a kérdés', other: 'Más baj van' };
 
   function emptyCache() { return { pupils: [], results: {}, badges: {}, current: null, userId: null, householdId: null }; }
@@ -1102,8 +1045,8 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
 
 
   /* ================= mini játék: akasztófa ================= */
-  const HM_WORDS = [['Állat', ALLN.concat(['pók', 'csiga', 'giliszta', 'szitakötő'])],
-    ['Természet', ['víz', 'levegő', 'fény', 'meleg', 'táplálék', 'szőr', 'toll', 'pikkely', 'kitinpáncél', 'emlős', 'madár', 'hüllő', 'kétéltű', 'rovar', 'gerinc', 'csontváz', 'ikra', 'ebihal', 'hernyó', 'báb', 'tojás', 'fészek', 'növény', 'állat']],
+  const HM_WORDS = [['Állat', ELO.állat.slice()], ['Növény', ELO.növény.filter(w => w.indexOf(' ') < 0)],
+    ['Természet', ['élőlény', 'élettelen', 'életjelenség', 'mozgás', 'táplálkozás', 'légzés', 'szaporodás', 'növekedés', 'fejlődés', 'utód', 'víz', 'fény', 'levegő', 'táplálék', 'hőmérséklet', 'ember', 'állat', 'növény', 'gyökér']],
     ['Matek', ['összeadás', 'kivonás', 'szorzás', 'osztás', 'számegyenes', 'kerekítés', 'tízes', 'százas', 'egyes', 'páros', 'páratlan', 'mérleg', 'forint', 'visszajáró', 'kilogramm', 'méter', 'centiméter', 'dekagramm', 'szomszéd']],
     ['Nyelvtan', ['főnév', 'melléknév', 'ige', 'mondat', 'kérdő', 'kijelentő', 'felkiáltó', 'óhajtó', 'betű', 'ábécé', 'szófaj', 'helyesírás', 'játék', 'hajó', 'király', 'bagoly', 'kölyök']]];
   const HM_KEYS = 'aábcdeéfghiíjklmnoóöőprstuúüűvyz'.split('');
@@ -1117,7 +1060,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   }
   // Segítség az akasztófában, kérésre (életet nem visz el).
   // 1.: egy betű a szó elejéről (az első még ismeretlen), minden előfordulásával.
-  // 2.: állatnál tartalmi utalás (kép és állatcsoport); más szónál még egy betű (a leggyakoribb ismeretlen).
+  // 2.: állatnál és növénynél kép; más szónál még egy betű (a leggyakoribb ismeretlen).
   function hmHint() {
     if (!MG || MG.done || MG.hints.length >= 2) return;
     const unknown = MG.word.split('').filter(c => MG.got.indexOf(c) < 0);
@@ -1127,9 +1070,9 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
       MG.hints.push(`1. segítség: megmutattam egy betűt: <b>${k.toUpperCase()}</b>`);
       return hmGuess(k);
     }
-    const g = GOF[MG.word] && GR[GOF[MG.word]], emo = EMO[MG.word];
-    if (MG.cat === 'Állat' && (g || emo)) {
-      MG.hints.push(`2. segítség: ${emo ? emo + ' ' : ''}${g ? 'Ez egy ' + g.n + '.' : 'Ez egy állat.'}`);
+    const emo = EMO[MG.word];
+    if ((MG.cat === 'Állat' || MG.cat === 'Növény') && emo) {
+      MG.hints.push(`2. segítség: ${emo} Ez egy ${MG.cat === 'Állat' ? 'állat' : 'növény'}.`);
       return render();
     }
     const freq = {}; unknown.forEach(c => { freq[c] = (freq[c] || 0) + 1; });
@@ -1691,7 +1634,7 @@ ${dotsHtml(Q.res, Q.i)}${box}
       setInterval(check, 30 * 60 * 1000);
     }).catch(() => {}));
   }
-  window.__gyakorlo = { get MG() { return MG; }, get WS() { return WS; }, get BO() { return BO; }, HM_WORDS, HM_KEYS, GEN, TOPICS, makeQuestion, buildRound, GR, GOF };
+  window.__gyakorlo = { get MG() { return MG; }, get WS() { return WS; }, get BO() { return BO; }, HM_WORDS, HM_KEYS, GEN, TOPICS, makeQuestion, buildRound };
   init();
 })();
 </script>
