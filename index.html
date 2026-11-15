@@ -262,6 +262,14 @@
   .avs span { display: grid; place-items: center; width: 52px; height: 52px; font-size: 30px; border-radius: 50%; border: 2px solid var(--line); }
   .avs input:checked + span { border-color: var(--accent); background: var(--bg); }
   .avs input:focus-visible + span { outline: 2px solid var(--fg); outline-offset: 2px; }
+  .acc { border-top: 1px solid var(--line); padding: var(--space-3) 0; }
+  .acc summary { cursor: pointer; min-height: 44px; display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .acc .accg { font-weight: 600; margin: var(--space-4) 0 var(--space-1); }
+  .acc .accrow { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 44px; }
+  .acc .accrow label { display: flex; gap: var(--space-3); align-items: center; font-size: 17px; line-height: 22px; flex: 1; min-width: 0; padding: var(--space-1) 0; }
+  .acc .accrow .pg { display: block; font-size: 14px; line-height: 20px; }
+  .acc .accrow input { width: 22px; height: 22px; accent-color: var(--accent); flex: none; }
+  .acc .acts { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-3); }
   .checks label { display: flex; gap: var(--space-3); align-items: center; font-size: 18px; min-height: 44px; }
   .checks input { width: 22px; height: 22px; accent-color: var(--accent); }
   .rowi { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--line); }
@@ -1232,10 +1240,47 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   const TNAME = { elet: 'Az élet feltételei', allat: 'Állatcsoportok', emlos: 'Emlősök', madar: 'Madarak', hullo: 'Hüllők', ketelt: 'Kétéltűek', rovar: 'Rovarok és bogarak' };
   TOPICS.forEach(t => TNAME[t.id] = t.name); TNAME.vegyes = 'Vegyes kör';
 
+  /* Tanmenet: tantárgyanként a könyv témakörei és fejezetei (a tartalomjegyzék szerint).
+     Fejezet: [kód, név, tankönyvi oldalak, a hozzá tartozó témák az appban]. A szülő tantárgyanként
+     bepipálja, mely fejezetek érhetők el (chapter_access); ha egy tantárgyhoz nincs beállítás,
+     minden elérhető. Fejezethez nem rendelt téma (pl. a régi matektémák) mindig látszik. */
+  const CURRICULUM = [
+    { id: 'matek', name: 'Matek', note: 'A tankönyv szerinti új matekfeladatok készülnek; addig a mostani matektémák mind látszanak.', groups: [
+      ['Számolás 0-tól 100-ig', [['m1-1', 'Számok 100-ig', '4–7'], ['m1-2', 'Összeadás és kivonás', '8–10'], ['m1-3', 'Szorzás és osztás', '11–13'],
+        ['m1-4', 'Maradékos osztás', '14–15'], ['m1-5', 'Szöveges feladatok', '16–17'], ['m1-6', 'A műveletek sorrendje', '18–19'],
+        ['m1-7', 'A zárójel használata', '20–25'], ['m1-8', 'A római számok', '26–27']]],
+      ['Számolás 0-tól 200-ig', [['m2-1', 'Számok 200-ig', '28–31'], ['m2-2', 'Számok helye a számegyenesen', '32'], ['m2-3', 'Számszomszédok, kerekítés', '33–34'],
+        ['m2-4', 'Összeadás és kivonás', '35–37'], ['m2-5', 'Szorzás és osztás', '38–43']]],
+      ['Mérések', [['m3-1', 'Mit mivel mérünk?', '44'], ['m3-2', 'A tömeg mérése', '45–46'], ['m3-3', 'Az űrtartalom mérése', '47–51']]],
+      ['Számolás 0-tól 500-ig', [['m4-1', 'Számok 500-ig', '52–55'], ['m4-2', 'Számszomszédok, kerekítés', '56–57'], ['m4-3', 'Összeadás és kivonás', '58–60'],
+        ['m4-4', 'Szorzás és osztás', '61–67']]],
+      ['Válogatások, csoportosítások', [['m5-1', 'Válogatások, csoportosítások', '68–73']]],
+      ['Írásbeli összeadás', [['m6-1', 'Háromjegyű számok összeadása', '74–75'], ['m6-2', 'Az összeg becslése', '76'], ['m6-3', 'Írásbeli összeadás', '77–80'],
+        ['m6-4', 'Az összeg változásai', '81'], ['m6-5', 'Szöveges feladatok', '82–85']]],
+      ['Írásbeli kivonás', [['m7-1', 'Háromjegyű számok kivonása', '86–87'], ['m7-2', 'A különbség becslése', '88'], ['m7-3', 'Írásbeli kivonás', '89–93'],
+        ['m7-4', 'A különbség változásai', '94–97']]],
+      ['Negatív számok, testek, tükrözés', [['m8-1', 'Ismerkedés a negatív számokkal', '98–99'], ['m8-2', 'Testek, síkidomok', '100–105'], ['m8-3', 'Tükrözések, szimmetria', '106–107']]],
+      ['Számolás 0-tól 1000-ig', [['m9-1', 'Számok 1000-ig', '108–109'], ['m9-2', 'Helyi érték', '110–111'], ['m9-3', 'Összeadás és kivonás', '112–113'],
+        ['m9-4', 'Szorzás és osztás', '114–117']]],
+      ['Írásbeli műveletek 1000-ig', [['m10-1', 'Írásbeli összeadás és kivonás', '118–121'], ['m10-2', 'Írásbeli szorzás egyjegyű szorzóval', '122–128'],
+        ['m10-3', 'Összefüggések, következtetések', '129'], ['m10-4', 'A műveletek sorrendje', '130–133']]],
+      ['Törtek', [['m11-1', 'Ismerkedés a törtekkel', '134–137']]],
+      ['Mérések II.', [['m12-1', 'Az idő mérése', '138–141'], ['m12-2', 'A hosszúság mérése', '142–145'], ['m12-3', 'A kerület mérése', '146–147'], ['m12-4', 'A terület mérése', '148–149']]],
+      ['Év végi ismétlés', [['m13-1', 'Év végi ismétlés', '150–159']]]] },
+    { id: 'kornyezet', name: 'Környezetismeret', groups: [
+      ['II. Élő környezetünk', [['k11', '11. Az élőlények tulajdonságai', '30–32', ['elo']], ['k12', '12. Növények', '33–35', ['novenyek']], ['k13', '13. Állatok', '36–38', ['allatok']],
+        ['k14', '14. Emlősállatok', '39–40', ['emlosok']], ['k15', '15. Madarak', '41–43', ['madarak']], ['k16', '16. Halak', '44–45', ['halak']],
+        ['k17', '17. Kétéltűek és hüllők', '46–47', ['keteltu']], ['k18', '18. Rovarok', '48–49', ['rovarok']]]]] }
+  ];
+  const CH_OF = {};   // téma → { subj, ch }
+  CURRICULUM.forEach(S0 => S0.groups.forEach(([, chs]) => chs.forEach(([ch, , , ts]) => (ts || []).forEach(t => { CH_OF[t] = { subj: S0.id, ch }; }))));
+  const topicOpen = id => { const m = CH_OF[id]; if (!m) return true; const L = C.access && C.access[m.subj]; return !Array.isArray(L) || L.includes(m.ch); };
+  const openTopics = () => { const o = TOPICS.filter(t => topicOpen(t.id)); return o.length ? o : TOPICS; };
+
   // Egy feladattípus (sablon) kiválasztása; a feladat megjegyzi, melyikből készült (buildRound).
   function pickT(T) { const i = rnd(0, T.length - 1), q = T[i](); q.tpl = i; q.tplN = T.length; return q; }
   function makeQuestion(topic) {
-    const id = topic === 'vegyes' ? pick(TOPICS).id : topic;
+    const id = topic === 'vegyes' ? pick(openTopics()).id : topic;
     const q = GEN[id](); q.topic = id; return q;
   }
   // A kör összeállítása, változatosan: minden feladat megjegyzi, melyik sablonból (feladattípusból)
@@ -1295,10 +1340,10 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   let kidExitWarn = false;
   let reports = null;           // a szülői nézet nyitott jelentései
   let reportOpen = false;       // a kérdésnél nyitva van-e a „Mi a hiba?” doboz
-  const APP_VERSION = 'gyakorlo-v22';
+  const APP_VERSION = 'gyakorlo-v23';
   const REASONS = { wrong_answer: 'Rossz a megoldás', bad_question: 'Hibás a kérdés', other: 'Más baj van' };
 
-  function emptyCache() { return { pupils: [], results: {}, badges: {}, current: null, userId: null, householdId: null }; }
+  function emptyCache() { return { pupils: [], results: {}, badges: {}, current: null, userId: null, householdId: null, access: {} }; }
   function loadCache() {
     try { const c = JSON.parse(localStorage.getItem(CACHE_KEY)); if (c && Array.isArray(c.pupils)) return Object.assign(emptyCache(), c); } catch (e) {}
     return emptyCache();
@@ -1389,6 +1434,9 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
       if (op.t === 'badge' && C.badges[op.row.pupil_id]) C.badges[op.row.pupil_id][op.row.badge_id] ??= dayStr(new Date(op.row.earned_at));
       if (op.t === 'theme') { const x = C.pupils.find(q => q.id === op.id); if (x) x.theme = op.theme; }
     }
+    // Elérhető fejezetek (a szülő beállítása; tantárgy → fejezetkódok). Hibánál a régi marad.
+    const ac = await sb.from('chapter_access').select('subject, chapters');
+    if (!ac.error) { C.access = {}; for (const x of ac.data) if (Array.isArray(x.chapters)) C.access[x.subject] = x.chapters.map(String); }
     if (MODE === 'parent' && !C.householdId) {
       const h = await sb.from('households').select('id').limit(1).maybeSingle();
       if (!h.error && h.data) C.householdId = h.data.id;
@@ -1460,7 +1508,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     { id: 'ot', ico: '🔥', name: 'Öt egyvégtében', desc: 'Egy körben 5 jó válasz egymás után.', ok: (s, c) => c.bestStreak >= 5 },
     { id: 'szorzo', ico: '✖️', name: 'Szorzótábla-mester', desc: 'Hibátlan kör a szorzás, osztás témából.', ok: (s, c) => c.topic === 'szorosz' && c.score === 10 },
     { id: 'helyesiras', ico: '✏️', name: 'Helyesírás-bajnok', desc: 'Hibátlan kör a j vagy ly? témából.', ok: (s, c) => c.topic === 'jly' && c.score === 10 },
-    { id: 'minden', ico: '🧭', name: 'Mindent kipróbáltam', desc: 'Játssz végig egy kört minden témából.', ok: s => TOPICS.every(t => s.played[t.id]) },
+    { id: 'minden', ico: '🧭', name: 'Mindent kipróbáltam', desc: 'Játssz végig egy kört minden elérhető témából.', ok: s => openTopics().every(t => s.played[t.id]) },
     { id: 'harom', ico: '📅', name: 'Három nap egymás után', desc: 'Gyakorolj három egymást követő napon.', ok: s => s.days >= 3 },
     { id: 'szaz', ico: '💯', name: 'Száz jó válasz', desc: 'Gyűjts össze 100 helyes választ.', ok: s => s.correct >= 100 },
     { id: 'szojatek', ico: '🔤', name: 'Szókitaláló', desc: 'Találj ki egy szót az akasztófa játékban.', ok: s => s.mgWins >= 1 },
@@ -1767,7 +1815,7 @@ ${WS.done ? `<button class="big-btn" data-go="home">Vissza a témákhoz</button>
       const best = S.best[t.id];
       return `<button class="topic" data-go="${t.id}"><span class="ico${t.sm ? ' sm' : ''}${t.emo ? ' emo' : ''}" aria-hidden="true">${t.ico}</span><span class="name">${t.name}</span><span class="best">${best === undefined ? 'még nem játszottad' : 'legjobb: ' + best + '/10'}</span></button>`;
     };
-    const grp = g => `<h2 class="group">${g}</h2><div class="topics">${TOPICS.filter(t => t.g === g).map(topicBtn).join('')}</div>`;
+    const grp = g => { const ts = TOPICS.filter(t => t.g === g && topicOpen(t.id)); return ts.length ? `<h2 class="group">${g}</h2><div class="topics">${ts.map(topicBtn).join('')}</div>` : ''; };
     const got = Object.keys(S.badges).length;
     const p = pupil();
     const switchBtn = MODE === 'parent' || C.pupils.length > 1 ? '<button class="link-btn" data-go="who">Másik gyerek</button>' : '';
@@ -1816,6 +1864,7 @@ ${footHtml()}`;
     return `<div class="qbar"><button class="icon-btn" data-go="who" aria-label="Vissza">←</button><div class="qtitle">Szülői nézet</div></div>
 <p class="msg" role="status">${esc(msg)}</p>
 <section class="card"><h3>Gyerekek</h3>${rows || '<p class="sub">Még nincs gyerekprofil.</p>'}</section>
+${accessHtml()}
 <section class="card stack"><h3>Új gyerekprofil</h3><p class="sub">Csak becenevet adj meg, teljes nevet ne.</p>
 <input class="inp" id="nick" maxlength="20" autocomplete="off" placeholder="Becenév" aria-label="Becenév">
 <fieldset class="avs"><legend class="sub">Ikon</legend>${avs}</fieldset>
@@ -1829,6 +1878,39 @@ ${C.pupils.length ? `<h3>Új tablet párosítása</h3><div class="checks">${chec
 ${footHtml()}`;
   }
 
+  // Mi legyen elérhető (tantárgyanként, a háztartásban közösen). A szerkesztés a vázlatban él,
+  // így a nézet újrarajzolása (pl. az eszközlista betöltése) nem veszíti el a pipákat.
+  let accDraft = {}, accOpen = null;   // accOpen: mentés után nyitva marad a tantárgy listája
+  const accList = subj => accDraft[subj] || (Array.isArray(C.access[subj]) ? C.access[subj] : null);
+  function accessHtml() {
+    const parts = CURRICULUM.map(S0 => {
+      const L = accList(S0.id), all = S0.groups.flatMap(([, chs]) => chs.map(c => c[0])), on = L === null ? all : L;
+      const state = L === null ? 'Még nincs beállítva: minden elérhető.' : `${on.filter(x => all.includes(x)).length}/${all.length} fejezet elérhető${accDraft[S0.id] ? ' (nincs mentve)' : ''}.`;
+      const groups = S0.groups.map(([g, chs]) => `<p class="accg">${esc(g)}</p>` + chs.map(([id, name, pg, ts]) =>
+        `<div class="accrow"><label><input type="checkbox" data-acc="${S0.id}" value="${id}"${on.includes(id) ? ' checked' : ''}><span>${esc(name)}<span class="sub pg">tankönyv ${pg}. oldal${ts && ts.length ? '' : ' · készül'}</span></span></label><button class="link-btn" data-upto="${S0.id}" data-ch="${id}">eddig</button></div>`).join('')).join('');
+      return `<details class="acc"${accOpen === S0.id ? ' open' : ''}><summary><b>${esc(S0.name)}</b> <span class="sub">${state}</span></summary>${S0.note ? `<p class="sub">${esc(S0.note)}</p>` : ''}
+<p class="sub">Az „eddig” bepipálja az összes fejezetet az adott fejezetig (ahol a suliban tartotok), a többit kiveszi.</p>${groups}
+<div class="acts"><button class="small-btn" data-go="accsave" data-subj="${S0.id}">Mentés</button><button class="small-btn" data-go="accall" data-subj="${S0.id}">Mind</button><button class="small-btn" data-go="accnone" data-subj="${S0.id}">Egyik sem</button></div></details>`;
+    }).join('');
+    return `<section class="card stack"><h3>Mi legyen elérhető?</h3><p class="sub">Amit nem pipálsz be, az a gyerekeknek nem látszik (a vegyes körben sem). A beállítás mindkét gyerekre és minden eszközre érvényes.</p>${parts}</section>`;
+  }
+  function accSet(subj, list) {
+    accDraft[subj] = list;
+    document.querySelectorAll(`input[data-acc="${subj}"]`).forEach(i => { i.checked = list.includes(i.value); });
+    const sum = document.querySelector(`[data-subj="${subj}"]`)?.closest('details')?.querySelector('summary .sub');
+    const all = CURRICULUM.find(x => x.id === subj).groups.flatMap(([, chs]) => chs.map(c => c[0]));
+    if (sum) sum.textContent = `${list.length}/${all.length} fejezet elérhető (nincs mentve).`;
+  }
+  async function accSave(subj) {
+    accOpen = subj;
+    if (!C.householdId) { msg = 'Ehhez a fiókhoz nem tartozik háztartás.'; return render(); }
+    const list = accList(subj) || CURRICULUM.find(x => x.id === subj).groups.flatMap(([, chs]) => chs.map(c => c[0]));
+    const { error } = await sb.from('chapter_access').upsert({ household_id: C.householdId, subject: subj, chapters: list, updated_at: new Date().toISOString() }, { onConflict: 'household_id,subject' });
+    if (error) msg = 'Nem sikerült menteni (van internet?).';
+    else { C.access[subj] = list.slice(); delete accDraft[subj]; saveCache(); msg = `${CURRICULUM.find(x => x.id === subj).name}: mentve, ${list.length} fejezet elérhető.`; }
+    render(); window.scrollTo(0, 0);
+  }
+
   async function loadDevices() {
     const [d, dp] = await Promise.all([
       sb.from('devices').select('user_id, label, last_seen_at').order('created_at'),
@@ -1838,7 +1920,7 @@ ${footHtml()}`;
     devices = d.data.filter(x => UUID.test(x.user_id)).map(x => ({ ...x,
       names: dp.data.filter(y => y.device_user_id === x.user_id).map(y => C.pupils.find(p => p.id === y.pupil_id)?.nickname).filter(Boolean).join(', ') || 'nincs gyerek' }));
   }
-  async function openParent() { view = 'parent'; msg = ''; devices = null; reports = null; render(); window.scrollTo(0, 0); await Promise.all([loadDevices(), loadReports()]); if (view === 'parent') render(); }
+  async function openParent() { view = 'parent'; msg = ''; devices = null; reports = null; accDraft = {}; accOpen = null; render(); window.scrollTo(0, 0); await Promise.all([loadDevices(), loadReports()]); if (view === 'parent') render(); }
 
   async function loadReports() {
     const r = await sb.from('question_reports').select('id, pupil_id, topic, qkey, prompt, body, choices, correct, picked, explain, reason, created_at')
@@ -2072,7 +2154,11 @@ ${BADGE_GROUPS.map(([g, ids]) => { const bs = ids.map(id => BADGES.find(b => b.i
 
   /* ================= események ================= */
   $app.addEventListener('click', e => {
-    const t = e.target.closest('[data-go],[data-pick],[data-next],[data-k],[data-r],[data-pupil],[data-delpupil],[data-revoke],[data-theme-pupil],[data-report],[data-rep]'); if (!t) return;
+    const t = e.target.closest('[data-go],[data-pick],[data-next],[data-k],[data-r],[data-pupil],[data-delpupil],[data-revoke],[data-theme-pupil],[data-report],[data-rep],[data-upto]'); if (!t) return;
+    if (t.dataset.upto) {
+      const all = CURRICULUM.find(x => x.id === t.dataset.upto).groups.flatMap(([, chs]) => chs.map(c => c[0]));
+      return accSet(t.dataset.upto, all.slice(0, all.indexOf(t.dataset.ch) + 1));
+    }
     if (t.dataset.themePupil) return setTheme(t.dataset.themePupil, t.dataset.themeVal);
     if (t.dataset.pupil) { C.current = t.dataset.pupil; saveCache(); refreshS(); view = 'home'; render(); window.scrollTo(0, 0); return; }
     if (t.dataset.delpupil) return delPupil(t.dataset.delpupil);
@@ -2092,6 +2178,8 @@ ${BADGE_GROUPS.map(([g, ids]) => { const bs = ids.map(id => BADGES.find(b => b.i
     if (g === 'who') { refreshS(); view = 'who'; msg = ''; render(); window.scrollTo(0, 0); return; }
     if (g === 'parent') { if (MODE === 'parent') { pairFromParent = false; openParent(); } return; }
     if (g === 'addpupil') return addPupil();
+    if (g === 'accsave') return accSave(t.dataset.subj);
+    if (g === 'accall' || g === 'accnone') return accSet(t.dataset.subj, g === 'accall' ? CURRICULUM.find(x => x.id === t.dataset.subj).groups.flatMap(([, chs]) => chs.map(c => c[0])) : []);
     if (g === 'report') { if (Q && !Q.reported[Q.i]) { reportOpen = !reportOpen; render(); } return; }
     if (g === 'copyreports') return copyReports();
     if (g === 'newcode') return newCode();
@@ -2102,6 +2190,10 @@ ${BADGE_GROUPS.map(([g, ids]) => { const bs = ids.map(id => BADGES.find(b => b.i
     if (g === 'forget') { forgetDevice().then(() => { C = emptyCache(); outbox.clear(); saveCache(); location.replace(location.pathname + '#parositas'); location.reload(); }); return; }
     if (g === 'home') { refreshS(); }
     if (g === 'home' || g === 'badges') { view = g; render(); window.scrollTo(0, 0); } else start(g);
+  });
+  $app.addEventListener('change', e => {
+    const i = e.target.closest('input[data-acc]'); if (!i) return;
+    accSet(i.dataset.acc, [...document.querySelectorAll(`input[data-acc="${i.dataset.acc}"]`)].filter(x => x.checked).map(x => x.value));
   });
   document.addEventListener('keydown', e => {
     if (view === 'mg' && !e.ctrlKey && !e.metaKey && !e.altKey && e.key.length === 1) return hmGuess(e.key.toLowerCase());

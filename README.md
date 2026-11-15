@@ -13,6 +13,8 @@ Gyakorló oldal 3. osztályosoknak: matek, nyelvtan és környezetismeret, kérd
 
 ## Gyerekprofilok, szülői nézet, gyerek mód
 
+- **Mi legyen elérhető?** A szülői nézetben tantárgyanként a könyv fejezetei (a tartalomjegyzék szerint), pipával; az „eddig” gomb az adott fejezetig mindent bepipál. Ami nincs bepipálva, az a gyerekeknek nem látszik (a vegyes körben sem). A beállítás a háztartásban közös, minden eszközön érvényes; ha egy tantárgyhoz még nincs beállítás, minden elérhető.
+
 - **Szülő**: Google-belépéssel (`https://laszlobiri.com/belepes/`). A kezdőképernyőn „Ki gyakorol?”: a gyerek kiválasztása; a „Szülői nézet”-ben gyerekprofil létrehozása és törlése, a gyerekek eredményei, a gyerek tabletek listája és párosítása.
 - **Gyerekprofil**: csak becenév, egy ikon és egy színtéma. A gyereknek nincs fiókja.
 - **Színtéma**: a gyerek maga választja a kezdőképernyőn („Színem”), a saját tabletjén is (offline is, a kimenő soron át): palakék (alap), rózsaszín (sötét; `#ebcddb`, `#e6abc0`, `#d77ca2`, `#3c3737`, `#261d1b`) vagy égkék (világos; `#1B90DD`, `#5FCEEA`, `#FFFFFF`, a szöveg a kék sötétített változata). A téma a gyerek saját nézeteiben él (kezdőképernyő, kör, eredmény, jelvények, minijátékok), a szülő telefonján és a gyerek tabletjén is; a „Ki gyakorol?” és a szülői nézet palakék marad. A témák a tokenek felülírásával készülnek az oldal saját CSS-ében (`data-theme="rose"`, `"sky"`), a központi `tokens.css` változatlan; a jel nem kap új színt (világos alapon a design system világos változatát használja).
