@@ -8,7 +8,7 @@ Gyakorló oldal 3. osztályosoknak: matek, nyelvtan és környezetismeret, kérd
 - **Környezetismeret:** a tankönyv fejezetei szerint, csak a tankönyv és a munkafüzet szövegével és képeivel (új tartalmat nem találunk ki). A forrás fejezetenként egy tankönyvi és egy munkafüzeti PDF (a szülő Drive-mappájában, nem a repóban); minden fejezet külön téma, a fejezet címével: 11. Az élőlények tulajdonságai, 12. Növények, 13. Állatok, 14. Emlősállatok, 15. Madarak, 16. Halak, 17. Kétéltűek és hüllők, 18. Rovarok. Az új fejezetek adatai a közös `chapGen` készítőbe kerülnek (feleletválasztós, igaz-hamis, párosító készletek). A régi környezetes témák (2026-11-15-ig) eredményei a nevükkel olvashatók maradnak.
 - **Vegyes kör:** 10 kérdés az összes témából.
 - Egy kör 10 véletlenszerű kérdés, változatosan (egy feladattípus legfeljebb kétszer, és nem egymás után), 4 (vagy 2–3) válaszlehetőséggel, azonnali visszajelzéssel és magyarázattal.
-- Jutalom: 10 pont minden jó válaszért, +50 pont hibátlan körért (csak a befejezett kör számít), szintek (1–9+), napi sorozat és 12 jelvény.
+- Jutalom: 10 pont minden jó válaszért, +50 pont hibátlan körért (csak a befejezett kör számít), szintek (1–9+), napi sorozat és 24 jelvény (köztük 500, 1000, 1500 és 2000 jó válaszért, és a környezetismeret minden fejezetéhez egy, hibátlan körért).
 - Offline működik, telepíthető a kezdőképernyőre (PWA). A gyerek tableten telepített appként használd: böngészőfülben a Safari egy hét használat nélkül törölheti a párosítást.
 
 ## Gyerekprofilok, szülői nézet, gyerek mód
