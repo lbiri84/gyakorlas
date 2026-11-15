@@ -234,6 +234,9 @@
 
   /* ---------- jelvények ---------- */
   .badges { display: grid; grid-template-columns: 1fr; gap: var(--space-3); }
+  .qbar + h2.group { margin-top: var(--space-4); }
+  .badge .bdate { display: block; }
+  h2.group .bcount { font-weight: 400; letter-spacing: 0; margin-left: var(--space-2); }
   .badge { display: flex; gap: var(--space-4); align-items: center; padding: var(--space-4); border: 1px solid var(--line); border-radius: var(--radius-lg); background: transparent; }
   .badge .bi { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; font-size: 28px; flex: none; border: 2px dashed var(--line); filter: grayscale(1); opacity: .5; }
   .badge.got { background: var(--bg-raised); }
@@ -1289,7 +1292,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   let kidExitWarn = false;
   let reports = null;           // a szülői nézet nyitott jelentései
   let reportOpen = false;       // a kérdésnél nyitva van-e a „Mi a hiba?” doboz
-  const APP_VERSION = 'gyakorlo-v20';
+  const APP_VERSION = 'gyakorlo-v21';
   const REASONS = { wrong_answer: 'Rossz a megoldás', bad_question: 'Hibás a kérdés', other: 'Más baj van' };
 
   function emptyCache() { return { pupils: [], results: {}, badges: {}, current: null, userId: null, householdId: null }; }
@@ -2034,8 +2037,18 @@ ${dotsHtml(Q.res, Q.i)}${box}
 
   function badgesView() {
     return `<div class="qbar"><button class="icon-btn" data-go="home" aria-label="Vissza a témákhoz">←</button><div class="qtitle">Jelvényeim</div><div class="qcount">${Object.keys(S.badges).length}/${BADGES.length}</div></div>
-<div class="badges">${BADGES.map(b => { const d = S.badges[b.id]; return `<div class="badge${d ? ' got' : ''}"><div class="bi" aria-hidden="true">${b.ico}</div><div><b>${b.name}</b><span>${b.desc}${d ? ' · megszerezted: ' + d : ''}</span></div></div>`; }).join('')}</div>`;
+${BADGE_GROUPS.map(([g, ids]) => { const bs = ids.map(id => BADGES.find(b => b.id === id)).filter(Boolean), got = bs.filter(b => S.badges[b.id]).length;
+  return `<h2 class="group">${g} <span class="bcount">${got}/${bs.length}</span></h2><div class="badges">${bs.map(b => { const d = S.badges[b.id];
+    return `<div class="badge${d ? ' got' : ''}"><div class="bi" aria-hidden="true">${b.ico}</div><div><b>${b.name}</b><span>${b.desc}</span>${d ? `<span class="bdate">Megszerezted: ${d}</span>` : ''}</div></div>`; }).join('')}</div>`; }).join('')}`;
   }
+  // A jelvényoldal csoportjai (minden jelvény pontosan egy csoportban; amit kihagynánk, az „Egyéb” alá kerül).
+  const BADGE_GROUPS = (() => {
+    const G = [['Kezdés és kitartás', ['elso', 'harom', 'minden', 'ot-szint']], ['Ügyesség', ['tokeletes', 'ot']],
+      ['Jó válaszok', ['szaz', 'jo-500', 'jo-1000', 'jo-1500', 'jo-2000']], ['Matek és nyelvtan', ['szorzo', 'helyesiras']],
+      ['Környezetismeret', BADGES.filter(b => b.id.startsWith('k-')).map(b => b.id)], ['Minijátékok', ['szojatek', 'szokereso', 'falbonto']]];
+    const rest = BADGES.map(b => b.id).filter(id => !G.some(([, ids]) => ids.includes(id)));
+    return rest.length ? G.concat([['Egyéb', rest]]) : G;
+  })();
 
   const PLAY_VIEWS = ['home', 'quiz', 'result', 'badges', 'mg', 'ws', 'bo', 'kidexit'];
   function applyTheme() {
