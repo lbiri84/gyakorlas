@@ -501,9 +501,12 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
       KF('A gyümölcsök és zöldségek fogyasztása egészséges.', 1), KF('A növények oxigént termelnek.', 1, 'Igaz. A növények oxigént termelnek, ételül és italul szolgálnak.'),
       KF('A komposztálással elkerülhető a kerti hulladékok szemétbe kerülése.', 1, 'Igaz. A komposztált hulladékkal termékenyebbé tehető a talaj.')],
     // évszakok (tankönyv 3.)
-    [['nyugalmi állapotban vannak, növekedésük szünetel, vízigényük csökken', 3], ['a rügyfakadás jelzi az újraéledésüket', 0],
-      ['dús lombkoronával köszöntik a nyarat, beérnek az első termések', 1], ['leveleik elszíneződnek és lehullanak, az őszi gyümölcsök beérnek', 2]]
-      .map(([t, i]) => KB('Mikor? A lombhullató növények…', t, N12_EVSZ, i, 'A növények alkalmazkodnak a környezetükhöz, és a természet ritmusa szerint élnek.')),
+    // (a kérdésben nem szerepelhet az évszak neve, pl. „köszöntik a nyarat”, „őszi gyümölcsök”; a magyarázat a könyv teljes mondata)
+    [['nyugalmi állapotban vannak, növekedésük szünetel, vízigényük csökken', 3, 'Télen a lombhullató növények nyugalmi állapotban vannak. Növekedésük szünetel, vízigényük csökken.'],
+      ['a rügyfakadás jelzi az újraéledésüket', 0, 'Újraéledésüket tavasszal a rügyfakadás jelzi. Ágaikon levelek nőnek, virágok nyílnak.'],
+      ['dús a lombkoronájuk, beérnek a virágokból az első termések', 1, 'Dús lombkoronával köszöntik a nyarat. Ekkor beérnek a virágokból az első termések.'],
+      ['leveleik elszíneződnek és lehullanak', 2, 'Ősszel a fák levelei elszíneződnek, és lehullanak, az őszi gyümölcsök beérnek.']]
+      .map(([t, i, e]) => KB('Mikor? A lombhullató növények…', t, N12_EVSZ, i, e)),
     // a növény részei (tankönyv 4.)
     [['rögzíti a növényt a talajban', 0], ['a talajból vizet és tápanyagokat vesz fel', 0], ['szállítja a gyökérből kapott táplálékot a növény többi részébe', 1],
       ['tartja a leveleket, virágokat, terméseket', 1], ['a növény légzőszerve', 2], ['itt történik a tápanyagkészítés', 2], ['a növény szaporítószerve', 3],
@@ -514,14 +517,14 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     [['A fák szára a törzs.', 0], ['Vastag, kemény és kéreggel borított.', 0], ['Zöld színű, puha, hajlékony.', 1], ['Nedvdús: összenyomva levet ereszt.', 1],
       ['A mezőkön, réteken élő színes virágú növények szára.', 1], ['A cserjék (bokrok) szára.', 0], ['A lombkorona ágai, gallyai és vesszői.', 0]]
       .map(([t, i]) => KB('Fás szár vagy lágy szár?', t, N12_SZAR, i, i ? 'Ez a lágy szár: zöld, puha, hajlékony, nedvdús.' : 'Ez a fás szár: a törzs vastag, kemény és kéreggel borított.')),
-    // munkafüzet 3.: gyümölcstalálós
+    // munkafüzet 3.: gyümölcstalálós (az „Érett, lédús… nehogy a magomba harapj!” kimaradt: a szilvára és a meggyre is igaz)
     [['Gyümölcsöm húsa harsog a fogad alatt. Jól rágd meg! A fogaidnak is jót teszel vele, és vitamint is tartalmaz.', 0],
-      ['Érett, lédús gyümölcsöm héja könnyen lehúzható. Vigyázz, nehogy a magomba harapj!', 1],
       ['Gyümölcsöm hamvaslila színe páratlan. A belőle főzött lekvár ízesíti a süteményeket.', 2], ['Bordó gyümölcsöm kissé savanyú. Fülbevalónak is kiváló!', 3]]
       .map(([t, i]) => KM('Mi a nevem?', t, N12_GY[i], N12_GY, `A megfejtés: ${N12_GY[i]}. A gyümölcsöskert fái lombhullató fák.`)),
     // munkafüzet 4.: termés és fa
-    KP('Melyik fa termése?', 'Melyik a termése?', [['vadgesztenye', 'gesztenyefa'], ['makk', 'tölgyfa'], ['dió', 'diófa'], ['mandula', 'mandulafa']],
-      (a, b) => `${A(a)} ${art(b)} ${b} termése.`, x => withEmo(x)),
+    // (csak a makk: a dió → diófa, mandula → mandulafa, vadgesztenye → gesztenyefa szövegben elárulja a választ, a munkafüzet képpel kérdez)
+    [KM('Melyik fa termése?', 'makk', 'tölgyfa', ['diófa', 'mandulafa', 'gesztenyefa'], 'A makk a tölgyfa termése.'),
+      KM('Melyik a termése?', 'tölgyfa', 'makk', ['dió', 'mandula', 'vadgesztenye'], 'A makk a tölgyfa termése.')],
     // munkafüzet 7.: hogyan mozoghat egy növény
     N12_MOZ.map(c => KM('Hogyan mozoghat egy növény?', '🌱', c, N12_NEMMOZ, 'A növények helyváltoztató mozgásra nem képesek, mégis mozognak: kúszik, körbefon, szétterül, kinyílik.'))
       .concat(N12_NEMMOZ.map(c => KM('Melyik NEM növényi mozgás?', '🌱', c, N12_MOZ, 'A növények helyváltoztató mozgásra nem képesek: nem ugranak, nem sétálnak.')))
@@ -885,7 +888,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
         () => { const live = Math.random() < 0.5, c = pick(live ? ELOK : ELETTELEN), wr = shuffle(live ? ELETTELEN : ELOK).slice(0, 3), all = shuffle(wr.concat([c]));
           return { prompt: 'Válaszd ki!', text: live ? 'Melyik élőlény?' : 'Melyik élettelen?', choices: all.map(withEmo), correct: all.indexOf(c), layout: 'list', key: 'liv2:' + c,
             explain: live ? `${A(c)} élőlény. Az emberek, az állatok és a növények élőlények.` : `${A(c)} élettelen, a többi élőlény.` }; },
-        () => { const w = pick(ELOK), g = ELOOF[w];
+        () => { const w = pick(ELOK.filter(x => x !== 'ember')), g = ELOOF[w];  // az „ember” szó elárulná a választ
           return { prompt: 'Ember, állat vagy növény?', text: withEmo(w), choices: ['ember', 'állat', 'növény'], correct: ['ember', 'állat', 'növény'].indexOf(g), layout: 'grid',
             key: 'grp:' + w, explain: `${A(w)} ${g === 'ember' ? 'az emberek' : g === 'állat' ? 'az állatok' : 'a növények'} csoportjába tartozik.` }; },
         () => { const [st, gi] = pick(ELO_STMT);
@@ -1292,7 +1295,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   let kidExitWarn = false;
   let reports = null;           // a szülői nézet nyitott jelentései
   let reportOpen = false;       // a kérdésnél nyitva van-e a „Mi a hiba?” doboz
-  const APP_VERSION = 'gyakorlo-v21';
+  const APP_VERSION = 'gyakorlo-v22';
   const REASONS = { wrong_answer: 'Rossz a megoldás', bad_question: 'Hibás a kérdés', other: 'Más baj van' };
 
   function emptyCache() { return { pupils: [], results: {}, badges: {}, current: null, userId: null, householdId: null }; }

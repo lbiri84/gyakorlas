@@ -4,6 +4,7 @@
 
 - A feladatok a tankönyv és a munkafüzet fejezeteihez igazodnak. Minden fejezet egy külön téma (kategória) az appban, a fejezet címével.
 - Csak a két könyv szövegét és képeit használjuk: a kérdések és a magyarázatok a könyv mondatai, új tartalmat nem találunk ki. Ahol a könyv nem adja meg a megoldást (pl. „Beszéljétek meg!”), vagy egy kép többféleképpen érthető, azt a szülőnek jelezni kell, és csak egyértelmű feladat kerülhet be.
+- A kérdés szövege nem árulhatja el a választ (pl. „köszöntik a nyarat” → nyáron; „dió” → diófa). Ahol a könyv képpel kérdez, és a szöveges változat így túl könnyű lenne, az a feladat kimarad.
 - A rossz válaszlehetőség soha ne legyen másképp is igaz (pl. tejet a juh is ad, ezért a „tehén – tej” párnál a juh nem lehet rossz válasz).
 - A forrás a szülő Google Drive-jában van: `Gyakorlás/<tantárgy>/<sorszám> - <fejezet címe> - tankönyv.pdf` és `... - munkafüzet.pdf`. A PDF-ek és a könyvek szövege tömegesen nem kerül a repóba.
 - Új fejezet: az adatai a közös `chapGen` készítőbe kerülnek (`KM` feleletválasztós, `KF` igaz-hamis, `KB` rögzített lehetőségek, `KP` párok mindkét irányban), és egy új sor a `TOPICS`-ba.
