@@ -376,7 +376,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   const EMO = { varjú: '🐦', macska: '🐈', juh: '🐑', tehén: '🐄', ember: '🧑', fa: '🌳', virág: '🌼', méh: '🐝', csibe: '🐥',
     tyúk: '🐔', kakas: '🐓', paradicsom: '🍅', káposzta: '🥬', repülőgép: '✈️', sárkány: '🪁', traktor: '🚜', ház: '🏠', létra: '🪜',
     seprű: '🧹', vödör: '🪣', baba: '👶', gyerek: '🧒', 'idős asszony': '👵', nő: '👩', szöcske: '🦗', ponty: '🐟', papagáj: '🦜',
-    róka: '🦊', tulipán: '🌷', vadgesztenye: '🌰', kutya: '🐕', liba: '', pulyka: '🦃', tengerimalac: '', kanári: '🐤', hörcsög: '🐹', farkas: '🐺', vaddisznó: '🐗',
+    róka: '🦊', tulipán: '🌷', vadgesztenye: '🌰', sas: '🦅', 'barna medve': '🐻', delfin: '🐬', bálna: '🐋', fóka: '🦭', denevér: '🦇', elefánt: '🐘', kutya: '🐕', liba: '', pulyka: '🦃', tengerimalac: '', kanári: '🐤', hörcsög: '🐹', farkas: '🐺', vaddisznó: '🐗',
     bagoly: '🦉', szarvas: '🦌', medve: '🐻', vadkacsa: '🦆', koala: '🐨', jegesmedve: '🐻‍❄️', tigris: '🐅', zsiráf: '🦒', oroszlán: '🦁', borz: '🦡',
     kiscica: '🐱', hód: '🦫', teknős: '🐢', kacsa: '🦆', gólya: '', tojás: '🥚', tej: '🥛', hús: '🥩', tollpárna: '', gyapjúsál: '🧣', makk: '🌰', mandula: '🥜', béka: '🐸', kaktusz: '🌵', palánta: '🌱', 'cserepes virág': '🪴',
     kerékpár: '🚲', óra: '🕰️', telefon: '📱', katicabogár: '🐞', nyúl: '🐇', gyík: '🦎', kesztyű: '🧤', laptop: '💻', sün: '🦔',
@@ -587,6 +587,55 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     [['cetcápa', 15, 2], ['piton', 10, 3], ['elefánt', 3, 10]].map(([a, m, n]) => () => numQ(n, [1, 2, 3, 5, 10, 15].filter(x => x !== n), {
       prompt: 'Hány állat hosszával egyenlő a kék bálna?', text: `A kék bálna 30 m, ${art(a)} ${a} ${m} m. 1 kék bálna = ? ${a}`, long: true,
       explain: `30 m = ${n} · ${m} m, tehát 1 kék bálna = ${n} ${a}. A Föld legnagyobb állata a kék bálna.`, key: 'k:balna' + a }))
+  ]);
+
+  // 14. Emlősállatok (tankönyv 39–40., munkafüzet 41–42. oldal)
+  const E14_SUM = 'Az emlősállatok gerincesek, testüket belső, csontos váz tartja, és részben vagy egészben szőr fedi. Legtöbbjüknek négy végtagja van. Tüdővel lélegeznek. Elevenszülők, az utódokat az anyaállat az emlőiben képződő tejjel táplálja. Lehetnek növényevők, ragadozók vagy mindenevők.';
+  const E14_TAP = ['növényevő', 'húsevő (ragadozó)', 'mindenevő'];
+  const E14_TAPX = ['A növényevők leveleket, terméseket, magokat esznek.', 'A húsevők (ragadozók) más állatok húsát fogyasztják.', 'A mindenevők növényeket és állatokat is fogyasztanak.'];
+  const E14_RESZ = ['fej', 'nyak', 'törzs', 'végtagok (lábak)', 'farok'];
+  GEN.emlosok = chapGen([
+    // tankönyv 1.: emlős-e (a négylábú, szőrös állatok)
+    [['medve', 1], ['ló', 1], ['bárány', 1], ['nyúl', 1], ['sas', 0], ['ponty', 0], ['csiga', 0]]
+      .map(([n, i]) => KB('Emlősállat?', withEmo(n), ['igen', 'nem'], i ? 0 : 1, i ? `${A(n)} emlősállat: négy lába van, és testét szőr fedi.` : `${A(n)} nem emlősállat.`)),
+    // táplálkozás (tankönyv 6., munkafüzet 4.)
+    [['őz', 0], ['hód', 0], ['nyúl', 0], ['kecske', 0], ['ló', 0], ['róka', 1], ['hiúz', 1], ['vidra', 1], ['menyét', 1], ['macska', 1],
+      ['vaddisznó', 2], ['borz', 2], ['barna medve', 2], ['sertés', 2]]
+      .map(([n, i]) => KB('Melyik emlősállat mit eszik?', withEmo(n), E14_TAP, i, `${A(n)} ${E14_TAP[i].replace(' (ragadozó)', '')}. ${E14_TAPX[i]}`)),
+    // tankönyv 6.: részletek
+    [KM('Mit eszik az őz?', '🦌', 'faleveleket, fiatal hajtásokat, füvet', ['egeret, pockot, rovarokat', 'csigákat, férgeket', 'makkot, gesztenyét'], 'Az őz növényevő állat. Faleveleket, lombos fák fiatal hajtásait, füvet fogyaszt.'),
+      KM('Mit tesznek az erdészek hosszú, hideg teleken?', '🦌', 'eleséget tesznek a vadetetőkbe', ['elviszik az őzeket', 'vizet engednek az erdőbe', 'kivágják a fákat'], 'Hosszú, hideg teleken, amikor az őz nem talál magának ennivalót, az erdészek a vadetetőkbe eleséget tesznek ki számára.'),
+      KM('Mit eszik a róka?', '🦊', 'egeret, pockot, rovarokat', ['faleveleket és füvet', 'csak gyökereket', 'csak gyümölcsöt'], 'A róka ragadozó állat. Egeret, pockot, rovarokat eszik, de megfogja a nyulat, őzgidát, madarakat is.'),
+      KM('Mit károsít a róka faluhelyen?', '🦊', 'a baromfiállományt', ['a gyümölcsfákat', 'a kukoricát', 'a burgonyát'], 'Faluhelyen károsítja a baromfiállományt.'),
+      KM('Mit eszik a vaddisznó?', '🐗', 'növényeket és állatokat is', ['csak füvet', 'csak húst', 'csak leveleket'], 'A vaddisznó mindenevő állat: kukoricát, burgonyát, lehullott gyümölcsöt, makkot, gesztenyét, de csigákat, férgeket is fogyaszt.'),
+      KM('Mivel ragadják meg a zsákmányukat a húsevők?', '🦊', 'erős fogazatukkal', ['a farkukkal', 'a fülükkel', 'az orrukkal'], 'Zsákmányukat erős fogazatukkal megragadják, és elejtik.')],
+    // a test (tankönyv 3–4., munkafüzet 3.)
+    [KM('Melyek az emlősállatok fő testrészei?', '🦦 vidra', 'fej, nyak, törzs, végtagok, farok', ['fej, tor, potroh', 'fej, törzs, szárnyak', 'gyökér, szár, levél'], 'Az emlősállatok fő testrészei: fej, nyak, törzs, végtagok (lábak), farok.'),
+      KM('Miből áll az emlősállatok váza?', '🦴', 'csontokból', ['tollakból', 'pikkelyekből', 'szőrből'], 'Mindegyikük testét szilárd váz tartja. Ez a váz csontokból áll, e csontozat fő eleme a gerincoszlop.'),
+      KM('Mi a csontozat fő eleme?', '🦴', 'a gerincoszlop', ['a farok', 'a szőrzet', 'a fej'], 'Ez a váz csontokból áll, e csontozat fő eleme a gerincoszlop.'),
+      KM('Mivel lélegeznek az emlősállatok?', '🫁', 'tüdővel', ['kopoltyúval', 'a bőrükkel', 'a szőrükkel'], 'Bárhol élnek, közös jellemzőjük, hogy az emberhez hasonlóan tüdővel lélegeznek.'),
+      KM('Hány végtagja van a legtöbb emlősállatnak?', '🐾', 'négy', ['kettő', 'hat', 'nyolc'], 'Legtöbbjüknek négy végtagja van.'),
+      KM('Mi tartja melegen az emlősállatok testét?', '🧥', 'a szőrzet', ['a toll', 'a pikkely', 'a csiga háza'], 'Az emlősállatok testét a szőrzet tartja melegen. Minél vastagabb és tömörebb a szőrzet, annál tovább tartja a hőmérsékletet.'),
+      KM('Mi történik tavasszal a vastag bundával?', '🌷', 'elhullatják (levedlik)', ['még vastagabb lesz', 'befehéredik', 'lehullik a bőrük'], 'A tavasz beköszöntével a vastag szőrszálakat elhullatják (levedlik), helyükre új, laza és vékony szálú szőrzetet növesztenek.'),
+      KM('Mivel táplálja az anyaállat a kicsinyeit?', '🍼', 'az emlőiben képződő tejjel', ['magokkal', 'rovarokkal', 'falevéllel'], 'A kicsinyeket az anyaállat az emlőiben képződő, tápanyagokban dús tejjel szoptatja. Innen ered az emlősállat kifejezés.'),
+      KM('Hogyan jönnek világra az emlősállatok utódai?', '🐶', 'elevenen', ['tojásból kelnek ki', 'ikrából kelnek ki', 'bábból bújnak elő'], 'Utódaik az anyaállat testén belül fejlődnek, és születésük pillanatában elevenen jönnek világra.')],
+    // tankönyv 2.: kicsinyek
+    [['ló', 'csikó'], ['sertés', 'malac'], ['kutya', 'kölyökkutya']].map(([a, y]) => KM('Hogyan nevezik a kicsinyét?', withEmo(a), y, ['csikó', 'malac', 'kölyökkutya', 'borjú', 'bárány'], `${A(a)} kicsinye ${art(y)} ${y}.`)),
+    // tankönyv 5.: vízben élő emlősök
+    [['delfin', 0], ['bálna', 0], ['fóka', 1], ['kacsacsőrű emlős', 1], ['hód', 1]].map(([n, i]) => KB('Állandóan vízben él, vagy időnként kijön a szárazföldre?', withEmo(n),
+      ['állandóan vízben él', 'időnként kijön a szárazföldre'], i, 'A vízben élő emlősállatoknak rendszeresen fel kell jönniük a vízfelszínre, hogy levegőt vegyenek.'))
+      .concat([KM('Hol találhatók meg az emlősállatok?', '🌍', 'a szárazföldön, a vizekben, a levegőben', ['csak a szárazföldön', 'csak a vizekben', 'csak a föld alatt'], 'Az emlősállatok benépesítik a Földet. Megtalálhatók a szárazföldön, a vizekben, a levegőben egyaránt.')]),
+    // munkafüzet 1.: módosult végtagok és egyedi jellegzetességek
+    [['mellső végtagja szárnnyá módosult, ezért repülni tud', 'denevér'], ['lábai uszonyokká alakultak', 'fóka'], ['mellső végtagjai hosszú karmokban végződő ásólábak lettek', 'vakond']]
+      .map(([t, a]) => KM('Melyik emlősállat?', cap(t) + '.', a, ['denevér', 'fóka', 'vakond', 'ló'], `${A(a)}: ${t}. Az életmód különböző, egyedi jellegzetességeket alakított ki az emlősállatokon.`))
+      .concat([['tüskék', 'sün'], ['ormány', 'elefánt'], ['agancs', 'szarvas'], ['agyar', 'rozmár'], ['csíkos, fekete-fehér szőrzet', 'zebra'], ['csíkos, narancssárga-fekete szőrzet', 'tigris'],
+        ['foltos szőrzet, nagyon hosszú nyak', 'zsiráf'], ['kunkori farok', 'malac'], ['bozontos, vörös farok', 'mókus']]
+        .map(([t, a], i, L) => KM('Melyik emlősállat részletére ismersz rá?', t, a, L.map(x => x[1]), `Ez ${art(a)} ${a}.`))),
+    // munkafüzet 5.: egészítsd ki
+    [['Az emlősállatok testét … borítja.', 'szőr', ['toll', 'pikkely', 'páncél']], ['Legtöbbjüknek … végtagja van.', 'négy', ['kettő', 'hat', 'nyolc']],
+      ['… lélegeznek.', 'Tüdővel', ['Kopoltyúval', 'Bőrükkel', 'Szárnyukkal']], ['Kicsinyeik elevenen bújnak elő anyjuk testéből, ezért nevezzük őket … .', 'elevenszülőnek', ['tojásrakónak', 'ikrarakónak', 'ragadozónak']],
+      ['Az anyaállat az utódokat az emlőiben képződő … táplálja.', 'tejjel', ['vízzel', 'magokkal', 'mézzel']]]
+      .map(([t, c, w]) => KM('Egészítsd ki az emlősállatokról szóló szöveget!', t, c, w, E14_SUM))
   ]);
 
   Object.assign(GEN, {
@@ -931,7 +980,8 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     { id: 'abc', g: 'Nyelvtan', name: 'ABC-sorrend', ico: 'A–Z', sm: 1 },
     { id: 'elo', g: 'Környezetismeret', name: 'Az élőlények tulajdonságai', ico: '🌱', emo: 1 },
     { id: 'novenyek', g: 'Környezetismeret', name: 'Növények', ico: '🌳', emo: 1 },
-    { id: 'allatok', g: 'Környezetismeret', name: 'Állatok', ico: '🐾', emo: 1 }
+    { id: 'allatok', g: 'Környezetismeret', name: 'Állatok', ico: '🐾', emo: 1 },
+    { id: 'emlosok', g: 'Környezetismeret', name: 'Emlősállatok', ico: '🐻', emo: 1 }
   ];
   // A régi (2026-11-15 előtti) környezetes témák neve, hogy a korábbi eredmények olvashatók maradjanak.
   const TNAME = { elet: 'Az élet feltételei', allat: 'Állatcsoportok', emlos: 'Emlősök', madar: 'Madarak', hullo: 'Hüllők', ketelt: 'Kétéltűek', rovar: 'Rovarok és bogarak' };
