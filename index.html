@@ -376,7 +376,9 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   const EMO = { varjú: '🐦', macska: '🐈', juh: '🐑', tehén: '🐄', ember: '🧑', fa: '🌳', virág: '🌼', méh: '🐝', csibe: '🐥',
     tyúk: '🐔', kakas: '🐓', paradicsom: '🍅', káposzta: '🥬', repülőgép: '✈️', sárkány: '🪁', traktor: '🚜', ház: '🏠', létra: '🪜',
     seprű: '🧹', vödör: '🪣', baba: '👶', gyerek: '🧒', 'idős asszony': '👵', nő: '👩', szöcske: '🦗', ponty: '🐟', papagáj: '🦜',
-    róka: '🦊', tulipán: '🌷', vadgesztenye: '🌰', makk: '🌰', mandula: '🥜', béka: '🐸', kaktusz: '🌵', palánta: '🌱', 'cserepes virág': '🪴',
+    róka: '🦊', tulipán: '🌷', vadgesztenye: '🌰', kutya: '🐕', liba: '', pulyka: '🦃', tengerimalac: '', kanári: '🐤', hörcsög: '🐹', farkas: '🐺', vaddisznó: '🐗',
+    bagoly: '🦉', szarvas: '🦌', medve: '🐻', vadkacsa: '🦆', koala: '🐨', jegesmedve: '🐻‍❄️', tigris: '🐅', zsiráf: '🦒', oroszlán: '🦁', borz: '🦡',
+    kiscica: '🐱', hód: '🦫', teknős: '🐢', kacsa: '🦆', gólya: '', tojás: '🥚', tej: '🥛', hús: '🥩', tollpárna: '', gyapjúsál: '🧣', makk: '🌰', mandula: '🥜', béka: '🐸', kaktusz: '🌵', palánta: '🌱', 'cserepes virág': '🪴',
     kerékpár: '🚲', óra: '🕰️', telefon: '📱', katicabogár: '🐞', nyúl: '🐇', gyík: '🦎', kesztyű: '🧤', laptop: '💻', sün: '🦔',
     cipő: '👞', lámpa: '💡', zebra: '🦓', pillangó: '🦋', bokor: '🌳', kukorica: '🌽', ló: '🐴', kígyó: '🐍', csiga: '🐌', galamb: '🕊️',
     hal: '🐟', mókus: '🐿️', őz: '🦌', egér: '🐁', dió: '🌰', szendvics: '🥪', 'virágzó ág': '🌸', 'rügyes ág': '🌿',
@@ -523,6 +525,68 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     // munkafüzet 9.: mamutfenyő átölelése
     [() => numQ(12, [6, 10, 24, 100], { prompt: 'Hány gyerek kell a fa átöleléséhez?', text: 'Az óriás mamutfenyő törzsének kerülete 12 méter. Egy gyerek 1 métert ér át.', long: true,
       explain: 'A 12 méteres kört 1 méteres papírszalagokból kialakítva 12 gyerekre lenne szükség.', key: 'k:mamut' })]
+  ]);
+
+  // 13. Állatok (tankönyv 36–38., munkafüzet 39–40. oldal)
+  const A13_HAZI = 'Az ember környezetében élő állatokat háziállatoknak nevezzük. Ezek az állatok az ember által készített mesterséges környezetben élnek.';
+  const A13_VAD = 'Az ember gondoskodása nélkül élő állatokat vadon élő állatoknak nevezzük. Ezek az állatok a természetes környezetükben élnek.';
+  const A13_HV = ['háziállat', 'vadon élő állat'];
+  GEN.allatok = chapGen([
+    // háziállat vagy vadon élő (a két könyv képei)
+    [['kutya', 0], ['macska', 0], ['liba', 0], ['pulyka', 0], ['tyúk', 0], ['tehén', 0], ['sertés', 0], ['ló', 0], ['juh', 0], ['kecske', 0], ['tengerimalac', 0],
+      ['kanári', 0], ['hörcsög', 0], ['farkas', 1], ['róka', 1], ['vaddisznó', 1], ['bagoly', 1], ['szarvas', 1], ['medve', 1], ['vadkacsa', 1], ['koala', 1],
+      ['jegesmedve', 1], ['őz', 1], ['tigris', 1], ['zsiráf', 1], ['oroszlán', 1], ['borz', 1], ['mókus', 1]]
+      .map(([n, i]) => KB('Háziállat vagy vadon élő állat?', withEmo(n), A13_HV, i, i ? A13_VAD : A13_HAZI))
+      .concat([KB('Hol élnek? Nevezd meg az állatok csoportját!', '🌳 természetes élőhely', A13_HV, 1, A13_VAD),
+        KB('Hol élnek? Nevezd meg az állatok csoportját!', '🏡 mesterséges élőhely', A13_HV, 0, A13_HAZI)]),
+    // munkafüzet 2.: kakukktojás
+    [['kiscica', 'hód', 'róka', 'vaddisznó'], ['bagoly', 'liba', 'pulyka', 'tyúk']].map(r => () => {
+      const all = shuffle(r.slice()); return { prompt: 'Melyik állat nem illik a többi közé?', text: 'Keresd a kakukktojást!', choices: all.map(withEmo), correct: all.indexOf(r[0]),
+        layout: 'list', key: 'k:kak13' + r[0], explain: r[0] === 'kiscica' ? 'A kiscica háziállat, a többi vadon élő állat.' : 'A bagoly vadon élő állat, a többi háziállat.' }; }),
+    // munkafüzet 3.: haszonállat vagy házi kedvenc
+    [['tehén', 0], ['liba', 0], ['sertés', 0], ['méh', 0], ['kutya', 1], ['tengerimalac', 1], ['kanári', 1]]
+      .map(([n, i]) => KB('Haszonállat vagy házi kedvenc?', withEmo(n), ['haszonállat', 'házi kedvenc'], i,
+        i ? 'A házi kedvencként tartott állatok társaságot és tartalmas időtöltést jelentenek a gazdáiknak.' : 'Az állatok egy részét hasznuk miatt tartja az ember.')),
+    // tankönyv 2.: melyik állatnak mi a haszna (a képek alapján)
+    // (csak az egyértelmű párok: pl. tejet a juh és a kecske is ad, ezért azok nem rossz válaszok egymásnak)
+    [['tyúk', 'tojás', ['tej', 'tollpárna', 'gyapjúsál']], ['liba', 'tollpárna', ['tej', 'gyapjúsál']], ['juh', 'gyapjúsál', ['tojás', 'tollpárna']],
+      ['tehén', 'tej', ['tojás', 'tollpárna', 'gyapjúsál']]].map(([a, b, w]) => KM('Mit ad nekünk?', withEmo(a), b, w, `${cap(b)}: ${art(a)} ${a} adja. A háziasítás célja az állatok hasznosítása volt.`))
+      .concat([['tojás', 'tyúk', ['tehén', 'juh', 'sertés']], ['tollpárna', 'liba', ['tehén', 'juh', 'sertés']], ['gyapjúsál', 'juh', ['tyúk', 'liba', 'sertés']]]
+        .map(([b, a, w]) => KM('Melyik állattól kapjuk?', withEmo(b), withEmo(a), w.map(withEmo), `${cap(b)}: ${art(a)} ${a} adja. A háziasítás célja az állatok hasznosítása volt.`))),
+    // munkafüzet 4.: a házi kedvencek lakóhelye
+    KP('Hol lakik a házi kedvenc?', null, [['papagáj', 'kalitka'], ['hörcsög', 'ketrec'], ['kutya', 'kutyaház'], ['hal', 'akvárium'], ['macska', 'fonott kosár'], ['teknős', 'terrárium'], ['kígyó', 'terrárium']],
+      (a, b) => `${A(a)} lakóhelye: ${b}.`, withEmo),
+    // munkafüzet 6.: hangok
+    KP('Melyik állat ad ilyen hangot?', 'Milyen hangot ad?', [['brekeg', 'béka'], ['kelepel', 'gólya'], ['béget', 'bárány'], ['huhog', 'bagoly'], ['kukorékol', 'kakas'],
+      ['ugat', 'kutya'], ['hápog', 'kacsa'], ['mekeg', 'kecske']], (a, b) => `${A(b)} ${a}.`, x => x, withEmo),
+    // igaz-hamis: munkafüzet 5. és 7.
+    [KF('A háziállatok természetes élőhelyen élnek.', 0, A13_HAZI), KF('Minden háziállat haszonállat.', 0), KF('Nem minden háziállat tartható lakásban.', 1),
+      KF('A hobbiállatokat kedvtelésből tartjuk.', 1), KF('A háziállatok képesek gondoskodni magukról.', 0, 'Hamis. Az ember felelőssége, hogy háziállatairól gondoskodjon.'),
+      KF('A szarvas vadon élő állat.', 1), KF('Krokodil nálunk csak az állatkertben él.', 1), KF('Tigrisek, oroszlánok hobbiállatként is tarthatók.', 0, 'Hamis. Vadon élő állatokat nem tarthatunk az otthonunkban.'),
+      KF('Az állatkertekben tartott állatok mind haszonállatok.', 0), KF('A veszélyeztetett fajokat a kipusztulás fenyegeti.', 1), KF('A vadon élő állatok között vannak növényevők is.', 1),
+      KF('A ló vadállat.', 0), KF('Napjainkban már nincsenek veszélyeztetett fajok.', 0), KF('A fajok kipusztulását okozhatja az élőhelyük elvesztése.', 1),
+      KF('Az akvárium mesterséges élőhely.', 1), KF('A zebrák természetes élőhelye az állatkert.', 0)],
+    // tankönyv: fogalmak
+    [KM('Melyik állatról szól a találós kérdés?', 'Falka a családja, vonyít a világba, szeme, füle éles, a szimata nem téves. Menekülne zsákmánya, de ott van a nyomába.', 'farkas', ['róka', 'medve', 'macska'], 'A farkas.'),
+      KM('Melyik vadon élő állat háziasításával kezdődött a kutya és az ember közös élete?', '🐕', 'a szürke farkas', ['a róka', 'a medve', 'a vaddisznó'], 'A szürke farkas háziasításával összefonódott az emberek és a kutyák élete.'),
+      KM('Mi volt a háziasítás célja?', '🐄', 'az állatok hasznosítása', ['a vadászat', 'az állatkert', 'a kirándulás'], 'A háziasítás célja az állatok hasznosítása volt.'),
+      KM('Melyek a legrégebben háziasított állatfajok?', '❗', 'a kutya, a juh és a kecske', ['a ló, a tehén és a tyúk', 'a macska, a liba és a sertés', 'a hörcsög, a kanári és a papagáj'], 'A legrégebben háziasított állatfajok a kutya, a juh és a kecske.'),
+      KM('Hol élnek a háziállatok?', '🏡', 'mesterséges környezetben', ['természetes környezetben', 'az erdőben', 'a vadasparkban'], A13_HAZI),
+      KM('Hol élnek a vadon élő állatok?', '🌳', 'a természetes környezetükben', ['mesterséges környezetben', 'az ólban', 'az istállóban'], A13_VAD),
+      KM('Mit jelent az örökbefogadás az állatkertben?', '🦁', 'A kiválasztott állat ellátását pénzbeli adománnyal segítjük.', ['Hazavisszük az állatot.', 'Megetetjük az állatot.', 'Lefényképezzük az állatot.'],
+        'Az állatkertekben lehetőségünk van örökbefogadásra is. Ez azt jelenti, hogy a kiválasztott állat ellátását pénzbeli adománnyal segítjük.'),
+      KM('Hogy nevezzük azokat az állatfajokat, melyeket a kihalás veszélye fenyeget?', '❗', 'veszélyeztetett állatok', ['háziállatok', 'haszonállatok', 'házi kedvencek'],
+        'Azokat az állatfajokat, melyeket a természetes élőhelyükön a kihalás veszélye fenyeget, veszélyeztetett állatoknak nevezzük. Ezeket nemzeti parkok kialakításával óvjuk, védjük.'),
+      KM('Melyik madár a magyar természetvédelem címermadara?', '🪶', 'a nagy kócsag', ['a gólya', 'a bagoly', 'a sas'], 'A magyar természetvédelem címermadara a védelem alatt álló nagy kócsag.'),
+      KM('Hová húzódnak a vadon élő állatok, hogy az időjárás hatásait átvészeljék?', '🌧️', 'a föld alá, odúba, fészekbe, barlangba', ['az ólba', 'az istállóba', 'a lakásba'],
+        'A vadon élő állatok táplálékot keresnek, és lakhelyet alakítanak ki maguknak.'),
+      KM('Mit hagyhatsz az erdőben?', '🌲', 'Csak a lábnyomodat.', ['A szemetet.', 'A maradék ételt.', 'A játékaidat.'], '„Csak a lábnyomod hagyd az erdőben!”'),
+      KM('Mi a kóbor állatok nagy része?', '🐕', 'megunt, magára hagyott házi kedvenc', ['vadon élő állat', 'haszonállat', 'veszélyeztetett állat'],
+        'A kóbor állatok nagy része megunt, magára hagyott házi kedvenc. Csak akkor tarts állatot, ha felelősséggel tudsz gondoskodni róla!')],
+    // munkafüzet 8.: a kék bálna hossza (30 m)
+    [['cetcápa', 15, 2], ['piton', 10, 3], ['elefánt', 3, 10]].map(([a, m, n]) => () => numQ(n, [1, 2, 3, 5, 10, 15].filter(x => x !== n), {
+      prompt: 'Hány állat hosszával egyenlő a kék bálna?', text: `A kék bálna 30 m, ${art(a)} ${a} ${m} m. 1 kék bálna = ? ${a}`, long: true,
+      explain: `30 m = ${n} · ${m} m, tehát 1 kék bálna = ${n} ${a}. A Föld legnagyobb állata a kék bálna.`, key: 'k:balna' + a }))
   ]);
 
   Object.assign(GEN, {
@@ -866,7 +930,8 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     { id: 'mondat', g: 'Nyelvtan', name: 'Mondatfajták', ico: '!?', sm: 1 },
     { id: 'abc', g: 'Nyelvtan', name: 'ABC-sorrend', ico: 'A–Z', sm: 1 },
     { id: 'elo', g: 'Környezetismeret', name: 'Az élőlények tulajdonságai', ico: '🌱', emo: 1 },
-    { id: 'novenyek', g: 'Környezetismeret', name: 'Növények', ico: '🌳', emo: 1 }
+    { id: 'novenyek', g: 'Környezetismeret', name: 'Növények', ico: '🌳', emo: 1 },
+    { id: 'allatok', g: 'Környezetismeret', name: 'Állatok', ico: '🐾', emo: 1 }
   ];
   // A régi (2026-11-15 előtti) környezetes témák neve, hogy a korábbi eredmények olvashatók maradjanak.
   const TNAME = { elet: 'Az élet feltételei', allat: 'Állatcsoportok', emlos: 'Emlősök', madar: 'Madarak', hullo: 'Hüllők', ketelt: 'Kétéltűek', rovar: 'Rovarok és bogarak' };
