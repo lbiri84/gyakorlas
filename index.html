@@ -372,19 +372,43 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
 
   /* ================= Környezetismeret: a tankönyv fejezetei =================
      A feladatok csak a tankönyv szövegét és képeit használják (új tartalmat nem találunk ki).
-     II. Élő környezetünk, 11. Az élőlények tulajdonságai. */
+     II. Élő környezetünk, 11. Az élőlények tulajdonságai (tankönyv 30–32., munkafüzet 34–36. oldal). */
   const EMO = { varjú: '🐦', macska: '🐈', juh: '🐑', tehén: '🐄', ember: '🧑', fa: '🌳', virág: '🌼', méh: '🐝', csibe: '🐥',
     tyúk: '🐔', kakas: '🐓', paradicsom: '🍅', káposzta: '🥬', repülőgép: '✈️', sárkány: '🪁', traktor: '🚜', ház: '🏠', létra: '🪜',
     seprű: '🧹', vödör: '🪣', baba: '👶', gyerek: '🧒', 'idős asszony': '👵', nő: '👩', szöcske: '🦗', ponty: '🐟', papagáj: '🦜',
-    róka: '🦊', tulipán: '🌷', béka: '🐸', kaktusz: '🌵', palánta: '🌱', 'cserepes virág': '🪴' };
+    róka: '🦊', tulipán: '🌷', béka: '🐸', kaktusz: '🌵', palánta: '🌱', 'cserepes virág': '🪴',
+    kerékpár: '🚲', óra: '🕰️', telefon: '📱', katicabogár: '🐞', nyúl: '🐇', gyík: '🦎', kesztyű: '🧤', laptop: '💻', sün: '🦔',
+    cipő: '👞', lámpa: '💡', zebra: '🦓', pillangó: '🦋', bokor: '🌳', kukorica: '🌽', ló: '🐴', kígyó: '🐍', csiga: '🐌', galamb: '🕊️',
+    hal: '🐟', mókus: '🐿️', őz: '🦌', egér: '🐁', dió: '🌰', szendvics: '🥪', 'virágzó ág': '🌸', 'rügyes ág': '🌿',
+     rák: '🦀', polip: '🐙', kagyló: '🐚', sirály: '🐦', sertés: '🐖', kecske: '🐐', szarvasmarha: '🐄', };
   const withEmo = w => (EMO[w] ? EMO[w] + ' ' : '') + w;
   // A tankönyv képei (30. oldal): élőlények és élettelen dolgok; az élőlények három csoportja.
+  // (munkafüzet 1–2. feladat képei is: cinege, katicabogár, nyúl, gyík, sün, zebra, pillangó, bokor, kukorica…)
   const ELO = { ember: ['ember', 'baba', 'gyerek', 'idős asszony', 'nő'],
-    állat: ['varjú', 'macska', 'juh', 'tehén', 'méh', 'liba', 'csibe', 'tyúk', 'kakas', 'szöcske', 'ponty', 'papagáj', 'róka', 'béka'],
-    növény: ['fa', 'virág', 'tulipán', 'paradicsom', 'káposzta', 'kaktusz', 'palánta', 'cserepes virág'] };
+    állat: ['varjú', 'macska', 'juh', 'tehén', 'méh', 'liba', 'csibe', 'tyúk', 'kakas', 'szöcske', 'ponty', 'papagáj', 'róka', 'béka',
+      'cinege', 'katicabogár', 'nyúl', 'gyík', 'sün', 'zebra', 'pillangó'],
+    növény: ['fa', 'virág', 'tulipán', 'paradicsom', 'káposzta', 'kaktusz', 'palánta', 'cserepes virág', 'bokor', 'kukorica'] };
   const ELOK = [].concat(ELO.ember, ELO.állat, ELO.növény);
   const ELOOF = {}; Object.keys(ELO).forEach(k => ELO[k].forEach(w => ELOOF[w] = k));
-  const ELETTELEN = ['repülőgép', 'sárkány', 'traktor', 'ház', 'létra', 'locsolókanna', 'seprű', 'vödör'];
+  const ELETTELEN = ['repülőgép', 'sárkány', 'traktor', 'ház', 'létra', 'locsolókanna', 'seprű', 'vödör',
+    'kerékpár', 'óra', 'telefon', 'merőkanál', 'kesztyű', 'laptop', 'cipő', 'lámpa'];
+  // munkafüzet 2.: „Karikázd be a sorokban a kakukktojást!” (a négy sor, a kakukktojás az első)
+  const ELO_KAK = [['kesztyű', 'nyúl', 'kaktusz', 'gyík'], ['sün', 'laptop', 'cipő', 'lámpa'], ['fa', 'zebra', 'pillangó', 'macska'],
+    ['gyerek', 'bokor', 'kukorica', 'palánta']];
+  // munkafüzet 3.: „Kösd össze az állatokat a rájuk jellemző mozgással!”
+  const ELO_MOZ = [['béka', 'ugrik'], ['kígyó', 'tekergőzik'], ['csiga', 'csúszik'], ['galamb', 'repül'], ['ló', 'vágtat'], ['hal', 'úszik']];
+  // munkafüzet 4.: „Melyik élőlény mivel táplálkozik?”
+  const ELO_TAP = [['méh', 'virágzó ág'], ['macska', 'egér'], ['őz', 'rügyes ág'], ['mókus', 'dió'], ['gyerek', 'szendvics']];
+  // munkafüzet 5.: „Élőlények a vízben”: kik töltik egész életüket a vízben (a rajz élőlényei)
+  const ELO_VIZ = [['hal', 1], ['medúza', 1], ['rák', 1], ['polip', 1], ['kagyló', 1], ['sirály', 0], ['búvár', 0], ['ember', 0]];
+  // munkafüzet 6.: „Hogy hívják az állatok kicsinyeit?”
+  const ELO_KICSI = [['ló', 'csikó'], ['sertés', 'malac'], ['kecske', 'gida'], ['juh', 'bárány'], ['tyúk', 'csibe'], ['szarvasmarha', 'borjú']];
+  // munkafüzet 7.: „Nézd meg a képeket! Melyik életfeltétel hiányzik?” (a képek leírása; az index az ELO_FN-ben)
+  const ELO_KEP = [['🐟 halak a hálóban, a vízből kiemelve', 0], ['🍂 fonnyadt levél a sötétben', 1], ['🧑‍🚀 űrhajós a világűrben', 2],
+    ['🐭 alvó pele a fészkében, télen', 3], ['🐕 kutya a kutyaházban, a hóban', 4]];
+  // munkafüzet 8.: „Életjelenség vagy életfeltétel?”
+  const ELO_JF = [['levegő', 1], ['mozgás', 0], ['légzés', 0], ['víz', 1], ['táplálék', 1], ['fény', 1], ['szaporodás', 0], ['táplálkozás', 0],
+    ['megfelelő hőmérséklet', 1], ['növekedés', 0]];
   const ELO_SUM = 'Az élőlények mozognak, táplálkoznak, lélegeznek, szaporodnak, növekednek.';
   const ELO_COND = 'Az élőlényeknek az élethez vízre, fényre, levegőre, táplálékra és megfelelő hőmérsékletre van szükségük.';
   // „Melyik csoportra jellemző az állítás?” (tankönyv, 2. feladat)
@@ -442,7 +466,27 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
           const txt = `Az élőlényeknek az élethez ${parts.slice(0, 4).join(', ')} és ${parts[4]} van szükségük.`;
           return { prompt: 'Mi hiányzik a mondatból?', text: txt, choices: ELO_FS.slice(), correct: i, layout: 'list', long: true, key: 'fs:' + i, explain: ELO_COND }; },
         () => { const [h, i, w] = pick(ELO_HA);
-          return mc('Melyik életfeltétel hiányozna?', `${EMO[w] || ''} Mi történne, ha ${h}`, ELO_FN[i], ELO_FN, ELO_COND, { key: 'ha:' + i }); }
+          return mc('Melyik életfeltétel hiányozna?', `${EMO[w] || ''} Mi történne, ha ${h}`, ELO_FN[i], ELO_FN, ELO_COND, { key: 'ha:' + i }); },
+        // munkafüzet
+        () => { let row; if (Math.random() < 0.5) row = pick(ELO_KAK); else {
+            const gs = ['ember', 'állat', 'növény', 'élettelen'], g = pick(gs), o = pick(gs.filter(x => x !== g)), src = x => x === 'élettelen' ? ELETTELEN : ELO[x];
+            row = [pick(src(o))].concat(shuffle(src(g)).slice(0, 3)); }
+          const all = shuffle(row.slice()), odd = row[0], k = ELOOF[odd] || 'élettelen', k2 = ELOOF[row[1]] || 'élettelen';
+          return { prompt: 'Karikázd be a kakukktojást!', text: 'Melyik nem illik a sorba?', choices: all.map(withEmo), correct: all.indexOf(odd), layout: 'list', key: 'kak:' + row.join(),
+            explain: `${A(odd)} ${k}, a többi ${k2}.` }; },
+        () => { const [a, m] = pick(ELO_MOZ); return Math.random() < 0.5
+            ? mc('Melyik a rá jellemző mozgás?', withEmo(a), m, ELO_MOZ.map(x => x[1]), `${A(a)} ${m}.`, { key: 'moz:' + a })
+            : mc('Melyik állatra jellemző ez a mozgás?', cap(m) + '.', withEmo(a), ELO_MOZ.map(x => withEmo(x[0])), `${A(a)} ${m}.`, { key: 'moz2:' + a }); },
+        () => { const [a, f] = pick(ELO_TAP); return mc('Melyik élőlény mivel táplálkozik?', withEmo(a), withEmo(f), ELO_TAP.map(x => withEmo(x[1])),
+            `Párosítás: ${withEmo(a)} – ${withEmo(f)}. Minden élőlénynek a számára megfelelő táplálékra van szüksége.`, { key: 'tap:' + a }); },
+        () => { const [a, y] = pick(ELO_VIZ); return { prompt: 'Élőlények a vízben: egész életét a vízben tölti?', text: withEmo(a), choices: ['igen', 'nem'], correct: y ? 0 : 1,
+            layout: 'grid', key: 'viz:' + a, explain: y ? `${A(a)} egész életét a vízben tölti.` : `${A(a)} nem tölti egész életét a vízben.` }; },
+        () => { const [a, y] = pick(ELO_KICSI); return Math.random() < 0.5
+            ? mc('Hogy hívják az állat kicsinyét?', withEmo(a), y, ELO_KICSI.map(x => x[1]), `${A(a)} kicsinye ${art(y)} ${y}.`, { key: 'kicsi:' + a })
+            : mc('Melyik állat kicsinye?', withEmo(y), a, ELO_KICSI.map(x => x[0]), `${A(y)} ${art(a)} ${a} kicsinye.`, { key: 'kicsi2:' + y }); },
+        () => { const [t, i] = pick(ELO_KEP); return mc('Melyik életfeltétel hiányzik?', t, ELO_FN[i], ELO_FN, ELO_COND, { key: 'kep:' + i }); },
+        () => { const [w, f] = pick(ELO_JF); return { prompt: 'Életjelenség vagy életfeltétel?', text: w, choices: ['életjelenség', 'életfeltétel'], correct: f, layout: 'grid',
+            key: 'jf:' + w, explain: f ? ELO_COND : ELO_SUM }; }
       ];
       return pickT(T);
     }
@@ -739,7 +783,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     { id: 'szofaj', g: 'Nyelvtan', name: 'Szófajok', ico: 'Aa', sm: 1 },
     { id: 'mondat', g: 'Nyelvtan', name: 'Mondatfajták', ico: '!?', sm: 1 },
     { id: 'abc', g: 'Nyelvtan', name: 'ABC-sorrend', ico: 'A–Z', sm: 1 },
-    { id: 'elo', g: 'Környezetismeret', name: 'Élő környezetünk', ico: '🌱', emo: 1 }
+    { id: 'elo', g: 'Környezetismeret', name: 'Az élőlények tulajdonságai', ico: '🌱', emo: 1 }
   ];
   // A régi (2026-11-15 előtti) környezetes témák neve, hogy a korábbi eredmények olvashatók maradjanak.
   const TNAME = { elet: 'Az élet feltételei', allat: 'Állatcsoportok', emlos: 'Emlősök', madar: 'Madarak', hullo: 'Hüllők', ketelt: 'Kétéltűek', rovar: 'Rovarok és bogarak' };
@@ -1045,8 +1089,8 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
 
 
   /* ================= mini játék: akasztófa ================= */
-  const HM_WORDS = [['Állat', ELO.állat.slice()], ['Növény', ELO.növény.filter(w => w.indexOf(' ') < 0)],
-    ['Természet', ['élőlény', 'élettelen', 'életjelenség', 'mozgás', 'táplálkozás', 'légzés', 'szaporodás', 'növekedés', 'fejlődés', 'utód', 'víz', 'fény', 'levegő', 'táplálék', 'hőmérséklet', 'ember', 'állat', 'növény', 'gyökér']],
+  const HM_WORDS = [['Állat', ELO.állat.concat(['kígyó', 'csiga', 'galamb', 'mókus', 'őz', 'egér', 'medúza', 'polip', 'kagyló', 'sirály', 'kecske', 'sertés'])], ['Növény', ELO.növény.filter(w => w.indexOf(' ') < 0)],
+    ['Természet', ['élőlény', 'élettelen', 'életjelenség', 'mozgás', 'táplálkozás', 'légzés', 'szaporodás', 'növekedés', 'fejlődés', 'utód', 'kakukktojás', 'víz', 'fény', 'levegő', 'táplálék', 'hőmérséklet', 'ember', 'állat', 'növény', 'gyökér']],
     ['Matek', ['összeadás', 'kivonás', 'szorzás', 'osztás', 'számegyenes', 'kerekítés', 'tízes', 'százas', 'egyes', 'páros', 'páratlan', 'mérleg', 'forint', 'visszajáró', 'kilogramm', 'méter', 'centiméter', 'dekagramm', 'szomszéd']],
     ['Nyelvtan', ['főnév', 'melléknév', 'ige', 'mondat', 'kérdő', 'kijelentő', 'felkiáltó', 'óhajtó', 'betű', 'ábécé', 'szófaj', 'helyesírás', 'játék', 'hajó', 'király', 'bagoly', 'kölyök']]];
   const HM_KEYS = 'aábcdeéfghiíjklmnoóöőprstuúüűvyz'.split('');
