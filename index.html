@@ -1419,6 +1419,43 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
       return mq('Végezd el a műveletet! Az eredményt arab számmal írd!', `${ROM(a)} ${plus ? '+' : '−'} ${ROM(b)} = ?`, v, [v + 1, v - 1, v + 10, v - 10, v + 5].filter(x => x >= 1 && x <= 39), `${a} ${plus ? '+' : '−'} ${b} = ${v}`, `m108e:${a}:${b}:${plus}`); }
   ]);
 
+
+  /* 2. témakör: Számolás 0-tól 200-ig (tankönyv 28–43., munkafüzet 35–47.). A korábbi 200-as
+     generátorok is ebből a fejezetből készültek: itt fejezetenként összefogva, a könyv további feladataival. */
+  // Több generátor egy témában: a sablon azonosítója generátoronként külön (a változatosság-szabályhoz).
+  const mixGen = (...gens) => () => { const i = rnd(0, gens.length - 1), q = gens[i](); q.tpl = i + ':' + q.tpl; q.tplN = (q.tplN || 1) * gens.length; return q; };
+  GEN.m203x = () => pickT([
+    () => { const R = pick([['A legnagyobb kétjegyű szám.', 99], ['A legkisebb háromjegyű páratlan szám.', 101], ['A legkisebb háromjegyű szám.', 100], ['200-nál kisebb háromjegyű szám, amelyben ugyanolyan alaki értékű számjegyek vannak.', 111]]);
+      return mq('Találd ki, melyik számra gondoltam!', R[0], R[1], [R[1] + 1, R[1] - 1, R[1] + 10, R[1] - 10, 110, 199].filter(v => v !== R[1] && v > 0), `A megoldás: ${R[1]}.`, 'm203xa' + R[1]); },
+    () => { const n = rnd(102, 198); if (n % 10 === 0) return GEN.m203x(); const lo = n - n % 10, K = [
+        [`Kisebb egyes számszomszédom ${az(n - 1)} ${n - 1}.`, n, [n - 2, n + 1, n - 10, n + 10]],
+        [`Nagyobb egyes számszomszédom ${az(n + 1)} ${n + 1}.`, n, [n + 2, n - 1, n + 10, n - 10]],
+        [`Kisebb tízes számszomszédom ${az(lo)} ${lo}, nagyobb egyes számszomszédom ${az(n + 1)} ${n + 1}.`, n, [n + 2, n - 1, lo + 10 + n % 10, lo - 10 + n % 10].filter(v => v !== n)]], [t, ans, w] = pick(K);
+      return mc('Melyik számkártyáról szól az állítás?', t, String(ans), w.filter(v => v > 0 && v <= 200 && v !== ans).map(String), `A számkártyán ${az(ans)} ${ans} áll.`, { key: 'm203xb' + t }); }
+  ]);
+  GEN.m205x = () => pickT([
+    () => { const [n, ks] = pick([[120, [2, 3, 4, 6]], [150, [3, 5]], [180, [2, 3, 6]], [160, [2, 4]], [140, [2, 7]]]), k = pick(ks);
+      return mq('Válaszolj a kérdésre!', `Mennyi ${az(n)} ${n} ${RESZ[k]}?`, n / k, [n / k + 10, n / k - 10, n / k + 5, n - n / k].filter(v => v > 0 && v !== n / k), `${n} : ${k} = ${n / k}`, `m205xa:${n}:${k}`); },
+    () => { const K = [
+        () => { const g = pick([20, 30, 40]), k = rnd(2, Math.floor(200 / g)); return [`Andi egy nyaklánc elkészítéséhez ${g} gyöngyöt használ fel. Hány gyöngyöt fűz fel ${k} ugyanilyen nyaklánc elkészítésekor?`, g * k, `${k} · ${g} = ${g * k}`]; },
+        () => { const g = pick([20, 30, 50]), k = rnd(2, Math.floor(200 / g)); return [`Andi egy nyaklánc elkészítéséhez ${g} gyöngyöt használ fel. Hány ugyanilyen nyakláncot tud készíteni ${g * k} db gyöngyből?`, k, `${g * k} : ${g} = ${k}`]; },
+        () => { const k = rnd(2, 9); return [`A virágoskert beültetéséhez egy gyereknek 20 virághagymát adtak. Hány gyerekre volt szükség ${20 * k} hagyma elültetéséhez?`, k, `${20 * k} : 20 = ${k}`]; },
+        () => { const p = t10(30, 90); return [`Egy testvér 200 Ft-ot kapott, hogy virágot vegyen. Két egyforma virágot vett, egy virág ${p} Ft. Mennyi pénzt kapott vissza?`, 200 - 2 * p, `2 · ${p} = ${2 * p}, 200 − ${2 * p} = ${200 - 2 * p}`]; },
+        () => { const k = rnd(2, 5); return [`Egy csomagban 40 számolópálcika van. Hány pálcika van ${k} csomagban?`, 40 * k, `${k} · 40 = ${40 * k}`]; }
+      ], [t, ans, ex] = pick(K)();
+      return mq('Oldd meg a szöveges feladatot!', t, ans, [ans + 10, ans - 10, ans + 1, ans * 2].filter(v => v >= 0 && v !== ans), ex, 'm205xb' + t, { long: true }); }
+  ]);
+  GEN.m204x = () => pickT([
+    () => { const a = t10(60, 150), b = t10(20, 200 - a); return mq('Oldd meg a szöveges feladatot!', `Zsófiék először az öccsét vitték el a lakásuktól ${a} m-re lévő óvodába. Onnan a kislány már egyedül ment a ${b} m-re lévő iskolába. Mekkora utat tett meg összesen Zsófi az iskoláig?`, a + b, [a + b + 10, a + b - 10, a - b > 0 ? a - b : a + b + 20, a + b + 100].filter(v => v > 0 && v !== a + b), `${a} + ${b} = ${a + b} m`, `m204xa:${a}:${b}`, { long: true }); },
+    () => { const a = t10(100, 190), b = t10(60, 100), V = [[`Mennyi ${az(a)} ${a} és ${az(b)} ${b} különbsége?`, a - b], [`Mennyivel kisebb ${az(b)} ${b} ${az(a)} ${Nnal(a)}?`, a - b], [`Melyik az a szám, amelyik ${az(b)} ${b} és ${az(a - b)} ${a - b} összegénél ${Nvel(b)} kisebb?`, a - b]], [t, ans] = pick(V);
+      return mq('Válaszolj a kérdésre! Írd le művelettel, majd számítsd ki!', t, ans, [ans + 10, ans - 10, a + b > 200 ? ans + 20 : a + b, ans + 100].filter(v => v > 0 && v !== ans), `A megoldás: ${ans}.`, 'm204xb' + t); }
+  ]);
+  GEN.m201 = mixGen(() => GEN.szamok200(), () => GEN.helyiertek());
+  GEN.m202 = () => GEN.szamegyenes();
+  GEN.m203 = mixGen(() => GEN.szomszed(), () => GEN.m203x());
+  GEN.m204 = mixGen(() => GEN.osszkiv(), () => GEN.penz(), () => GEN.m204x());
+  GEN.m205 = mixGen(() => GEN.szorosz(), () => GEN.m205x());
+
   const TOPICS = [
     { id: 'szamok200', g: 'Matek', name: 'Számok 200-ig', ico: '200', sm: 1 },
     { id: 'helyiertek', g: 'Matek', name: 'Helyi érték', ico: '123', sm: 1 },
@@ -1437,6 +1474,11 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     { id: 'm106', g: 'Matek', name: 'A műveletek sorrendje', ico: '1·2', sm: 1 },
     { id: 'm107', g: 'Matek', name: 'A zárójel használata', ico: '( )', sm: 1 },
     { id: 'm108', g: 'Matek', name: 'A római számok', ico: 'XII', sm: 1 },
+    { id: 'm201', g: 'Matek', name: 'Számok 200-ig', ico: '200', sm: 1 },
+    { id: 'm202', g: 'Matek', name: 'Számok helye a számegyenesen', ico: '↔' },
+    { id: 'm203', g: 'Matek', name: 'Számszomszédok, kerekítés 200-ig', ico: '≈' },
+    { id: 'm204', g: 'Matek', name: 'Összeadás, kivonás 200-ig', ico: '±', sm: 1 },
+    { id: 'm205', g: 'Matek', name: 'Szorzás, osztás 200-ig', ico: '×÷', sm: 1 },
     { id: 'jly', g: 'Nyelvtan', name: 'j vagy ly?', ico: 'ly', sm: 1 },
     { id: 'szofaj', g: 'Nyelvtan', name: 'Szófajok', ico: 'Aa', sm: 1 },
     { id: 'mondat', g: 'Nyelvtan', name: 'Mondatfajták', ico: '!?', sm: 1 },
@@ -1463,8 +1505,8 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
       ['Számolás 0-tól 100-ig', [['m1-1', 'Számok 100-ig', '4–7', ['m101']], ['m1-2', 'Összeadás és kivonás', '8–10', ['m102']], ['m1-3', 'Szorzás és osztás', '11–13', ['m103']],
         ['m1-4', 'Maradékos osztás', '14–15', ['m104']], ['m1-5', 'Szöveges feladatok', '16–17', ['m105']], ['m1-6', 'A műveletek sorrendje', '18–19', ['m106']],
         ['m1-7', 'A zárójel használata', '20–25', ['m107']], ['m1-8', 'A római számok', '26–27', ['m108']]]],
-      ['Számolás 0-tól 200-ig', [['m2-1', 'Számok 200-ig', '28–31'], ['m2-2', 'Számok helye a számegyenesen', '32'], ['m2-3', 'Számszomszédok, kerekítés', '33–34'],
-        ['m2-4', 'Összeadás és kivonás', '35–37'], ['m2-5', 'Szorzás és osztás', '38–43']]],
+      ['Számolás 0-tól 200-ig', [['m2-1', 'Számok 200-ig', '28–31', ['m201']], ['m2-2', 'Számok helye a számegyenesen', '32', ['m202']], ['m2-3', 'Számszomszédok, kerekítés', '33–34', ['m203']],
+        ['m2-4', 'Összeadás és kivonás', '35–37', ['m204']], ['m2-5', 'Szorzás és osztás', '38–43', ['m205']]]],
       ['Mérések', [['m3-1', 'Mit mivel mérünk?', '44'], ['m3-2', 'A tömeg mérése', '45–46'], ['m3-3', 'Az űrtartalom mérése', '47–51']]],
       ['Számolás 0-tól 500-ig', [['m4-1', 'Számok 500-ig', '52–55'], ['m4-2', 'Számszomszédok, kerekítés', '56–57'], ['m4-3', 'Összeadás és kivonás', '58–60'],
         ['m4-4', 'Szorzás és osztás', '61–67']]],
