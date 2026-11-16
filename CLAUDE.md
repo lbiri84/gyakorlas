@@ -10,7 +10,8 @@
 - A tanmenet (`CURRICULUM`): tantárgyanként a könyv témakörei és fejezetei a tartalomjegyzék szerint (fejezetkód, név, tankönyvi oldalak, a fejezet témái). A szülő a szülői nézetben tantárgyanként bepipálja, mi legyen elérhető (`chapter_access`, a háztartásban közös); ami nincs bepipálva, az a gyereknek nem látszik, a vegyes körben sem. Új fejezet témáját mindig a `CURRICULUM` megfelelő fejezetéhez kell rendelni.
 - A forráskönyvek egészben is lehetnek a Drive-on (pl. `Matematika - tankönyv - 3.pdf`); a Drive-ról legfeljebb 10 MB tölthető le, a nagyobbakból csak a felismert szöveg olvasható ki, ezért a képekhez 10 MB alatti darabok kellenek.
 - Új fejezet: az adatai a közös `chapGen` készítőbe kerülnek (`KM` feleletválasztós, `KF` igaz-hamis, `KB` rögzített lehetőségek, `KP` párok mindkét irányban), és egy új sor a `TOPICS`-ba.
-- Állapot: a **Környezetismeret** már így készül (11–18. fejezet). A **Matek** és a **Nyelvtan** később kerül át ugyanerre; addig a mostani generált feladataik maradnak.
+- Állapot: a **Környezetismeret** (11–18. fejezet) és a **Matek** 1–6. témaköre (a munkafüzet I. kötete) már így készül; a matek 7–13. témakörének feladataihoz a munkafüzet II. kötete kell. A **Nyelvtan** később kerül át ugyanerre.
+- Matek: a feladattípus és a megfogalmazás a könyvből jön, a számok a fejezet számkörén belül véletlenek (a szülő jóváhagyásával). A ragozott számokhoz (pl. „37-tel”, „16-ot”, „a 63-nál”) a `Nvel`, `Nt`, `Nhoz`, `Nnal`, `Ntol`, `Nbol`, `Nan` és az `az()` segédfüggvény kell, kézzel írt rag nem.
 
 ## Írás és ellenőrzés
 

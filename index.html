@@ -1423,7 +1423,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   /* 2. témakör: Számolás 0-tól 200-ig (tankönyv 28–43., munkafüzet 35–47.). A korábbi 200-as
      generátorok is ebből a fejezetből készültek: itt fejezetenként összefogva, a könyv további feladataival. */
   // Több generátor egy témában: a sablon azonosítója generátoronként külön (a változatosság-szabályhoz).
-  const mixGen = (...gens) => () => { const i = rnd(0, gens.length - 1), q = gens[i](); q.tpl = i + ':' + q.tpl; q.tplN = (q.tplN || 1) * gens.length; return q; };
+  const mixGen = (...gens) => () => { const i = rnd(0, gens.length - 1), q = gens[i](); q.tpl = i + ':' + q.tpl; q.tplN = Math.max(5, (q.tplN || 1) * gens.length); return q; };
   GEN.m203x = () => pickT([
     () => { const R = pick([['A legnagyobb kétjegyű szám.', 99], ['A legkisebb háromjegyű páratlan szám.', 101], ['A legkisebb háromjegyű szám.', 100], ['200-nál kisebb háromjegyű szám, amelyben ugyanolyan alaki értékű számjegyek vannak.', 111]]);
       return mq('Találd ki, melyik számra gondoltam!', R[0], R[1], [R[1] + 1, R[1] - 1, R[1] + 10, R[1] - 10, 110, 199].filter(v => v !== R[1] && v > 0), `A megoldás: ${R[1]}.`, 'm203xa' + R[1]); },
@@ -1505,16 +1505,139 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
       return mq('Oldd meg a szöveges feladatot!', t, ans, [ans + 10, ans - 10, ans + 5, ans * 2, ans + 20].filter(v => v > 0 && v !== ans), ex, 'm303d' + t, { long: true }); }
   ]);
 
+
+  /* 4. témakör: Számolás 0-tól 500-ig (tankönyv 52–67., munkafüzet 61–76.) — számkörrel paraméterezve (az 1000-es témakör is ezt használja) */
+  const r10 = n => Math.round(n / 10) * 10, r100 = n => Math.round(n / 100) * 100;   // .5 felfelé (a könyv szabálya)
+  const numN = (N, lo = 101) => { let n = rnd(lo, N - 1); if (n % 10 === 0 && Math.random() < 0.7) n += rnd(1, 9); return Math.min(n, N); };
+  const szamokN = N => [
+    () => { const n = numN(N); return mq('Írd le számjegyekkel!', nw(n) + ' = ?', n, [n + 10, n - 10, n + 100, n - 100, swap2(n)].filter(v => v > 0 && v <= N + 100), `${nw(n)} = ${n}`, `sz${N}a` + n); },
+    () => { const n = numN(N); return mc('Írd le betűvel!', String(n), nw(n), [n + 10, n - 10, n + 100, n - 100, n + 1].filter(v => v > 0 && v < 1000 && v !== n).map(nw), `${n} = ${nw(n)}`, { key: `sz${N}b` + n }); },
+    () => { const n = numN(N), h = Math.floor(n / 100), t = Math.floor((n % 100) / 10), e = n % 10, miss = rnd(0, 2), P = [h, t, e];
+      const txt = `${n} = ${miss === 0 ? '?' : h} százas + ${miss === 1 ? '?' : t} tízes + ${miss === 2 ? '?' : e} egyes`;
+      return mq('Pótold a hiányzó számot!', txt, P[miss], [P[miss] + 1, P[miss] - 1, P[(miss + 1) % 3], 9 - P[miss]].filter(v => v >= 0 && v !== P[miss]), `${n} = ${h} százas + ${t} tízes + ${e} egyes`, `sz${N}c` + n + miss); },
+    () => { const n = numN(N), dg = [Math.floor(n / 100), Math.floor((n % 100) / 10), n % 10], i = pick([0, 1, 2].filter(j => dg[j])), pl = [100, 10, 1][i], v = dg[i] * pl;
+      return mq('Mennyi a kiemelt számjegy valódi értéke?', dg.map((x, j) => j === i ? hl(x) : x).join(''), v, [dg[i], dg[i] * 10, dg[i] * 100, v + 10].filter(x => x > 0 && x !== v), `A kiemelt számjegy alaki értéke ${dg[i]}, helyi értéke ${['százas', 'tízes', 'egyes'][i]}, valódi értéke ${v}.`, `sz${N}d` + n + i); },
+    () => { const n = numN(N, 100); return { prompt: 'Páros vagy páratlan?', text: String(n), choices: ['páros', 'páratlan'], correct: n % 2, layout: 'grid', key: `sz${N}e` + n, explain: `${n} ${n % 2 ? 'páratlan' : 'páros'}: az egyesek helyén ${n % 10} áll.` }; },
+    () => { const a = numN(N), b = Math.random() < 0.15 ? a : Math.random() < 0.4 ? swap2(a) : Math.min(N, Math.max(100, a + rnd(-30, 30))); return cmpQ('Tedd ki a megfelelő jelet (<, >, =)!', `${a} ○ ${b}`, a, b, `${a} ${a < b ? '<' : a === b ? '=' : '>'} ${b}`, { key: `sz${N}f:${a}:${b}` }); },
+    () => { for (;;) { const st = pick([20, 30, 50, 100, -20, -30, -50]), a0 = st > 0 ? t10(0, N - 4 * st) : t10(-4 * st, N), seq = [0, 1, 2, 3, 4].map(i => a0 + i * st), h = rnd(2, 4); if (seq.some(v => v < 0 || v > N)) continue;
+      return mq('Folytasd a sorozatot a felismert szabály alapján!', seq.slice(0, h).join(', ') + ', ?', seq[h], [seq[h] + 10, seq[h] - 10, seq[h] + st, seq[h] + 100].filter(v => v >= 0 && v !== seq[h]), `${st > 0 ? 'Növekvő' : 'Csökkenő'} sorozat, ${Math.abs(st)}-${front(Math.abs(st)) ? 'esével' : 'asával'}.`.replace(/(\d+)-(asával|esével)/, (m, x, y) => `${nw(+x).replace(/^egy/, '')}${y === 'asával' ? 'asával' : 'esével'}`), `sz${N}g` + seq.join()); } }
+  ];
+  const szomszedN = N => [
+    () => { const n = numN(N); if (n % 10 === 0 || n >= N) return pick(szomszedN(N))(); const lo = n - n % 10, h = n - n % 100, K = [['kisebb egyes', n - 1], ['nagyobb egyes', n + 1], ['kisebb tízes', lo], ['nagyobb tízes', lo + 10], ['kisebb százas', h], ['nagyobb százas', h + 100]], [nm, ans] = pick(K);
+      return mq('Pótold a hiányzó számszomszédot!', `${Az(n)} ${n} ${nm} számszomszédja: ?`, ans, [n - 1, n + 1, lo, lo + 10, h, h + 100].filter(v => v !== ans), `${Az(n)} ${n} ${nm} számszomszédja ${ans}.`, `nb${N}a` + n + nm); },
+    () => { const n = numN(N); if (n % 10 === 0) return pick(szomszedN(N))(); const ans = r10(n), lo = n - n % 10; return mq('Kerekítsd tízesre!', `${n} ≈ ?`, ans, [lo, lo + 10, r100(n), ans + 10, ans - 10].filter(v => v !== ans), `${n} tízesre kerekített értéke ${ans}${n % 10 === 5 ? ' (5-ös egyesnél a nagyobb tízesre kerekítünk)' : ''}.`, `nb${N}b` + n); },
+    () => { const n = numN(N); if (n % 100 === 0) return pick(szomszedN(N))(); const ans = r100(n), h = n - n % 100; return mq('Kerekítsd százasra!', `${n} ≈ ?`, ans, [h, h + 100, r10(n), ans + 100].filter(v => v !== ans && v >= 0), `${n} a ${h} és a ${h + 100} között van, a ${ans}-hoz közelebb${n % 100 === 50 ? ' (50 esetén a nagyobb százasra kerekítünk)' : ''}.`.replace(/a (\d+)-hoz/, (m, x) => `${az(+x)} ${Nhoz(+x)}`).replace(/a (\d+) és a (\d+)/, (m, x, y) => `${az(+x)} ${x} és ${az(+y)} ${y}`), `nb${N}c` + n); },
+    () => { const t = t10(110, N - 10), c = rnd(t - 5, t + 4); return mq('Válaszd ki!', `Melyik szám tízesre kerekített értéke ${t}?`, c, [t - 6, t + 5, t + 6, t - 7, t + 8, t - 9], `${c} tízesre kerekítve ${t}.`, `nb${N}d:${t}:${c}`); }
+  ];
+  GEN.m401x = () => pickT([
+    () => { for (;;) { const n = rnd(101, 499), d = [Math.floor(n / 100), Math.floor((n % 100) / 10), n % 10], S = d[0] + d[1] + d[2];
+      const C = [`A számjegyeinek összege ${S}.`, `A tízes helyi értéken ${az(d[1])} ${d[1]}-${['s', 's', 'es', 'as', 'es', 'ös', 'os', 'es', 'as', 'es'][d[1]]} található.`, `A százas helyi értéken ${d[0]}-${['s', 's', 'es', 'as', 'es', 'ös', 'os', 'es', 'as', 'es'][d[0]]} alaki értékű szám áll.`];
+      const opts = new Set(); for (let i = 0; i < 400 && opts.size < 3; i++) { const m = rnd(101, 499), e = [Math.floor(m / 100), Math.floor((m % 100) / 10), m % 10]; const ok = [e[0] + e[1] + e[2] === S, e[1] === d[1], e[0] === d[0]]; if (ok.filter(Boolean).length === 2) opts.add(String(m)); }
+      if (opts.size < 3) continue;
+      return mc('Melyik számra gondoltam?', C.join(' '), String(n), [...opts], `${n}: ${d.join(' + ')} = ${S}, a tízesek helyén ${d[1]}, a százasok helyén ${d[0]} áll.`, { key: 'm401xa' + n, long: true }); } }
+  ]);
+  GEN.m401 = mixGen(() => pickT(szamokN(500)), () => GEN.m401x());
+  GEN.m402 = () => pickT(szomszedN(500));
+  const muvN = N => [
+    () => { const a = t10(100, N - 50), b = t10(10, N - a); return exprQ('Számítsd ki az összeget!', `${a} + ${b} = ?`, a + b, `${a}+${b}`, [a + b + 10, a + b - 10, a + b + 100, a + b - 100].filter(v => v > 0), `${a} + ${b} = ${a + b}`, { key: `mv${N}a:${a}:${b}` }); },
+    () => { const a = t10(150, N), b = t10(10, a - 50); return exprQ('Számítsd ki a különbséget!', `${a} − ${b} = ?`, a - b, `${a}-${b}`, [a - b + 10, a - b - 10, a - b + 100, a - b - 100].filter(v => v >= 0), `${a} − ${b} = ${a - b}`, { key: `mv${N}b:${a}:${b}` }); },
+    () => { const a = t10(10, N - 20), b = t10(10, N - a), s = a + b, V = [[`${a} + ? = ${s}`, b], [`? + ${b} = ${s}`, a], [`${s} − ? = ${a}`, b]], [t, ans] = pick(V);
+      return mq('Pótold a hiányzó számot!', t, ans, [ans + 10, ans - 10, ans + 100, s].filter(v => v > 0 && v !== ans), `A hiányzó szám ${ans}.`, `mv${N}c` + t); },
+    () => { const n = numN(N); if (n % 100 === 0) return pick(muvN(N))(); const up = Math.random() < 0.5, h = n - n % 100, ans = up ? h + 100 - n : n - h;
+      return mq(up ? 'Pótold a számot a nagyobb százas számszomszédjára!' : 'Vegyél el annyit, hogy a kisebb százas számszomszédját kapd!', up ? `${n} + ? = ${h + 100}` : `${n} − ? = ${h}`, ans, [100 - ans, ans + 10, ans - 10, ans + 1].filter(v => v > 0 && v !== ans), up ? `${n} + ${ans} = ${h + 100}` : `${n} − ${ans} = ${h}`, `mv${N}d` + n + up); }
+  ];
+  GEN.m403x = () => { const K = [
+      () => { const a = t10(100, 300), b = t10(100, 500 - a); return [`Lilla a lovával először egy ${a} m-es, majd egy ${b} m-es távot tett meg. Mennyit lovagolt összesen?`, a + b, `${a} + ${b} = ${a + b} m`]; },
+      () => { const a = t10(150, 300), b = t10(20, 120); return [`Edina Csillag nevű lovával ${a} pontot gyűjtött, András Villám nevű lovával ${Nvel(b)} kevesebbet. Hány pontot gyűjtött András?`, a - b, `${a} − ${b} = ${a - b}`]; },
+      () => { const a = t10(150, 250), b = t10(a + 20, 300); return [`A lovasmúzeumban szombaton ${a} látogató volt, vasárnap ${b}. Mennyivel voltak többen vasárnap, mint szombaton?`, b - a, `${b} − ${a} = ${b - a}`]; },
+      () => { const x = t10(200, 450); return [`Pista bácsi 500 kg zabot szeretne venni a lovának. Az egyik termelőtől vásárolt már ${x} kg-ot. Mennyit kell még vennie?`, 500 - x, `500 − ${x} = ${500 - x} kg`]; },
+      () => { const m = pick([100, 200, 300, 400]); return [`Hány métert kell még futnia a Szellő nevű lónak a célig, ha az 500 m-es távból már megtett ${m} m-t?`, 500 - m, `500 − ${m} = ${500 - m} m`]; },
+      () => { const a = t10(150, 250), b = t10(150, 500 - a); return [`A bugaci lovasnapokon szombaton ${a} látogató volt, vasárnap ${b}. Hány látogatója volt a rendezvénynek ezen a két napon összesen?`, a + b, `${a} + ${b} = ${a + b}`]; },
+      () => { const s = t10(250, 400), h = t10(100, s - 100), b = t10(10, s - h - 20); return [`A lovasbemutatóra ${s} ember látogatott el. Az eső miatt ${Nan(h)} hazamentek, ${Nan(b)} a büfébe szaladtak. Hányan maradtak a szabadban?`, s - h - b, `${s} − ${h} − ${b} = ${s - h - b}`]; }
+    ];
+    return pickT(K.map(f => () => { const [t, ans, ex] = f(); return mq('Oldd meg a szöveges feladatot!', t, ans, [ans + 10, ans - 10, ans + 100, ans + 1].filter(v => v > 0 && v !== ans), ex, 'm403x' + t, { long: true }); })); };
+  GEN.m403 = mixGen(() => pickT(muvN(500)), () => GEN.m403x());
+  const szorN = N => [
+    () => { const k = rnd(2, 10), t = t10(10, Math.floor(N / k / 10) * 10); return exprQ('Számítsd ki a szorzatot!', `${k} · ${t} = ?`, k * t, `${k}*${t}`, [k * t + t, k * t - t, k * t + 10, k * t - 10].filter(v => v > 0), `${k} · ${t} = ${k * t}`, { key: `so${N}a:${k}:${t}` }); },
+    () => { const k = rnd(2, 10), t = t10(10, Math.floor(N / k / 10) * 10), p = k * t; return Math.random() < 0.5
+      ? exprQ('Számítsd ki a hányadost!', `${p} : ${k} = ?`, t, `${p}/${k}`, [t + 10, t - 10, k, t * 10].filter(v => v > 0 && v !== t), `${p} : ${k} = ${t}, mert ${k} · ${t} = ${p}.`, { key: `so${N}b:${p}:${k}` })
+      : exprQ('Számítsd ki a hányadost!', `${p} : ${t} = ?`, k, `${p}/${t}`, [k + 1, k - 1, k * 10, t].filter(v => v > 0 && v !== k), `${p} : ${t} = ${k}, mert ${k} · ${t} = ${p}.`, { key: `so${N}c:${p}:${t}` }); },
+    () => { const k = rnd(2, 10), t = t10(10, Math.floor(N / k / 10) * 10), p = k * t, V = [[`${k} · ? = ${p}`, t], [`? · ${t} = ${p}`, k], [`${p} : ? = ${t}`, k]], [x, ans] = pick(V);
+      return mq('Számítsd ki a hiányzó számot!', x, ans, [ans + 1, ans + 10, ans * 10, ans - 10].filter(v => v > 0 && v !== ans), `A hiányzó szám ${ans}.`, `so${N}d` + x); }
+  ];
+  GEN.m404x = () => { const K = [
+      () => { const k = pick([5, 9, 12, 15, 20]); return [`Dezső bácsi a répát tízesével kötegelve vásárolja. Hány darab répát vásárolt, ha ${k} köteget szállított haza?`, 10 * k, `${k} · 10 = ${10 * k}`]; },
+      () => { const n = 10 * rnd(8, 25); return [`István bácsi hány sorba rakhatja a ${n} darabból álló patkógyűjteményét, ha a tárló minden sorába 10 patkót tesz?`, n / 10, `${n} : 10 = ${n / 10}`]; },
+      () => { const s = pick([20, 40, 50]), k = rnd(4, Math.floor(500 / s)); return [`A díjugrató verseny nézőterén ${s * k} néző ül, mindegyik sorban ${s} vendég. Hány sorban ülnek a nézők?`, k, `${s * k} : ${s} = ${k}`]; },
+      () => { const f = pick([50, 60, 70, 80, 90, 100]); return [`Egy ménesbirtokon a fekete lipicai lovak száma ${f}. A szürkék száma háromszor annyi, mint a feketéké. Hány szürke lipicai ló él a ménesbirtokon?`, 3 * f, `3 · ${f} = ${3 * f}`]; },
+      () => { const l = pick([50, 60, 70]), k = pick([3, 4, 5, 6]); if (l * (k + 1) > 500) return [`Egy réten 50 ló és háromszor ennyi juh legel. Hány ló és juh legel összesen?`, 200, '50 + 3 · 50 = 200']; return [`Egy réten ${l} ló és ${['', '', 'kétszer', 'háromszor', 'négyszer', 'ötször', 'hatszor'][k]} ennyi juh legel. Hány ló és juh legel összesen?`, l + k * l, `${l} + ${k} · ${l} = ${l + k * l}`]; },
+      () => { const n = rnd(2, 9); return [`A patkolókovács a ló patkóját 5 patkószöggel erősíti fel. Hány patkószögre van szüksége ${n} ló minden lábának megpatkolásához?`, n * 4 * 5, `${n} · 4 · 5 = ${n * 20}`]; }
+    ];
+    return pickT(K.map(f => () => { const [t, ans, ex] = f(); return mq('Oldd meg a szöveges feladatot!', t, ans, [ans + 10, ans - 10, ans + 100, ans + 1].filter(v => v > 0 && v !== ans), ex, 'm404x' + t, { long: true }); })); };
+  GEN.m404 = mixGen(() => pickT(szorN(500)), () => GEN.m404x());
+
+  /* 5. témakör: Válogatások, csoportosítások (tankönyv 68–73., munkafüzet 77–80.) — a számokkal kapcsolatos feladatok */
+  const PROPS = [['páros', n => n % 2 === 0], ['páratlan', n => n % 2 === 1], ['háromjegyű', n => n >= 100], ['kétjegyű', n => n >= 10 && n < 100], ['150-nél kisebb', n => n < 150], ['300-nál nagyobb', n => n > 300], ['kerek tízes', n => n % 10 === 0]];
+  GEN.m501 = () => pickT([
+    () => { for (;;) { const [nm, f] = pick(PROPS), good = [], bad = []; for (let i = 0; i < 60; i++) { const n = Math.random() < 0.3 ? rnd(10, 99) : rnd(100, 500); (f(n) ? good : bad).push(n); }
+      if (good.length < 3 || bad.length < 1) continue; const set = [...new Set(good)].slice(0, 3), odd = bad[0], all = shuffle(set.concat([odd])).map(String);
+      return { prompt: 'Melyik szám nem illik a csoportba?', text: `Csak ${nm} számok vannak a csoportban.`, choices: all, correct: all.indexOf(String(odd)), layout: 'grid', key: 'm501a' + nm + all.join(), explain: `${odd} nem ${nm}, a többi igen.` }; } },
+    () => { for (;;) { const P1 = pick(PROPS), P2 = pick(PROPS.filter(p => p !== P1)), n = Math.random() < 0.3 ? rnd(10, 99) : rnd(100, 500), a = P1[1](n), b = P2[1](n);
+      const ch = [`csak a „${P1[0]}” halmazba`, `csak a „${P2[0]}” halmazba`, 'mindkét halmazba (a közös részbe)', 'egyik halmazba sem'], c = a && b ? 2 : a ? 0 : b ? 1 : 3;
+      return { prompt: 'Melyik halmazba illik a szám?', text: `${n}<br>A halmazok: „${P1[0]}” és „${P2[0]}”`, choices: ch, correct: c, layout: 'list', long: true, key: `m501b:${n}:${P1[0]}:${P2[0]}`, explain: `${n} ${a ? '' : 'nem '}${P1[0]}, és ${b ? '' : 'nem '}${P2[0]}.` }; } },
+    () => { const set = shuffle([rnd(100, 500), rnd(100, 500), rnd(10, 99), rnd(100, 500), rnd(10, 500)]).map(x => x), S = [
+        ['Minden szám páros.', set.every(n => n % 2 === 0)], ['Minden szám háromjegyű.', set.every(n => n >= 100)], ['Van olyan szám, amelyben a számjegyek összege 10.', set.some(n => String(n).split('').reduce((a, b) => a + +b, 0) === 10)],
+        ['Nincs olyan szám, amely 300-nál nagyobb.', !set.some(n => n > 300)], ['Van olyan szám, amely kerek tízes.', set.some(n => n % 10 === 0)], ['Van olyan szám, amely páratlan.', set.some(n => n % 2)]], [st, v] = pick(S);
+      return tf('Igaz vagy hamis az állítás a halmazban lévő számokra?', `Számok: ${set.join(', ')}<br>${st}`, v, v ? 'Igaz.' : 'Hamis.', { key: 'm501c' + set.join() + st }); }
+  ]);
+
+  /* 6. témakör: Írásbeli összeadás (tankönyv 74–85., munkafüzet 81–96.) */
+  const VASAR = [['célba dobás', 50], ['erőmérés', 130], ['karkötő', 120], ['ceruzatartó', 250], ['fakanál', 80], ['csupor', 200]];
+  GEN.m601 = () => pickT([   // Háromjegyű számok összeadása
+    () => { const a = t10(110, 390), b = pick([100, 200, 300].filter(x => a + x <= 500)) || 100; return exprQ('Végezd el az összeadást!', `${a} + ${b} = ?`, a + b, `${a}+${b}`, [a + b + 10, a + b - 100, a + b + 100, a + b - 10].filter(v => v > 0), `${a} + ${b} = ${a + b}`, { key: `m601a:${a}:${b}` }); },
+    () => { const a = rnd(110, 380), b = t10(20, 490 - a); return exprQ('Végezd el az összeadást!', `${a} + ${b} = ?`, a + b, `${a}+${b}`, [a + b + 10, a + b - 10, a + b + 100, a + b + 1].filter(v => v > 0), `${a} + ${b} = ${a + b}`, { key: `m601b:${a}:${b}` }); },
+    () => { const [x, y] = shuffle(VASAR).slice(0, 2); return mq('Számítsd ki, mennyibe kerül a két dolog együtt!', `${cap(x[0])}: ${x[1]} Ft, ${y[0]}: ${y[1]} Ft`, x[1] + y[1], [x[1] + y[1] + 10, x[1] + y[1] - 10, x[1] + y[1] + 100, Math.abs(x[1] - y[1])].filter(v => v > 0 && v !== x[1] + y[1]), `${x[1]} + ${y[1]} = ${x[1] + y[1]} Ft`, `m601c:${x[0]}:${y[0]}`); },
+    () => { const a = t10(150, 300), b = t10(100, 500 - a), K = [[`Beátának ${a} Ft-ja van, az öccsének pedig ${b} Ft-ja. Mennyi pénzt költhetnek el együtt?`, a + b], [`Árpi ${a} Ft-ért kipróbált két játékot, és ${b} Ft-ért vásárolt egy nyakláncot. Mennyi pénzt költött a vásárban?`, a + b]], [t, ans] = pick(K);
+      return mq('Oldd meg a szöveges feladatot!', t, ans, [ans + 10, ans - 10, ans + 100, ans - 100].filter(v => v > 0), `${a} + ${b} = ${ans} Ft`, 'm601d' + t, { long: true }); }
+  ]);
+  GEN.m602 = () => pickT([   // Az összeg becslése
+    () => { for (;;) { const a = rnd(110, 380), b = rnd(105, 490 - a), e = r100(a) + r100(b); if (a % 100 === 50 || b % 100 === 50) continue;
+      return mq('Becsüld meg az összeget a tagok százasra kerekített értékével!', `${a} + ${b} ≈ ?`, e, [r10(a) + r10(b), e + 100, e - 100, a + b].filter(v => v > 0 && v !== e), `${a} ≈ ${r100(a)}, ${b} ≈ ${r100(b)}, a becslés: ${r100(a)} + ${r100(b)} = ${e}.`, `m602a:${a}:${b}`); } },
+    () => { for (;;) { const a = rnd(110, 380), b = rnd(105, 490 - a), e = r10(a) + r10(b); if (a % 10 === 0 || b % 10 === 0) continue;
+      return mq('Becsüld meg az összeget a tagok tízesre kerekített értékével!', `${a} + ${b} ≈ ?`, e, [r100(a) + r100(b), e + 10, e - 10, a + b].filter(v => v > 0 && v !== e), `${a} ≈ ${r10(a)}, ${b} ≈ ${r10(b)}, a becslés: ${r10(a)} + ${r10(b)} = ${e}.`, `m602b:${a}:${b}`); } },
+    () => { const k = t10(120, 200) + rnd(1, 9), p = rnd(150, 300), j = k + p, ok = r10(k) + r10(p) <= 500;
+      return { prompt: 'Tízesre kerekítve számolj!', text: `Katinak ${k} forintja van, Jutkának ${p} forinttal több. Meg tudja-e venni Jutka az 500 forintos tollat?`, choices: ['igen', 'nem'], correct: j <= 500 ? 0 : 1, layout: 'grid', long: true, key: `m602c:${k}:${p}`,
+        explain: `Becslés: ${r10(k)} + ${r10(p)} = ${r10(k) + r10(p)} Ft; pontosan: ${k} + ${p} = ${j} Ft, ez ${j <= 500 ? 'nem több' : 'több'} 500 Ft-nál.` }; }
+  ]);
+  GEN.m603 = () => pickT([   // Írásbeli összeadás
+    () => { const a = rnd(101, 389), b = rnd(101, 499 - a); return exprQ('Írásbeli összeadással számolj!', `${a} + ${b} = ?`, a + b, `${a}+${b}`, [a + b + 10, a + b - 10, a + b + 1, a + b + 100, a + b - 1].filter(v => v > 0), `Az egyesekkel kezdjük, aztán a tízesek, végül a százasok: ${a} + ${b} = ${a + b}.`, { key: `m603a:${a}:${b}` }); },
+    () => { const a = rnd(101, 250), b = rnd(51, 150), c = rnd(11, 499 - a - b); if (c < 11) return GEN.m603(); return exprQ('Írásbeli összeadással számolj!', `${a} + ${b} + ${c} = ?`, a + b + c, `${a}+${b}+${c}`, [a + b + c + 10, a + b + c - 10, a + b + c + 1, a + b + c - 1], `${a} + ${b} + ${c} = ${a + b + c}`, { key: `m603b:${a}:${b}:${c}` }); },
+    () => { for (;;) { const a = rnd(101, 389), b = rnd(101, 499 - a), s = a + b, A = String(a).split(''), i = rnd(0, 2), d = +A[i]; A[i] = '□';
+      return mq('Melyik számjegyet takartuk le az összeadásban?', `${A.join('')} + ${b} = ${s}`, d, [(d + 1) % 10, (d + 9) % 10, (d + 2) % 10, (d + 5) % 10].filter(v => v !== d), `${a} + ${b} = ${s}, a letakart számjegy: ${d}.`, `m603c:${a}:${b}:${i}`); } },
+    () => { const a = rnd(101, 299), b = rnd(51, 499 - a), V = [[`${Az(a)} ${a} és ${az(b)} ${b} összege.`, a + b], [`${cap(Nvel(b))} nagyobb ${az(a)} ${Nnal(a)}.`, a + b], [`${Az(a)} ${Nnal(a)} ${Nvel(b)} nagyobb.`, a + b]], [t, ans] = pick(V);
+      return mq('Melyik számra gondoltam?', t, ans, [ans + 10, ans - 10, ans + 1, Math.abs(a - b)].filter(v => v > 0 && v !== ans), `${a} + ${b} = ${ans}`, 'm603d' + t); }
+  ]);
+  GEN.m604 = () => pickT([   // Az összeg változásai
+    () => { for (;;) { const a = rnd(101, 299), b = rnd(101, 299), d = pick([10, 100, -10, -100]); if (a + b + d > 500 || a + d < 100) continue; const s = a + b;
+      return mq('Figyeld meg a tagok változását! Hogyan változik az összeg?', `${a} + ${b} = ${s}, tehát ${a + d} + ${b} = ?`, s + d, [s - d, s, s + 2 * d, s + d + 1].filter(v => v > 0 && v !== s + d), `Az egyik tag ${Math.abs(d)}-${d > 0 ? 'zal nőtt' : 'zal csökkent'}, így az összeg is ${Math.abs(d)}-${d > 0 ? 'zal nő' : 'zal csökken'}: ${s + d}.`.replace(/10-zal/g, '10-zel'), `m604a:${a}:${b}:${d}`); } },
+    () => { const [t, v] = pick([['Ha az egyik tagot 100-zal növelem, a másikat nem változtatom, akkor az összeg nem változik.', 0], ['Ha mindkét tagot 100-zal növelem, akkor az összeg 200-zal nő.', 1],
+        ['Ha 10-zel növelem az egyik tagot, a másikat nem változtatom, akkor az összeg is 10-zel nő.', 1], ['Ha 10-zel csökkentem az egyik tagot, a másikat nem változtatom, akkor az összeg 10-zel nő.', 0], ['Ha mindkét tagot csökkentem 10-zel, akkor az összeg 20-szal kevesebb lesz.', 1]]);
+      return tf('Igaz vagy hamis? Az állítások egy összeg két tagjára vonatkoznak.', t, !!v, v ? 'Igaz.' : 'Hamis.', { key: 'm604b' + t }); },
+    () => { const a = t10(150, 250) + 5, b = t10(150, 250) + 5, x = pick([100, 150, 200, 250]), y = pick([100, 150, 200, 250]); if (a + x > 500 || b + y > 500) return GEN.m604();
+      return cmpQ('A pontos számítás előtt hasonlítsd össze az összegeket!', `${a} + ${x} ○ ${b} + ${y}`, a + x, b + y, `${a} + ${x} = ${a + x}, ${b} + ${y} = ${b + y}`, { key: `m604c:${a}:${x}:${b}:${y}` }); }
+  ]);
+  GEN.m605 = () => { const K = [   // Szöveges feladatok
+      () => { const t = rnd(100, 180), l = rnd(200, 499 - t); return [`Bálint a kézművesvásárban egy pohár teát és egy lángost vásárolt. Mennyit fizetett, ha a tea ${t} Ft-ba, a lángos ${l} Ft-ba került?`, t + l, `${t} + ${l} = ${t + l} Ft`]; },
+      () => { const d = rnd(80, 150), x = rnd(100, 499 - 2 * d - 1); return [`A gyertyakészítő délelőtt ${d} gyertyát adott el, délután ${Nvel(x)} többet. Hány gyertyát adott el délután?`, d + x, `${d} + ${x} = ${d + x}`]; },
+      () => { const a = rnd(120, 180), b = rnd(80, 130), c = rnd(30, 499 - a - b); return [`A fazekas ${a} csuprot, ${b} bögrét és ${c} kancsót vitt a vásárra. Hány edény ez összesen?`, a + b + c, `${a} + ${b} + ${c} = ${a + b + c}`]; },
+      () => { const f = rnd(120, 200), x = rnd(100, 499 - f); return [`A fiúk ${f} zoknibábot készítettek, ez ${Nvel(x)} kevesebb, mint amennyit a lányok alkottak. Hány zoknibábot készítettek a lányok?`, f + x, `${f} + ${x} = ${f + x}`]; },
+      () => { const a = rnd(200, 300), b = rnd(100, 499 - a); return [`A kirakodóvásáron az árusok ${a} tejfölös pompost és ${b} hagymás pompost adtak el. Hány pompos fogyott el összesen?`, a + b, `${a} + ${b} = ${a + b}`]; },
+      () => { const a = rnd(150, 200), b = rnd(200, 499 - a); return [`Hány forintja van Gergőnek, ha édesanyjától ${a} Ft-ot, édesapjától ${b} Ft-ot kapott?`, a + b, `${a} + ${b} = ${a + b} Ft`]; },
+      () => { const a = rnd(120, 200), x = rnd(200, 499 - a); return [`A varrónő a rózsaszín virágokhoz ${a} cm szalagot használt fel, a pirosakhoz ${Nvel(x)} többet. Hány centiméter piros szalagból készített virágokat?`.replace(Nvel(x), `${x} cm-rel`), a + x, `${a} + ${x} = ${a + x} cm`]; }
+    ];
+    return pickT(K.map(f => () => { const [t, ans, ex] = f(); return mq('Oldd meg a szöveges feladatot! Előtte becsüld meg az eredményt!', t, ans, [ans + 10, ans - 10, ans + 100, ans + 1].filter(v => v > 0 && v !== ans), ex, 'm605' + t, { long: true }); })); };
+
   const TOPICS = [
-    { id: 'szamok200', g: 'Matek', name: 'Számok 200-ig', ico: '200', sm: 1 },
-    { id: 'helyiertek', g: 'Matek', name: 'Helyi érték', ico: '123', sm: 1 },
-    { id: 'szamegyenes', g: 'Matek', name: 'Számegyenes', ico: '↔' },
-    { id: 'szomszed', g: 'Matek', name: 'Számszomszédok, kerekítés', ico: '≈' },
-    { id: 'osszkiv', g: 'Matek', name: 'Összeadás, kivonás', ico: '±' },
-    { id: 'szorosz', g: 'Matek', name: 'Szorzás, osztás', ico: '×÷', sm: 1 },
-    { id: 'szoveges', g: 'Matek', name: 'Szöveges feladatok', ico: '?' },
-    { id: 'meres', g: 'Matek', name: 'Mérések (tömeg, hossz)', ico: 'kg', sm: 1 },
-    { id: 'penz', g: 'Matek', name: 'Pénz, visszajáró', ico: 'Ft', sm: 1 },
     { id: 'm101', g: 'Matek', name: 'Számok 100-ig', ico: '100', sm: 1 },
     { id: 'm102', g: 'Matek', name: 'Összeadás, kivonás 100-ig', ico: '±', sm: 1 },
     { id: 'm103', g: 'Matek', name: 'Szorzás, osztás 100-ig', ico: '×÷', sm: 1 },
@@ -1531,6 +1654,16 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     { id: 'm301', g: 'Matek', name: 'Mit mivel mérünk?', ico: '📏', emo: 1 },
     { id: 'm302', g: 'Matek', name: 'A tömeg mérése', ico: 'kg', sm: 1 },
     { id: 'm303', g: 'Matek', name: 'Az űrtartalom mérése', ico: 'l', sm: 1 },
+    { id: 'm401', g: 'Matek', name: 'Számok 500-ig', ico: '500', sm: 1 },
+    { id: 'm402', g: 'Matek', name: 'Számszomszédok, kerekítés 500-ig', ico: '≈' },
+    { id: 'm403', g: 'Matek', name: 'Összeadás, kivonás 500-ig', ico: '±', sm: 1 },
+    { id: 'm404', g: 'Matek', name: 'Szorzás, osztás 500-ig', ico: '×÷', sm: 1 },
+    { id: 'm501', g: 'Matek', name: 'Válogatások, csoportosítások', ico: '∩', sm: 1 },
+    { id: 'm601', g: 'Matek', name: 'Háromjegyű számok összeadása', ico: '+', sm: 1 },
+    { id: 'm602', g: 'Matek', name: 'Az összeg becslése', ico: '≈+', sm: 1 },
+    { id: 'm603', g: 'Matek', name: 'Írásbeli összeadás', ico: '+', sm: 1 },
+    { id: 'm604', g: 'Matek', name: 'Az összeg változásai', ico: '+?', sm: 1 },
+    { id: 'm605', g: 'Matek', name: 'Szöveges feladatok 500-ig', ico: '?', sm: 1 },
     { id: 'jly', g: 'Nyelvtan', name: 'j vagy ly?', ico: 'ly', sm: 1 },
     { id: 'szofaj', g: 'Nyelvtan', name: 'Szófajok', ico: 'Aa', sm: 1 },
     { id: 'mondat', g: 'Nyelvtan', name: 'Mondatfajták', ico: '!?', sm: 1 },
@@ -1545,7 +1678,10 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     { id: 'rovarok', g: 'Környezetismeret', name: 'Rovarok', ico: '🐞', emo: 1 }
   ];
   // A régi (2026-11-15 előtti) környezetes témák neve, hogy a korábbi eredmények olvashatók maradjanak.
-  const TNAME = { elet: 'Az élet feltételei', allat: 'Állatcsoportok', emlos: 'Emlősök', madar: 'Madarak', hullo: 'Hüllők', ketelt: 'Kétéltűek', rovar: 'Rovarok és bogarak' };
+  const TNAME = { elet: 'Az élet feltételei', allat: 'Állatcsoportok', emlos: 'Emlősök', madar: 'Madarak', hullo: 'Hüllők', ketelt: 'Kétéltűek', rovar: 'Rovarok és bogarak',
+    // a régi (2026-11-16 előtti) matektémák
+    szamok200: 'Számok 200-ig', helyiertek: 'Helyi érték', szamegyenes: 'Számegyenes', szomszed: 'Számszomszédok, kerekítés', osszkiv: 'Összeadás, kivonás', szorosz: 'Szorzás, osztás',
+    szoveges: 'Szöveges feladatok', meres: 'Mérések (tömeg, hossz)', penz: 'Pénz, visszajáró' };
   TOPICS.forEach(t => TNAME[t.id] = t.name); TNAME.vegyes = 'Vegyes kör';
 
   /* Tanmenet: tantárgyanként a könyv témakörei és fejezetei (a tartalomjegyzék szerint).
@@ -1553,18 +1689,18 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
      bepipálja, mely fejezetek érhetők el (chapter_access); ha egy tantárgyhoz nincs beállítás,
      minden elérhető. Fejezethez nem rendelt téma (pl. a régi matektémák) mindig látszik. */
   const CURRICULUM = [
-    { id: 'matek', name: 'Matek', note: 'A tankönyv szerinti új matekfeladatok készülnek; addig a mostani matektémák mind látszanak.', groups: [
+    { id: 'matek', name: 'Matek', note: 'A „készül” jelű fejezetek feladatai még nincsenek kész (a munkafüzet II. kötete hiányzik).', groups: [
       ['Számolás 0-tól 100-ig', [['m1-1', 'Számok 100-ig', '4–7', ['m101']], ['m1-2', 'Összeadás és kivonás', '8–10', ['m102']], ['m1-3', 'Szorzás és osztás', '11–13', ['m103']],
         ['m1-4', 'Maradékos osztás', '14–15', ['m104']], ['m1-5', 'Szöveges feladatok', '16–17', ['m105']], ['m1-6', 'A műveletek sorrendje', '18–19', ['m106']],
         ['m1-7', 'A zárójel használata', '20–25', ['m107']], ['m1-8', 'A római számok', '26–27', ['m108']]]],
       ['Számolás 0-tól 200-ig', [['m2-1', 'Számok 200-ig', '28–31', ['m201']], ['m2-2', 'Számok helye a számegyenesen', '32', ['m202']], ['m2-3', 'Számszomszédok, kerekítés', '33–34', ['m203']],
         ['m2-4', 'Összeadás és kivonás', '35–37', ['m204']], ['m2-5', 'Szorzás és osztás', '38–43', ['m205']]]],
       ['Mérések', [['m3-1', 'Mit mivel mérünk?', '44', ['m301']], ['m3-2', 'A tömeg mérése', '45–46', ['m302']], ['m3-3', 'Az űrtartalom mérése', '47–51', ['m303']]]],
-      ['Számolás 0-tól 500-ig', [['m4-1', 'Számok 500-ig', '52–55'], ['m4-2', 'Számszomszédok, kerekítés', '56–57'], ['m4-3', 'Összeadás és kivonás', '58–60'],
-        ['m4-4', 'Szorzás és osztás', '61–67']]],
-      ['Válogatások, csoportosítások', [['m5-1', 'Válogatások, csoportosítások', '68–73']]],
-      ['Írásbeli összeadás', [['m6-1', 'Háromjegyű számok összeadása', '74–75'], ['m6-2', 'Az összeg becslése', '76'], ['m6-3', 'Írásbeli összeadás', '77–80'],
-        ['m6-4', 'Az összeg változásai', '81'], ['m6-5', 'Szöveges feladatok', '82–85']]],
+      ['Számolás 0-tól 500-ig', [['m4-1', 'Számok 500-ig', '52–55', ['m401']], ['m4-2', 'Számszomszédok, kerekítés', '56–57', ['m402']], ['m4-3', 'Összeadás és kivonás', '58–60', ['m403']],
+        ['m4-4', 'Szorzás és osztás', '61–67', ['m404']]]],
+      ['Válogatások, csoportosítások', [['m5-1', 'Válogatások, csoportosítások', '68–73', ['m501']]]],
+      ['Írásbeli összeadás', [['m6-1', 'Háromjegyű számok összeadása', '74–75', ['m601']], ['m6-2', 'Az összeg becslése', '76', ['m602']], ['m6-3', 'Írásbeli összeadás', '77–80', ['m603']],
+        ['m6-4', 'Az összeg változásai', '81', ['m604']], ['m6-5', 'Szöveges feladatok', '82–85', ['m605']]]],
       ['Írásbeli kivonás', [['m7-1', 'Háromjegyű számok kivonása', '86–87'], ['m7-2', 'A különbség becslése', '88'], ['m7-3', 'Írásbeli kivonás', '89–93'],
         ['m7-4', 'A különbség változásai', '94–97']]],
       ['Negatív számok, testek, tükrözés', [['m8-1', 'Ismerkedés a negatív számokkal', '98–99'], ['m8-2', 'Testek, síkidomok', '100–105'], ['m8-3', 'Tükrözések, szimmetria', '106–107']]],
@@ -1648,7 +1784,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   let kidExitWarn = false;
   let reports = null;           // a szülői nézet nyitott jelentései
   let reportOpen = false;       // a kérdésnél nyitva van-e a „Mi a hiba?” doboz
-  const APP_VERSION = 'gyakorlo-v23';
+  const APP_VERSION = 'gyakorlo-v24';
   const REASONS = { wrong_answer: 'Rossz a megoldás', bad_question: 'Hibás a kérdés', other: 'Más baj van' };
 
   function emptyCache() { return { pupils: [], results: {}, badges: {}, current: null, userId: null, householdId: null, access: {} }; }
@@ -1814,7 +1950,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     { id: 'elso', ico: '🌱', name: 'Első kör', desc: 'Játssz végig egy kört.', ok: s => s.rounds >= 1 },
     { id: 'tokeletes', ico: '⭐', name: 'Tökéletes kör', desc: 'Válaszolj mind a 10 kérdésre helyesen.', ok: (s, c) => c.score === 10 },
     { id: 'ot', ico: '🔥', name: 'Öt egyvégtében', desc: 'Egy körben 5 jó válasz egymás után.', ok: (s, c) => c.bestStreak >= 5 },
-    { id: 'szorzo', ico: '✖️', name: 'Szorzótábla-mester', desc: 'Hibátlan kör a szorzás, osztás témából.', ok: (s, c) => c.topic === 'szorosz' && c.score === 10 },
+    { id: 'szorzo', ico: '✖️', name: 'Szorzótábla-mester', desc: 'Hibátlan kör a „Szorzás, osztás 100-ig” fejezetből.', ok: (s, c) => (c.topic === 'm103' || c.topic === 'szorosz') && c.score === 10 },
     { id: 'helyesiras', ico: '✏️', name: 'Helyesírás-bajnok', desc: 'Hibátlan kör a j vagy ly? témából.', ok: (s, c) => c.topic === 'jly' && c.score === 10 },
     { id: 'minden', ico: '🧭', name: 'Mindent kipróbáltam', desc: 'Játssz végig egy kört minden elérhető témából.', ok: s => openTopics().every(t => s.played[t.id]) },
     { id: 'harom', ico: '📅', name: 'Három nap egymás után', desc: 'Gyakorolj három egymást követő napon.', ok: s => s.days >= 3 },
