@@ -1456,6 +1456,55 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   GEN.m204 = mixGen(() => GEN.osszkiv(), () => GEN.penz(), () => GEN.m204x());
   GEN.m205 = mixGen(() => GEN.szorosz(), () => GEN.m205x());
 
+
+  /* 3. témakör: Mérések (tankönyv 44–51., munkafüzet 48–60.) */
+  const MERT = ['a tömegét', 'a hosszúságát', 'az űrtartalmát'];
+  GEN.m301 = () => pickT([   // Mit mivel mérünk?
+    () => { const [x, i] = pick([['egy zsák burgonya', 0], ['egy alma', 0], ['egy tankönyv', 0], ['a liszt', 0], ['a tej a kancsóban', 2], ['a víz a hordóban', 2], ['a szörp a pohárban', 2], ['a kakaó a bögrében', 2], ['az asztal', 1], ['a tanterem', 1], ['egy ceruza', 1], ['a zsinór', 1]]);
+      return { prompt: 'Mit mérnél meg?', text: cap(x), choices: MERT.map(cap), correct: i, layout: 'list', key: 'm301a' + x, explain: `${cap(x)}: ${MERT[i]} mérhetjük meg.` }; },
+    () => { const U = [['kilogramm', 0], ['dekagramm', 0], ['liter', 2], ['deciliter', 2], ['centiliter', 2], ['méter', 1], ['centiméter', 1]], [u, i] = pick(U);
+      return { prompt: 'Mit mérünk ezzel a mértékegységgel?', text: u, choices: ['tömeget', 'hosszúságot', 'űrtartalmat'], correct: i, layout: 'list', key: 'm301b' + u, explain: `${cap(u)}: ${['tömeg', 'hosszúság', 'űrtartalom'][i]}.` }; },
+    () => { const [x, u, w] = pick([['egy alma tömegét', 'dekagramm', ['liter', 'méter', 'centiliter']], ['egy zsák burgonya tömegét', 'kilogramm', ['deciliter', 'centiméter', 'centiliter']], ['egy csésze űrtartalmát', 'centiliter', ['kilogramm', 'méter', 'dekagramm']],
+        ['egy hordó űrtartalmát', 'liter', ['dekagramm', 'centiméter', 'kilogramm']], ['a tanterem hosszúságát', 'méter', ['liter', 'dekagramm', 'deciliter']], ['egy ceruza hosszúságát', 'centiméter', ['kilogramm', 'liter', 'deciliter']]]);
+      return mc('Melyik mértékegységgel mérnéd?', cap(x), u, w, `${cap(x)} ${u === 'kilogramm' || u === 'dekagramm' ? u + 'mal' : u + 'rel'} mérjük.`, { key: 'm301c' + x }); }
+  ]);
+  const dkgTxt = d => d >= 100 ? (d % 100 ? `${Math.floor(d / 100)} kg ${d % 100} dkg` : `${d / 100} kg`) : `${d} dkg`;
+  GEN.m302 = () => pickT([   // A tömeg mérése
+    () => { const K = [() => { const k = rnd(1, 2); return [`${k} kg = ? dkg`, 100 * k]; }, () => ['fél kg = ? dkg', 50], () => { const d = rnd(1, 99); return [`1 kg ${d} dkg = ? dkg`, 100 + d]; }, () => { const k = rnd(1, 2); return [`${100 * k} dkg = ? kg`, k]; }], [t, ans] = pick(K)();
+      return mq('Váltsd át!', t, ans, [ans * 10, ans + 10, ans - 10, ans + 1, ans === 50 ? 5 : ans + 50].filter(v => v > 0 && v !== ans), '1 kilogramm = 100 dekagramm', 'm302a' + t); },
+    () => { const a = rnd(20, 199), b = Math.random() < 0.2 ? a : rnd(20, 199); return cmpQ('Hasonlítsd össze a mennyiségeket! Tedd ki a megfelelő jelet (<, >, =)!', `${dkgTxt(a)} ○ ${Math.random() < 0.5 ? b + ' dkg' : dkgTxt(b)}`, a, b, `Dekagrammban: ${a} dkg ${a < b ? '<' : a === b ? '=' : '>'} ${b} dkg (1 kg = 100 dkg)`, { key: `m302b:${a}:${b}` }); },
+    () => { const d = rnd(101, 199); if (d % 100 === 0) return GEN.m302(); return mc('Írd be a dekagrammokban kifejezett mennyiség egész kilogramm számszomszédait!', `${d} dkg`, '1 kg és 2 kg', ['0 kg és 1 kg', '2 kg és 3 kg', '10 kg és 20 kg'], `${d} dkg = 1 kg ${d - 100} dkg, ez 1 kg és 2 kg között van.`, { key: 'm302c' + d }); },
+    () => { const K = [
+        () => { const a = rnd(20, 60), b = rnd(20, 60); return [`Csenge gyümölcssalátát készít. Ehhez ${a} dkg mandarint, ${b} dkg ananászt és fél kg almát vásárolt. Hány dekagramm gyümölcsöt vásárolt összesen?`, a + b + 50, `${a} + ${b} + 50 = ${a + b + 50} dkg`]; },
+        () => { const d = pick([20, 30, 40]), k = 2; return [`Misi Mókus az erdőben ${d} dkg diót és kétszer annyi mogyorót gyűjtött. Mennyi mogyorót gyűjtött?`, d * k, `2 · ${d} = ${d * k} dkg`]; },
+        () => { const d = pick([20, 30, 40]), x = pick([30, 40, 50]); return [`Misi Mókus ${2 * d} dkg mogyorót gyűjtött, és ${Nvel(x)} dkg-mal több makkot szedett össze, mint amennyi mogyorót. Mennyi makkot gyűjtött?`.replace(`${Nvel(x)} dkg-mal`, `${x} dkg-mal`), 2 * d + x, `${2 * d} + ${x} = ${2 * d + x} dkg`]; },
+        () => { const c = pick([10, 15, 20]); return [`A mérleg egyik serpenyőjében egy tábla csokoládé van, a másikban egy ugyanilyen tábla csokoládé fele és még ${c} dkg súly. A mérleg egyenlőséget mutat. Hány dekagramm a tábla csokoládé tömege?`, 2 * c, `A tábla fele ${c} dkg, az egész ${2 * c} dkg.`]; },
+        () => { const l = rnd(40, 60), c = rnd(20, 35), d = rnd(20, 30); return [`Erika a nagymamájával süteményt sütött: ${l} dkg lisztet, ${c} dkg porcukrot és ${d} dkg darált diót használtak fel. Mennyivel több lisztet használtak fel, mint diót?`, l - d, `${l} − ${d} = ${l - d} dkg`]; },
+        () => { const m = pick([10, 15, 20]); return [`Anyu 1 kg lisztet, 2 csomag ${m} dkg-os mazsolát és fél kg porcukrot vásárolt. Hány dekagramm tömegű árut vitt haza?`, 100 + 2 * m + 50, `100 + 2 · ${m} + 50 = ${150 + 2 * m} dkg`]; },
+        () => { const x = pick([5, 10, 15, 30]); return [`A receptben ${x} dkg ${pick(['vaj', 'porcukor', 'búzaliszt'])} szerepel. Mennyit vegyek belőle, ha dupla adagot szeretnék sütni?`, 2 * x, `2 · ${x} = ${2 * x} dkg`]; }
+      ], [t, ans, ex] = pick(K)();
+      return mq('Oldd meg a szöveges feladatot!', t, ans, [ans + 10, ans - 10, ans + 5, ans * 2].filter(v => v > 0 && v !== ans), ex, 'm302d' + t, { long: true }); }
+  ]);
+  const clTxt = c => c >= 100 && c % 100 === 0 ? `${c / 100} l` : c % 10 === 0 ? `${c / 10} dl` : `${c} cl`;
+  GEN.m303 = () => pickT([   // Az űrtartalom mérése
+    () => { const K = [() => { const k = rnd(1, 5); return [`${k} l = ? dl`, 10 * k]; }, () => { const k = rnd(1, 9); return [`${k} dl = ? cl`, 10 * k]; }, () => { const k = rnd(1, 2); return [`${k} l = ? cl`, 100 * k]; },
+        () => { const k = rnd(1, 9) * 10; return [`${k} cl = ? dl`, k / 10]; }, () => ['fél l = ? dl', 5], () => ['fél l = ? cl', 50]], [t, ans] = pick(K)();
+      return mq('Váltsd át!', t, ans, [ans * 10, ans / 10, ans + 10, ans + 1, ans === 5 ? 50 : ans + 5].filter(v => v > 0 && v === Math.floor(v) && v !== ans), '1 liter = 10 deciliter, 1 deciliter = 10 centiliter, 1 liter = 100 centiliter', 'm303a' + t); },
+    () => { const a = rnd(1, 20) * 10, b = Math.random() < 0.2 ? a : rnd(1, 20) * 10; return cmpQ('Hasonlítsd össze a mennyiségeket! Tedd ki a megfelelő jelet (<, >, =)!', `${clTxt(a)} ○ ${b} cl`, a, b, `${clTxt(a)} = ${a} cl`, { key: `m303b:${a}:${b}` }); },
+    () => { const [t, v] = pick([['Egy csészébe 50 liter folyadék fér.', 0], ['Az 1 literes kancsóba 100 cl vizet tudok tölteni.', 1], ['Ha egy pohárban 200 cl szörp van, az pontosan 2 dl.', 0], ['100 cl tea fér a literes kancsóba.', 1], ['A levesestányéromba 200 l folyadék fér.', 0]]);
+      return tf('Igaz vagy hamis?', t, !!v, v ? 'Igaz.' : 'Hamis.', { key: 'm303c' + t }); },
+    () => { const K = [
+        () => { const s = rnd(5, 20); return [`A félliteres üvegembe töltöttem már ${s} cl szörpöt. Hány centiliter szódavíz kell még hozzá, hogy az üvegem tele legyen?`, 50 - s, `fél l = 50 cl, 50 − ${s} = ${50 - s} cl`]; },
+        () => { const c = pick([5, 10]); return [`Egy félliteres termoszból hány csészébe tudunk folyadékot önteni, ha egy csészébe ${c} cl-t öntünk?`, 50 / c, `fél l = 50 cl, 50 : ${c} = ${50 / c}`]; },
+        () => { const k = rnd(2, 8); return [`Anyu 1 liter kakaót készített reggelire. Kitöltött már ${k} dl-t. Hány centiliter kakaó maradt a kancsóban?`, (10 - k) * 10, `1 l = 10 dl, 10 − ${k} = ${10 - k} dl = ${(10 - k) * 10} cl`]; },
+        () => { const a = pick([40, 50, 60, 70]); return [`Tréfás feladat: Egy literes edényben ${a} cl víz van. Hozzáöntök még ${a} cl-t. Hány centiliter víz lesz az edényben?`, 100, `Az 1 literes edénybe csak 100 cl fér, a többi kifolyik.`]; },
+        () => { const r = pick([30, 40, 50]); return [`Egy tehén naponta 120 l vizet iszik. Hány liter vizet iszik meg este, ha reggel és délben már ${r}-${r} litert megivott?`, 120 - 2 * r, `120 − 2 · ${r} = ${120 - 2 * r} l`]; },
+        () => { const t = pick([10, 20, 30]); return [`Egy tengerimalac ${t} cl vizet iszik naponta, a törpenyúl ennél 1 dl-rel többet. Hány centiliter vizet iszik naponta egy törpenyúl?`, t + 10, `1 dl = 10 cl, ${t} + 10 = ${t + 10} cl`]; },
+        () => { const a = rnd(2, 3); return [`Egy kannába először ${a} l, majd fél l, végül 5 dl folyadékot öntöttünk, és így meg is telt. Hány literes a kanna?`, a + 1, `${a} l + fél l + 5 dl = ${a + 1} l`]; }
+      ], [t, ans, ex] = pick(K)();
+      return mq('Oldd meg a szöveges feladatot!', t, ans, [ans + 10, ans - 10, ans + 5, ans * 2, ans + 20].filter(v => v > 0 && v !== ans), ex, 'm303d' + t, { long: true }); }
+  ]);
+
   const TOPICS = [
     { id: 'szamok200', g: 'Matek', name: 'Számok 200-ig', ico: '200', sm: 1 },
     { id: 'helyiertek', g: 'Matek', name: 'Helyi érték', ico: '123', sm: 1 },
@@ -1479,6 +1528,9 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     { id: 'm203', g: 'Matek', name: 'Számszomszédok, kerekítés 200-ig', ico: '≈' },
     { id: 'm204', g: 'Matek', name: 'Összeadás, kivonás 200-ig', ico: '±', sm: 1 },
     { id: 'm205', g: 'Matek', name: 'Szorzás, osztás 200-ig', ico: '×÷', sm: 1 },
+    { id: 'm301', g: 'Matek', name: 'Mit mivel mérünk?', ico: '📏', emo: 1 },
+    { id: 'm302', g: 'Matek', name: 'A tömeg mérése', ico: 'kg', sm: 1 },
+    { id: 'm303', g: 'Matek', name: 'Az űrtartalom mérése', ico: 'l', sm: 1 },
     { id: 'jly', g: 'Nyelvtan', name: 'j vagy ly?', ico: 'ly', sm: 1 },
     { id: 'szofaj', g: 'Nyelvtan', name: 'Szófajok', ico: 'Aa', sm: 1 },
     { id: 'mondat', g: 'Nyelvtan', name: 'Mondatfajták', ico: '!?', sm: 1 },
@@ -1507,7 +1559,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
         ['m1-7', 'A zárójel használata', '20–25', ['m107']], ['m1-8', 'A római számok', '26–27', ['m108']]]],
       ['Számolás 0-tól 200-ig', [['m2-1', 'Számok 200-ig', '28–31', ['m201']], ['m2-2', 'Számok helye a számegyenesen', '32', ['m202']], ['m2-3', 'Számszomszédok, kerekítés', '33–34', ['m203']],
         ['m2-4', 'Összeadás és kivonás', '35–37', ['m204']], ['m2-5', 'Szorzás és osztás', '38–43', ['m205']]]],
-      ['Mérések', [['m3-1', 'Mit mivel mérünk?', '44'], ['m3-2', 'A tömeg mérése', '45–46'], ['m3-3', 'Az űrtartalom mérése', '47–51']]],
+      ['Mérések', [['m3-1', 'Mit mivel mérünk?', '44', ['m301']], ['m3-2', 'A tömeg mérése', '45–46', ['m302']], ['m3-3', 'Az űrtartalom mérése', '47–51', ['m303']]]],
       ['Számolás 0-tól 500-ig', [['m4-1', 'Számok 500-ig', '52–55'], ['m4-2', 'Számszomszédok, kerekítés', '56–57'], ['m4-3', 'Összeadás és kivonás', '58–60'],
         ['m4-4', 'Szorzás és osztás', '61–67']]],
       ['Válogatások, csoportosítások', [['m5-1', 'Válogatások, csoportosítások', '68–73']]],
