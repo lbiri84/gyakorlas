@@ -1784,7 +1784,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   let kidExitWarn = false;
   let reports = null;           // a szülői nézet nyitott jelentései
   let reportOpen = false;       // a kérdésnél nyitva van-e a „Mi a hiba?” doboz
-  const APP_VERSION = 'gyakorlo-v24';
+  const APP_VERSION = 'gyakorlo-v25';
   const REASONS = { wrong_answer: 'Rossz a megoldás', bad_question: 'Hibás a kérdés', other: 'Más baj van' };
 
   function emptyCache() { return { pupils: [], results: {}, badges: {}, current: null, userId: null, householdId: null, access: {} }; }
@@ -2349,7 +2349,11 @@ ${footHtml()}`;
     accOpen = subj;
     if (!C.householdId) { msg = 'Ehhez a fiókhoz nem tartozik háztartás.'; return render(); }
     const list = accList(subj) || CURRICULUM.find(x => x.id === subj).groups.flatMap(([, chs]) => chs.map(c => c[0]));
-    const { error } = await sb.from('chapter_access').upsert({ household_id: C.householdId, subject: subj, chapters: list, updated_at: new Date().toISOString() }, { onConflict: 'household_id,subject' });
+    // Előbb frissítés (csak a chapters és az updated_at írható), és ha még nincs sor, beszúrás.
+    // (Upsert nem jó: az a kulcsoszlopokat is frissítené, arra nincs jog.)
+    const row = { chapters: list, updated_at: new Date().toISOString() };
+    let { data, error } = await sb.from('chapter_access').update(row).eq('household_id', C.householdId).eq('subject', subj).select('subject');
+    if (!error && (!data || !data.length)) ({ error } = await sb.from('chapter_access').insert(Object.assign({ household_id: C.householdId, subject: subj }, row)));
     if (error) msg = 'Nem sikerült menteni (van internet?).';
     else { C.access[subj] = list.slice(); delete accDraft[subj]; saveCache(); msg = `${CURRICULUM.find(x => x.id === subj).name}: mentve, ${list.length} fejezet elérhető.`; }
     render(); window.scrollTo(0, 0);
