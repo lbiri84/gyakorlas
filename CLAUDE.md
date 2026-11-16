@@ -7,6 +7,8 @@
 - A kérdés szövege nem árulhatja el a választ (pl. „köszöntik a nyarat” → nyáron; „dió” → diófa). Ahol a könyv képpel kérdez, és a szöveges változat így túl könnyű lenne, az a feladat kimarad.
 - A rossz válaszlehetőség soha ne legyen másképp is igaz (pl. tejet a juh is ad, ezért a „tehén – tej” párnál a juh nem lehet rossz válasz).
 - A forrás a szülő Google Drive-jában van: `Gyakorlás/<tantárgy>/<sorszám> - <fejezet címe> - tankönyv.pdf` és `... - munkafüzet.pdf`. A PDF-ek és a könyvek szövege tömegesen nem kerül a repóba.
+- A tanmenet (`CURRICULUM`): tantárgyanként a könyv témakörei és fejezetei a tartalomjegyzék szerint (fejezetkód, név, tankönyvi oldalak, a fejezet témái). A szülő a szülői nézetben tantárgyanként bepipálja, mi legyen elérhető (`chapter_access`, a háztartásban közös); ami nincs bepipálva, az a gyereknek nem látszik, a vegyes körben sem. Új fejezet témáját mindig a `CURRICULUM` megfelelő fejezetéhez kell rendelni.
+- A forráskönyvek egészben is lehetnek a Drive-on (pl. `Matematika - tankönyv - 3.pdf`); a Drive-ról legfeljebb 10 MB tölthető le, a nagyobbakból csak a felismert szöveg olvasható ki, ezért a képekhez 10 MB alatti darabok kellenek.
 - Új fejezet: az adatai a közös `chapGen` készítőbe kerülnek (`KM` feleletválasztós, `KF` igaz-hamis, `KB` rögzített lehetőségek, `KP` párok mindkét irányban), és egy új sor a `TOPICS`-ba.
 - Állapot: a **Környezetismeret** már így készül (11–18. fejezet). A **Matek** és a **Nyelvtan** később kerül át ugyanerre; addig a mostani generált feladataik maradnak.
 
