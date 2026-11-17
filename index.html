@@ -2107,10 +2107,10 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
     const w = MG.word, lost = MG.done === 2;
     const slots = w.split('').map(c => { const on = MG.got.indexOf(c) >= 0; return `<span class="slot${!on && lost ? ' lost' : ''}">${on || lost ? c : ''}</span>`; }).join('');
     const keys = HM_KEYS.map(k => `<button class="key${MG.got.indexOf(k) >= 0 ? ' hit' : MG.miss.indexOf(k) >= 0 ? ' miss' : ''}" data-k="${k}"${MG.done || MG.got.indexOf(k) >= 0 || MG.miss.indexOf(k) >= 0 ? ' disabled' : ''} aria-label="${k}">${k}</button>`).join('');
-    const end = MG.done === 1 ? `<div class="banner">Kitaláltad! +10 pont${MG.badge ? ' · Új jelvény: ' + MG.badge.ico + ' ' + MG.badge.name : ''}</div>` : lost ? `<div class="banner">Most nem sikerült. A szó: <b>${w}</b></div>` : '';
+    const end = MG.done === 1 ? `<div class="banner">Kitaláltad! +10 pont${MG.badge ? ', új jelvény: ' + MG.badge.ico + ' ' + MG.badge.name : ''}</div>` : lost ? `<div class="banner">Most nem sikerült. A szó: <b>${w}</b></div>` : '';
     const btns = MG.done ? `<button class="big-btn" data-go="home">Vissza a témákhoz</button>` : '';
     return `<div class="qbar"><button class="icon-btn" data-go="home" aria-label="Kilépés a játékból">←</button><div class="qtitle">Akasztófa</div></div>
-<section class="card hm"><p class="hint">Tipp: ${MG.cat} · ${w.length} betű</p>${MG.hints.map(h => `<p class="hint hmhint">${h}</p>`).join('')}${hmSvg(MG.miss.length)}<div class="slots" aria-label="A kitalálandó szó">${slots}</div>${end}
+<section class="card hm"><p class="hint">Tipp: ${MG.cat}, ${w.length} betű</p>${MG.hints.map(h => `<p class="hint hmhint">${h}</p>`).join('')}${hmSvg(MG.miss.length)}<div class="slots" aria-label="A kitalálandó szó">${slots}</div>${end}
 ${MG.done ? '' : `<div class="hmhelp">${MG.hints.length < 2 ? `<button class="small-btn" data-go="hmhint">💡 ${MG.hints.length + 1}. segítség</button>` : ''}</div>`}
 ${MG.done ? '' : `<p class="lives">Hibázhatsz még ${HM_MAX - MG.miss.length}-szer.</p>`}</section>
 ${MG.done ? '' : `<div class="kb" role="group" aria-label="Betűk">${keys}</div>`}${btns}`;
@@ -2131,7 +2131,7 @@ ${MG.done ? '' : `<div class="kb" role="group" aria-label="Betűk">${keys}</div>
     view = 'bo'; render(); window.scrollTo(0, 0);
   }
   function boView() {
-    const end = BO.done === 1 ? `<div class="banner">Lebontottad a falat! +10 pont${BO.badge ? ' · Új jelvény: ' + BO.badge.ico + ' ' + BO.badge.name : ''}</div>`
+    const end = BO.done === 1 ? `<div class="banner">Lebontottad a falat! +10 pont${BO.badge ? ', új jelvény: ' + BO.badge.ico + ' ' + BO.badge.name : ''}</div>`
       : BO.done === 2 ? '<div class="banner">Most nem sikerült. Legközelebb menni fog!</div>' : '';
     return `<div class="qbar"><button class="icon-btn" data-go="home" aria-label="Kilépés a játékból">←</button><div class="qtitle">Falbontó</div><div class="qcount" aria-label="Életek">${'❤️'.repeat(BO.lives)}</div></div>
 <section class="card bo"><p class="hint">${BO.done ? '' : 'Húzd az ütőt az ujjaddal (vagy a nyilakkal), és koppints az indításhoz. Ne engedd leesni a labdát!'}</p><canvas id="boCanvas" width="${BO_W * 2}" height="${BO_H * 2}" aria-label="Falbontó játéktér"></canvas>${end}</section>
@@ -2256,7 +2256,7 @@ ${BO.done ? '<button class="big-btn" data-go="home">Vissza a témákhoz</button>
   function wsView() {
     const cells = WS.grid.map((row, y) => row.map((ch, x) => `<button class="wc${WS.hit[y + ',' + x] ? ' hit' : ''}${WS.sel && WS.sel[0] === y && WS.sel[1] === x ? ' sel' : ''}" data-r="${y}" data-c="${x}" aria-label="${ch}, ${y + 1}. sor, ${x + 1}. oszlop">${ch}</button>`).join('')).join('');
     const list = WS.words.map(o => `<li class="${o.found ? 'got' : ''}">${o.w}</li>`).join('');
-    const end = WS.done ? `<div class="banner">Megtaláltál mindent! +10 pont${WS.badge ? ' · Új jelvény: ' + WS.badge.ico + ' ' + WS.badge.name : ''}</div>` : '';
+    const end = WS.done ? `<div class="banner">Megtaláltál mindent! +10 pont${WS.badge ? ', új jelvény: ' + WS.badge.ico + ' ' + WS.badge.name : ''}</div>` : '';
     return `<div class="qbar"><button class="icon-btn" data-go="home" aria-label="Kilépés a játékból">←</button><div class="qtitle">Szókereső</div><div class="qcount">${WS.words.filter(o => o.found).length}/${WS.words.length}</div></div>
 <section class="card ws"><p class="hint" style="margin:0;color:var(--fg-muted);text-align:center">Téma: ${WS.cat}. Koppints a szó első, majd utolsó betűjére. A szó lehet vízszintes, függőleges vagy átlós.</p>
 <div class="wgrid" role="group" aria-label="Betűtábla">${cells}</div><ul class="wlist" aria-label="Keresendő szavak">${list}</ul>${end}</section>
@@ -2289,7 +2289,7 @@ ${WS.done ? `<button class="big-btn" data-go="home">Vissza a témákhoz</button>
     const got = Object.keys(S.badges).length;
     const p = pupil();
     const switchBtn = MODE === 'parent' || C.pupils.length > 1 ? '<button class="link-btn" data-go="who">Másik gyerek</button>' : '';
-    return `<header class="head">${MARK}<div><h1>Gyakorló</h1><p class="sub">3. osztály · matek, nyelvtan, környezetismeret</p></div></header>
+    return `<header class="head">${MARK}<div><h1>Gyakorló</h1><p class="sub">3. osztály: matek, nyelvtan, környezetismeret</p></div></header>
 <div class="whobar"><div class="me">${AVATARS[p.avatar]} <b>${esc(p.nickname)}</b></div>${switchBtn}</div>
 <section class="card level" aria-label="Szinted">
   <div class="row"><div class="lv">${L}. szint<small>${lvName(L)}</small></div><div class="pts">${S.points} pont</div></div>
@@ -2305,7 +2305,7 @@ ${footHtml()}`;
 
   function footHtml() {
     const n = outbox.size();
-    const st = n ? `<br>${navigator.onLine === false ? 'Offline' : 'Mentés'} · ${n} eredmény vár` : '';
+    const st = n ? `<br>${navigator.onLine === false ? 'Offline' : 'Mentés'}, ${n} eredmény vár` : '';
     if (MODE === 'device') return `<p class="foot">A pontok a családi fiókba mentődnek.${st}<br><button class="link-btn" data-go="kidexit">Szülő</button></p>`;
     return `<p class="foot">A pontok a családi fiókba mentődnek.${st}<br><button class="link-btn" data-go="parent">Szülői nézet</button><lb-auth></lb-auth></p>`;
   }
@@ -2315,7 +2315,7 @@ ${footHtml()}`;
     const none = MODE === 'device'
       ? '<section class="card"><p>Ehhez a tablethez most nincs gyerek rendelve. Kérd meg a szülőt, hogy párosítsa újra.</p><button class="big-btn ghost" data-go="forget">Újrapárosítás</button></section>'
       : '<section class="card"><p>Még nincs gyerekprofil.</p><button class="big-btn" data-go="parent">Gyerekprofil létrehozása</button></section>';
-    return `<header class="head">${MARK}<div><h1>Gyakorló</h1><p class="sub">3. osztály · matek, nyelvtan, környezetismeret</p></div></header>
+    return `<header class="head">${MARK}<div><h1>Gyakorló</h1><p class="sub">3. osztály: matek, nyelvtan, környezetismeret</p></div></header>
 <h2 class="group">Ki gyakorol?</h2>${C.pupils.length ? `<div class="topics">${cards}</div>` : none}${footHtml()}`;
   }
 
@@ -2324,11 +2324,11 @@ ${footHtml()}`;
     const rows = C.pupils.map(p => {
       const s = computeState(p.id), L = levelOf(s.points);
       const last = (C.results[p.id] || []).filter(r => r.kind === 'round').slice(-5).reverse()
-        .map(r => `<li>${esc(dayStr(new Date(r.created_at)))} · ${esc(TNAME[r.topic] || r.topic)}: <b>${r.score | 0}/10</b></li>`).join('');
-      return `<div class="rowi"><div><b>${AVATARS[p.avatar]} ${esc(p.nickname)}</b><p class="sub">${L}. szint · ${s.points} pont · ${s.rounds} kör · ${Object.keys(s.badges).length} jelvény${s.lastDay ? ' · utoljára: ' + esc(s.lastDay) : ''}</p>${last ? `<ul class="recent">${last}</ul>` : ''}</div><button class="small-btn danger" data-delpupil="${p.id}">Törlés</button></div>`;
+        .map(r => `<li>${esc(dayStr(new Date(r.created_at)))}, ${esc(TNAME[r.topic] || r.topic)}: <b>${r.score | 0}/10</b></li>`).join('');
+      return `<div class="rowi"><div><b>${AVATARS[p.avatar]} ${esc(p.nickname)}</b><p class="sub">${L}. szint, ${s.points} pont, ${s.rounds} kör, ${Object.keys(s.badges).length} jelvény${s.lastDay ? ', utoljára: ' + esc(s.lastDay) : ''}</p>${last ? `<ul class="recent">${last}</ul>` : ''}</div><button class="small-btn danger" data-delpupil="${p.id}">Törlés</button></div>`;
     }).join('');
     const avs = Object.entries(AVATARS).map(([k, v], i) => `<label><input type="radio" name="av" value="${k}"${i === 0 ? ' checked' : ''}><span aria-label="${k}">${v}</span></label>`).join('');
-    const devs = devices === null ? '<p class="sub">Betöltés…</p>' : devices.length ? devices.map(d => `<div class="rowi"><div><b>${esc(d.label)}</b><p class="sub">${esc(d.names)} · utoljára: ${esc(dayStr(new Date(d.last_seen_at)))}</p></div><button class="small-btn danger" data-revoke="${d.user_id}">Visszavonás</button></div>`).join('') : '<p class="sub">Nincs párosított gyerek tablet.</p>';
+    const devs = devices === null ? '<p class="sub">Betöltés…</p>' : devices.length ? devices.map(d => `<div class="rowi"><div><b>${esc(d.label)}</b><p class="sub">${esc(d.names)}, utoljára: ${esc(dayStr(new Date(d.last_seen_at)))}</p></div><button class="small-btn danger" data-revoke="${d.user_id}">Visszavonás</button></div>`).join('') : '<p class="sub">Nincs párosított gyerek tablet.</p>';
     const checks = C.pupils.map(p => `<label><input type="checkbox" name="pp" value="${p.id}" checked> ${AVATARS[p.avatar]} ${esc(p.nickname)}</label>`).join('');
     const code = pairCode ? `<div class="codebox" aria-label="Párosító kód">${esc(pairCode)}</div><p class="sub">10 percig érvényes, egyszer használható. A tableten nyisd meg: <b>gyakorlas.laszlobiri.com/#parositas</b></p>` : '';
     return `<div class="qbar"><button class="icon-btn" data-go="who" aria-label="Vissza">←</button><div class="qtitle">Szülői nézet</div></div>
@@ -2357,7 +2357,7 @@ ${footHtml()}`;
       const L = accList(S0.id), all = S0.groups.flatMap(([, chs]) => chs.map(c => c[0])), on = L === null ? all : L;
       const state = L === null ? 'Még nincs beállítva: minden elérhető.' : `${on.filter(x => all.includes(x)).length}/${all.length} fejezet elérhető${accDraft[S0.id] ? ' (nincs mentve)' : ''}.`;
       const groups = S0.groups.map(([g, chs]) => `<p class="accg">${esc(g)}</p>` + chs.map(([id, name, pg, ts]) =>
-        `<div class="accrow"><label><input type="checkbox" data-acc="${S0.id}" value="${id}"${on.includes(id) ? ' checked' : ''}><span>${esc(name)}<span class="sub pg">tankönyv ${pg}. oldal${ts && ts.length ? '' : ' · készül'}</span></span></label><button class="link-btn" data-upto="${S0.id}" data-ch="${id}">eddig</button></div>`).join('')).join('');
+        `<div class="accrow"><label><input type="checkbox" data-acc="${S0.id}" value="${id}"${on.includes(id) ? ' checked' : ''}><span>${esc(name)}<span class="sub pg">tankönyv ${pg}. oldal${ts && ts.length ? '' : ', készül'}</span></span></label><button class="link-btn" data-upto="${S0.id}" data-ch="${id}">eddig</button></div>`).join('')).join('');
       return `<details class="acc"${accOpen === S0.id ? ' open' : ''}><summary><b>${esc(S0.name)}</b> <span class="sub">${state}</span></summary>${S0.note ? `<p class="sub">${esc(S0.note)}</p>` : ''}
 <p class="sub">Az „eddig” bepipálja az összes fejezetet az adott fejezetig (ahol a suliban tartotok), a többit kiveszi.</p>${groups}
 <div class="acts"><button class="small-btn" data-go="accsave" data-subj="${S0.id}">Mentés</button><button class="small-btn" data-go="accall" data-subj="${S0.id}">Mind</button><button class="small-btn" data-go="accnone" data-subj="${S0.id}">Egyik sem</button></div></details>`;
@@ -2409,7 +2409,7 @@ ${footHtml()}`;
     const items = reports.map(r => {
       const who = C.pupils.find(p => p.id === r.pupil_id);
       const ch = (r.choices || []).map((c, i) => `<li>${L[i]}) ${esc(c)}${i === r.correct ? ' ✓ <b>helyes</b>' : ''}${i === r.picked ? ' ← ezt jelölte' : ''}</li>`).join('');
-      return `<div class="rowi rep"><div><b>${esc(dayStr(new Date(r.created_at)))} · ${esc(TNAME[r.topic] || r.topic)}${who ? ' · ' + esc(who.nickname) : ''}</b>
+      return `<div class="rowi rep"><div><b>${esc(dayStr(new Date(r.created_at)))}, ${esc(TNAME[r.topic] || r.topic)}${who ? ', ' + esc(who.nickname) : ''}</b>
 <p class="sub">${esc(REASONS[r.reason] || r.reason)}</p><p>${esc(r.prompt)}</p>${r.body ? `<p><b>${esc(r.body)}</b></p>` : ''}<ul class="recent">${ch}</ul>${r.explain ? `<p class="sub">${esc(r.explain)}</p>` : ''}</div>
 <div class="acts"><button class="small-btn" data-repstatus="fixed" data-rep="${r.id}">Javítva</button><button class="small-btn danger" data-repstatus="dismissed" data-rep="${r.id}">Elvetés</button></div></div>`;
     }).join('');
@@ -2419,7 +2419,7 @@ ${footHtml()}`;
   function reportsText() {
     const L = 'abcdef';
     return `Hibás feladat jelentések (gyakorlas.laszlobiri.com, ${APP_VERSION}), ${reports.length} db\n` + reports.map((r, n) => [
-      `---\n${n + 1}. ${dayStr(new Date(r.created_at))} · ${TNAME[r.topic] || r.topic} (téma: ${r.topic}) · ${REASONS[r.reason] || r.reason}`,
+      `---\n${n + 1}. ${dayStr(new Date(r.created_at))}, ${TNAME[r.topic] || r.topic} (téma: ${r.topic}), ${REASONS[r.reason] || r.reason}`,
       `Kérdés: ${r.prompt}`, r.body ? `Feladat: ${r.body}` : '',
       `Válaszok: ${(r.choices || []).map((c, i) => `${L[i]}) ${c}${i === r.correct ? ' [helyes]' : ''}${i === r.picked ? ' [ezt jelölte]' : ''}`).join(' | ')}`,
       r.explain ? `Magyarázat: ${r.explain}` : '', r.qkey ? `Kulcs: ${r.qkey}` : '',
