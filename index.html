@@ -114,12 +114,28 @@
   .big-btn:active { transform: translateY(1px); }
 
   h2.group { font-size: 14px; line-height: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--fg-muted); margin: var(--space-8) 0 var(--space-3); }
-  .topics { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-3); }
+  .topics { display: grid; grid-template-columns: 1fr; gap: var(--space-2); }
+  /* téma: elnyújtott téglalap, egymás alatt; balra az ikon, mellette a név és a legjobb eredmény, jobbra nyíl */
   .topic {
-    display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); text-align: left;
-    min-height: 132px; padding: var(--space-4);
+    display: grid; grid-template-columns: auto 1fr auto; grid-template-rows: auto auto; column-gap: var(--space-4); row-gap: 2px;
+    align-items: center; text-align: left; min-height: 72px; padding: var(--space-3) var(--space-4);
     background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--radius-lg);
   }
+  .topic .ico { grid-row: 1 / 3; }
+  .topic .name { grid-column: 2; align-self: end; }
+  .topic .best { grid-column: 2; align-self: start; }
+  .topic::after { content: '›'; grid-column: 3; grid-row: 1 / 3; font-size: 26px; color: var(--fg-muted); }
+  /* összecsukható tantárgyak és témakörök */
+  details.fold > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: var(--space-2); min-height: 44px; }
+  details.fold > summary::-webkit-details-marker { display: none; }
+  details.fold > summary::before { content: '›'; display: inline-block; width: 16px; font-size: 22px; line-height: 1; color: var(--fg-muted); transition: transform .15s; }
+  details.fold[open] > summary::before { transform: rotate(90deg); }
+  details.fold > summary .cnt { margin-left: auto; font-size: 13px; color: var(--fg-muted); border: 1px solid var(--line); border-radius: 999px; padding: 0 var(--space-2); line-height: 22px; }
+  details.subj { margin-top: var(--space-6); }
+  details.subj > summary h2.group { margin: 0; }
+  details.tk { margin: var(--space-2) 0 0 var(--space-2); }
+  details.tk > summary { font-size: 16px; line-height: 22px; font-weight: 600; color: var(--fg); }
+  details.tk > .topics { margin: var(--space-2) 0 var(--space-3) calc(-1 * var(--space-2)); }
   .topic:hover { border-color: var(--accent); }
   .ico {
     width: 44px; height: 44px; border-radius: 50%; flex: none;
@@ -129,7 +145,7 @@
   }
   .ico.sm { font-size: 15px; }
   .ico.emo { font-size: 22px; }
-  .topic .name { font-size: 18px; line-height: 22px; font-weight: 600; margin-top: auto; }
+  .topic .name { font-size: 18px; line-height: 22px; font-weight: 600; }
   .topic .best { font-size: 14px; line-height: 20px; color: var(--fg-muted); }
 
   /* ---------- kvíz ---------- */
@@ -1759,6 +1775,9 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   try { localStorage.removeItem('gyakorlo.v1'); } catch (e) {}
   const def = () => ({ points: 0, answered: 0, correct: 0, rounds: 0, perfect: 0, best: {}, played: {}, badges: {}, days: 0, lastDay: '', mgDone: 0, mgWins: 0, mgN: 0, wsWins: 0, boWins: 0 });
   const CACHE_KEY = 'gyakorlo.v2';
+  const FOLD_KEY = 'gyakorlo.fold.v1';
+  let FOLD = {}; try { FOLD = JSON.parse(localStorage.getItem(FOLD_KEY)) || {}; } catch (e) { FOLD = {}; }
+  const foldOpen = (k, def) => (k in FOLD ? FOLD[k] : def);
   // Minijáték jutalom ennyi pontonként (egy hibátlan kör 150 pont).
   const MG_EVERY = 500;
   const outbox = createOutbox('gyakorlo.outbox.v1');
@@ -1784,7 +1803,7 @@ const LIB = 'https://laszlobiri.com/lib/v1/';
   let kidExitWarn = false;
   let reports = null;           // a szülői nézet nyitott jelentései
   let reportOpen = false;       // a kérdésnél nyitva van-e a „Mi a hiba?” doboz
-  const APP_VERSION = 'gyakorlo-v26';
+  const APP_VERSION = 'gyakorlo-v27';
   const REASONS = { wrong_answer: 'Rossz a megoldás', bad_question: 'Hibás a kérdés', other: 'Más baj van' };
 
   function emptyCache() { return { pupils: [], results: {}, badges: {}, current: null, userId: null, householdId: null, access: {} }; }
@@ -2259,7 +2278,14 @@ ${WS.done ? `<button class="big-btn" data-go="home">Vissza a témákhoz</button>
       const best = S.best[t.id];
       return `<button class="topic" data-go="${t.id}"><span class="ico${t.sm ? ' sm' : ''}${t.emo ? ' emo' : ''}" aria-hidden="true">${t.ico}</span><span class="name">${t.name}</span><span class="best">${best === undefined ? 'még nem játszottad' : 'legjobb: ' + best + '/10'}</span></button>`;
     };
-    const grp = g => { const ts = TOPICS.filter(t => t.g === g && topicOpen(t.id)); return ts.length ? `<h2 class="group">${g}</h2><div class="topics">${ts.map(topicBtn).join('')}</div>` : ''; };
+    // tantárgy → (a tanmenet szerinti) témakörök → témák egymás alatt; a tantárgy és a témakör is összecsukható
+    const sgOf = id => { for (const S0 of CURRICULUM) for (const [gn, chs] of S0.groups) if (chs.some(c => (c[3] || []).includes(id))) return gn; return ''; };
+    const grp = g => { const ts = TOPICS.filter(t => t.g === g && topicOpen(t.id)); if (!ts.length) return '';
+      const subs = []; for (const t of ts) { const sg = sgOf(t.id), last = subs[subs.length - 1]; if (last && last[0] === sg) last[1].push(t); else subs.push([sg, [t]]); }
+      const inner = subs.map(([sg, list]) => sg
+        ? `<details class="fold tk" data-fold="${esc(g + '/' + sg)}"${foldOpen(g + '/' + sg, false) ? ' open' : ''}><summary><span>${esc(sg)}</span><span class="cnt">${list.length}</span></summary><div class="topics">${list.map(topicBtn).join('')}</div></details>`
+        : `<div class="topics">${list.map(topicBtn).join('')}</div>`).join('');
+      return `<details class="fold subj" data-fold="${esc(g)}"${foldOpen(g, true) ? ' open' : ''}><summary><h2 class="group">${g}</h2><span class="cnt">${ts.length}</span></summary>${inner}</details>`; };
     const got = Object.keys(S.badges).length;
     const p = pupil();
     const switchBtn = MODE === 'parent' || C.pupils.length > 1 ? '<button class="link-btn" data-go="who">Másik gyerek</button>' : '';
@@ -2639,6 +2665,14 @@ ${BADGE_GROUPS.map(([g, ids]) => { const bs = ids.map(id => BADGES.find(b => b.i
     if (g === 'home') { refreshS(); }
     if (g === 'home' || g === 'badges') { view = g; render(); window.scrollTo(0, 0); } else start(g);
   });
+  // összecsukás: a toggle esemény nem buborékozik, ezért elkapó (capture) figyelővel
+  const saveFold = () => { try { localStorage.setItem(FOLD_KEY, JSON.stringify(FOLD)); } catch (er) { /* nincs tárhely */ } };
+  // a koppintás pillanatában mentjük (a toggle esemény később jön, egy gyors újratöltés megelőzheti)
+  $app.addEventListener('click', e => { const sm = e.target.closest('details.fold[data-fold] > summary'); if (!sm) return; const d = sm.parentElement; FOLD[d.dataset.fold] = !d.open; saveFold(); }, true);
+  $app.addEventListener('toggle', e => {
+    const d = e.target; if (!d.matches || !d.matches('details.fold[data-fold]')) return;
+    FOLD[d.dataset.fold] = d.open; try { localStorage.setItem(FOLD_KEY, JSON.stringify(FOLD)); } catch (er) { /* nincs tárhely */ }
+  }, true);
   $app.addEventListener('change', e => {
     const i = e.target.closest('input[data-acc]'); if (!i) return;
     accSet(i.dataset.acc, [...document.querySelectorAll(`input[data-acc="${i.dataset.acc}"]`)].filter(x => x.checked).map(x => x.value));
